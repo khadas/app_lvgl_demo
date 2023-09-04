@@ -18,6 +18,7 @@ static lv_obj_t *bt_label;
 static lv_obj_t *bt_switch;
 
 static struct wifibt_cmdarg cmdarg;
+static struct bt_info new_info;
 
 static void switch_toggled(lv_event_t *e)
 {
@@ -49,7 +50,15 @@ lv_obj_t *menu_bt_init(lv_obj_t *parent)
     lv_obj_add_style(bt_label, &style_txt_s, LV_PART_MAIN);
     bt_switch = lv_switch_create(part_switch);
     lv_obj_align(bt_switch, LV_ALIGN_RIGHT_MID, 0, 0);
-    lv_obj_add_state(bt_switch, LV_STATE_CHECKED);
+
+    cmdarg.cmd = BT_INFO;
+    cmdarg.val = &new_info;
+    wifibt_send_wait(&cmdarg, sizeof(cmdarg));
+    if (new_info.bt_state == RK_BT_STATE_ON)
+        lv_obj_add_state(bt_switch, LV_STATE_CHECKED);
+    else
+        lv_obj_clear_state(bt_switch, LV_STATE_CHECKED);
+
     lv_obj_add_event_cb(bt_switch, switch_toggled, LV_EVENT_VALUE_CHANGED, NULL);
 
     return bg;
