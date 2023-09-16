@@ -37,7 +37,7 @@ lv_obj_t *menu_info_init(lv_obj_t *parent)
     lv_obj_refr_size(bg);
     lv_obj_refr_pos(bg);
 
-    bg_snapshot = smart_home_ui_bg_blur();
+    bg_snapshot = get_bg_snapshot();
     bg_img_date = malloc(sizeof(*bg_img_date));
     bg_img_weather = malloc(sizeof(*bg_img_weather));
     bg_img_scene = malloc(sizeof(*bg_img_scene));

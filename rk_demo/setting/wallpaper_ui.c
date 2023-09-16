@@ -30,9 +30,11 @@ lv_obj_t *menu_wallpaper_init(lv_obj_t *parent)
 
     bg = lv_obj_create(parent);
     lv_obj_remove_style_all(bg);
+    lv_obj_set_style_pad_all(bg, 10, LV_PART_MAIN);
+    lv_obj_set_style_pad_gap(bg, 30, LV_PART_MAIN);
     lv_obj_set_size(bg, lv_pct(100), LV_SIZE_CONTENT);
     lv_obj_set_flex_flow(bg, LV_FLEX_FLOW_COLUMN);
-    lv_obj_center(bg);
+    lv_obj_align(bg, LV_ALIGN_TOP_MID, 0, 0);
 
     area_screen_timeout = lv_obj_create(bg);
     lv_obj_set_size(area_screen_timeout, lv_pct(100), LV_SIZE_CONTENT);

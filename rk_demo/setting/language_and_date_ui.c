@@ -132,9 +132,12 @@ lv_obj_t *menu_language_init(lv_obj_t *parent)
     lv_obj_t *obj;
 
     bg = lv_obj_create(parent);
+    lv_obj_remove_style_all(bg);
+    lv_obj_set_style_pad_all(bg, 10, LV_PART_MAIN);
+    lv_obj_set_style_pad_gap(bg, 30, LV_PART_MAIN);
     lv_obj_set_size(bg, lv_pct(100), LV_SIZE_CONTENT);
     lv_obj_set_flex_flow(bg, LV_FLEX_FLOW_COLUMN);
-    lv_obj_center(bg);
+    lv_obj_align(bg, LV_ALIGN_TOP_MID, 0, 0);
 
     area_language = lv_obj_create(bg);
     lv_obj_remove_style_all(area_language);

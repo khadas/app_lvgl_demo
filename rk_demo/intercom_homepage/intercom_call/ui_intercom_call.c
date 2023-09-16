@@ -6,15 +6,13 @@
 #include "audio_server.h"
 #include "local_ip.h"
 
+static lv_obj_t *main = NULL;
 
-lv_obj_t *ui_Screen_test;
-lv_obj_t *ui_Screen_intercom_call;
-
-static lv_obj_t *ui_back;
+static lv_obj_t *btn_return;
 static lv_obj_t *bg_pic;
 static lv_obj_t *ui_rectangle;
 static lv_obj_t *ui_circle[15];
-static lv_obj_t *ui_intercom_call_Label_0;
+static lv_obj_t *label_menu;
 static lv_obj_t *ui_intercom_call_Label_1;
 static lv_obj_t *ui_call_break;
 static lv_obj_t *ui_ip_label;
@@ -106,15 +104,15 @@ static void icon_cb(lv_event_t *e)
     }
 }
 
-static void back_icon_cb(lv_event_t *e)
+static void btn_return_cb(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *obj = lv_event_get_target(e);
     if (code == LV_EVENT_CLICKED)
     {
         intercom_homepage_ui_init();
-        lv_obj_del(ui_Screen_intercom_call);
-        ui_Screen_intercom_call = NULL;
+        lv_obj_del(main);
+        main = NULL;
         lv_timer_del(timer);
         exit_audio_client();
         exit_audio_server();
@@ -139,9 +137,9 @@ void intercom_call_button(lv_obj_t *parent, lv_obj_t *referent)
         lv_obj_set_size(button[i].ui_circle_label, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
         lv_obj_align_to(button[i].ui_circle_label, button[i].ui_circle, LV_ALIGN_CENTER, button[i].x_po_verify, button[i].y_po_verify);
         lv_label_set_text(button[i].ui_circle_label, button[i].txt);
+        lv_obj_add_style(button[i].ui_circle_label, &style_txt_s, LV_PART_MAIN);
         lv_obj_add_flag(button[i].ui_circle, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_add_event_cb(button[i].ui_circle, icon_cb, LV_EVENT_ALL, (void *)i);
-
     }
 }
 
@@ -169,40 +167,34 @@ static void state_update(lv_timer_t *timer)
     }
 }
 
-void ui_intercom_call_screen_init()
+void intercom_call_ui_init()
 {
     char *ip;
 
-    ui_Screen_intercom_call = lv_obj_create(NULL);
-    lv_obj_clear_flag(ui_Screen_intercom_call, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_img_opa(ui_Screen_intercom_call, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_add_style(ui_Screen_intercom_call, &style_txt_s, LV_PART_MAIN);
+    if (main)
+        return;
 
-    bg_pic = lv_img_create(ui_Screen_intercom_call);
-    lv_obj_set_pos(bg_pic, 0, 0);
-    lv_img_set_src(bg_pic, BG_PIC_0);
+    main = lv_obj_create(lv_scr_act());
+    lv_obj_remove_style_all(main);
+    lv_obj_set_style_pad_all(main, 10, LV_PART_MAIN);
+    lv_obj_set_size(main, lv_pct(100), lv_pct(100));
+    lv_obj_refr_size(main);
 
+    btn_return = lv_img_create(main);
+    lv_obj_set_pos(btn_return, 20, 20);
+    lv_img_set_src(btn_return, IMG_RETURN_BTN);
+    lv_obj_add_flag(btn_return, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(btn_return, btn_return_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_refr_size(btn_return);
+    lv_obj_refr_pos(btn_return);
 
-    //back img
-    ui_back = lv_img_create(ui_Screen_intercom_call);
-    lv_img_set_src(ui_back, IMG_RETURN_BTN);
-    lv_obj_set_width(ui_back, LV_SIZE_CONTENT);   /// 32
-    lv_obj_set_height(ui_back, LV_SIZE_CONTENT);    /// 32
-    lv_obj_align(ui_back, LV_ALIGN_TOP_LEFT, 10, 10);
-    lv_obj_add_flag(ui_back, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
-    lv_obj_clear_flag(ui_back, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_add_event_cb(ui_back, back_icon_cb, LV_EVENT_ALL, 0);
+    label_menu = lv_label_create(main);
+    lv_label_set_text(label_menu, "对讲呼叫");
+    lv_obj_add_style(label_menu, &style_txt_m, LV_PART_MAIN);
+    lv_obj_align_to(label_menu, btn_return,
+                    LV_ALIGN_OUT_RIGHT_MID, 5, 0);
 
-
-    ui_intercom_call_Label_0 = lv_label_create(ui_Screen_intercom_call);
-    lv_label_set_text(ui_intercom_call_Label_0, "对讲呼叫");
-    lv_obj_set_style_text_color(ui_intercom_call_Label_0, lv_color_white(), LV_PART_MAIN);
-    lv_obj_add_style(ui_intercom_call_Label_0, &style_txt_m, LV_PART_MAIN);
-    lv_obj_align_to(ui_intercom_call_Label_0, ui_back,
-                    LV_ALIGN_OUT_RIGHT_MID,
-                    5, 0);
-
-    ui_rectangle = lv_img_create(ui_Screen_intercom_call);
+    ui_rectangle = lv_img_create(main);
     lv_img_set_src(ui_rectangle, IMG_INTERCOM_RECTANGLE1);
     lv_obj_set_width(ui_rectangle, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_rectangle, LV_SIZE_CONTENT);
@@ -218,7 +210,7 @@ void ui_intercom_call_screen_init()
     lv_obj_refr_size(ui_intercom_call_Label_1);
     lv_obj_refr_pos(ui_intercom_call_Label_1);
 
-    ui_ip_label = lv_label_create(ui_Screen_intercom_call);
+    ui_ip_label = lv_label_create(main);
     lv_obj_set_size(ui_ip_label, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
     ip = get_local_ip();
     //lv_obj_set_style_bg_opa(ui_ip_label, LV_OPA_TRANSP, LV_PART_MAIN);
@@ -231,16 +223,10 @@ void ui_intercom_call_screen_init()
     lv_obj_refr_pos(ui_ip_label);
     lv_obj_align_to(ui_ip_label, ui_rectangle, LV_ALIGN_OUT_TOP_LEFT, 0, -10);
 
-    intercom_call_button(ui_Screen_intercom_call, ui_rectangle);
+    intercom_call_button(main, ui_rectangle);
 
     timer = lv_timer_create(state_update, 100, NULL);
     lv_timer_enable(timer);
-}
-
-void intercom_call_ui_init()
-{
-    if (!ui_Screen_intercom_call)
-        ui_intercom_call_screen_init();
-    lv_disp_load_scr(ui_Screen_intercom_call);
     run_audio_server();
 }
+

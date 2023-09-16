@@ -20,11 +20,12 @@
 #include "main.h"
 #include "hal_sdl.h"
 #include "hal_drm.h"
-
+#include "home_ui.h"
 #include "ui_resource.h"
 
 #include "rk_defines.h"
 #include "rk_mpi_sys.h"
+
 #include "wifibt.h"
 
 lv_ft_info_t ttf_main_s;
@@ -53,17 +54,32 @@ int app_disp_rotation(void)
     return g_disp_rotation;
 }
 
+#if USE_SDL_GPU
+static void sdl_mouse_init(void)
+{
+    static lv_indev_drv_t indev_drv_1;
+    lv_indev_t *mouse_indev;
+
+    lv_indev_drv_init(&indev_drv_1);
+    indev_drv_1.type = LV_INDEV_TYPE_POINTER;
+
+    indev_drv_1.read_cb = sdl_mouse_read;
+    mouse_indev = lv_indev_drv_register(&indev_drv_1);
+}
+#endif
+
 static void lvgl_init(void)
 {
     lv_init();
 
-#ifdef USE_SDL_GPU
+#if USE_SDL_GPU
     hal_sdl_init(0, 0, g_disp_rotation);
+    sdl_mouse_init();
 #else
     hal_drm_init(0, 0, g_disp_rotation);
+    lv_port_indev_init(g_indev_rotation);
 #endif
     lv_port_fs_init();
-    lv_port_indev_init(g_indev_rotation);
 }
 
 static void font_init(void)

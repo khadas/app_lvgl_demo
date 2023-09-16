@@ -1,145 +1,185 @@
-#include "home_ui.h"
 #include <time.h>
+#include <lvgl/lvgl.h>
+
+#include "main.h"
+#include "ui_resource.h"
+
 #include "ui_intercom_homepage.h"
 
-static lv_obj_t *ui_back;
+static lv_obj_t *btn_return;
 
-lv_obj_t *ui_Screen_intercom_homepage;
-lv_obj_t *ui_intercom_call_Label_0;
-static lv_obj_t *bg_pic;
+static lv_obj_t *main = NULL;
+static lv_obj_t *label_menu;
 
-extern lv_obj_t *ui_img_circular;
-extern lv_font_t Security_alarm;
-extern lv_font_t Video_monitor;
-extern lv_obj_t *ui_Screen_intercom_call;
-extern lv_style_t style_txt_s;
-extern lv_style_t style_txt_m;
-
-static void icon_cb(lv_event_t *e);
-
-static struct lv_button_parameter button[] =
-{
-    {NULL, NULL, 45, 300, "安防报警", -25, -5},
-    {NULL, NULL, 175, 300, "视频监控", -25, -5},
-    {NULL, NULL, 305, 300, "对讲呼叫", -25, -5},
-    {NULL, NULL, 435, 300, "信息", 0, -5},
-    {NULL, NULL, 565, 300, "家电控制", -25, -5},
-    {NULL, NULL, 45, 550, "留影留言", -25, -5},
-    {NULL, NULL, 175, 550, "电梯召唤", -25, -5},
-    {NULL, NULL, 305, 550, "呼叫管理员", -30, -5},
-    {NULL, NULL, 435, 550, "图片管理", -25, -5},
-    {NULL, NULL, 565, 550, "家人留言", -25, -5},
-};
-
+static lv_obj_t *ui_box_area;
+static lv_obj_t *ui_box_main;
+static lv_obj_t *ui_box[10];
 
 void intercom_call_ui_init();
 void monitor_ui_init();
+static void page_switch(lv_event_t *e);
 
-static void icon_cb(lv_event_t *e)
+static struct btn_desc button[] =
 {
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
-    intptr_t type = (intptr_t)lv_event_get_user_data(e);
-
-    if (code == LV_EVENT_CLICKED)
     {
-        switch (type)
-        {
-        case 1:
-            monitor_ui_init();
-            lv_obj_del(ui_Screen_intercom_homepage);
-            ui_Screen_intercom_homepage = NULL;
-            break;
-        case 2:
-            intercom_call_ui_init();
-            lv_obj_del(ui_Screen_intercom_homepage);
-            ui_Screen_intercom_homepage = NULL;
-            break;
+        &ui_box[0],
+        NULL,
+        "视频监控",
+        {0, 0, 1, 1},
+        common_draw,
+        page_switch,
+        monitor_ui_init
+    },
+    {
+        &ui_box[1],
+        NULL,
+        "对讲呼叫",
+        {1, 0, 2, 1},
+        common_draw,
+        page_switch,
+        intercom_call_ui_init
+    },
+    {
+        &ui_box[2],
+        NULL,
+        "安防报警",
+        {0, 1, 1, 2},
+        common_draw,
+        page_switch,
+        NULL
+    },
+    {
+        &ui_box[3],
+        NULL,
+        "信息",
+        {1, 1, 2, 2},
+        common_draw,
+        page_switch,
+        NULL
+    },
+    {
+        &ui_box[4],
+        NULL,
+        "家电控制",
+        {0, 2, 1, 3},
+        common_draw,
+        page_switch,
+        NULL
+    },
+    {
+        &ui_box[5],
+        NULL,
+        "留影留言",
+        {1, 2, 2, 3},
+        common_draw,
+        page_switch,
+        NULL
+    },
+    {
+        &ui_box[6],
+        NULL,
+        "电梯召唤",
+        {0, 3, 1, 4},
+        common_draw,
+        page_switch,
+        NULL
+    },
+    {
+        &ui_box[7],
+        NULL,
+        "呼叫管理员",
+        {1, 3, 2, 4},
+        common_draw,
+        page_switch,
+        NULL
+    },
+    {
+        &ui_box[8],
+        NULL,
+        "图片管理",
+        {0, 4, 1, 5},
+        common_draw,
+        page_switch,
+        NULL
+    },
+    {
+        &ui_box[9],
+        NULL,
+        "家人留言",
+        {1, 4, 2, 5},
+        common_draw,
+        page_switch,
+        NULL
+    },
+};
 
-        default:
-            break;
-        }
+static lv_coord_t col_dsc[] = {200, 200, LV_GRID_TEMPLATE_LAST};
+static lv_coord_t row_dsc[] = {200, 200, 200, 200, 200, 200, 200, 200, 200, 200, LV_GRID_TEMPLATE_LAST};
+
+struct btn_matrix_desc btn_desc = {
+    .col_dsc = col_dsc,
+    .row_dsc = row_dsc,
+    .pad = 5,
+    .gap = 20,
+    .desc = button,
+    .btn_cnt = sizeof(button) / sizeof(button[0]),
+};
+
+static void page_switch(lv_event_t *e)
+{
+    void (*func)(void) = lv_event_get_user_data(e);
+
+    if (func)
+    {
+        func();
+        lv_obj_del(main);
+        main = NULL;
     }
 }
 
-
-static void back_icon_cb(lv_event_t *e)
+static void btn_return_cb(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *obj = lv_event_get_target(e);
     if (code == LV_EVENT_CLICKED)
     {
         home_ui_init();
-        lv_obj_del(ui_Screen_intercom_homepage);
-        ui_Screen_intercom_homepage = NULL;
+        lv_obj_del(main);
+        main = NULL;
     }
-}
-
-
-void function_keys(lv_obj_t *parent, lv_obj_t *referent)
-{
-    for (intptr_t i = 0; i < 10; i ++)
-    {
-        button[i].ui_circle = lv_img_create(parent);
-        lv_img_set_src(button[i].ui_circle, IMG_INTERCOM_ROUND);
-        lv_obj_set_width(button[i].ui_circle, LV_SIZE_CONTENT);
-        lv_obj_set_height(button[i].ui_circle, LV_SIZE_CONTENT);
-        lv_obj_add_flag(button[i].ui_circle, LV_OBJ_FLAG_ADV_HITTEST);
-        lv_obj_clear_flag(button[i].ui_circle, LV_OBJ_FLAG_SCROLLABLE);
-        lv_img_set_zoom(button[i].ui_circle, 500);
-        lv_obj_align_to(button[i].ui_circle, referent, LV_ALIGN_OUT_BOTTOM_LEFT, button[i].x, button[i].y);
-        lv_obj_add_flag(button[i].ui_circle, LV_OBJ_FLAG_CLICKABLE);
-
-        button[i].ui_circle_label = lv_label_create(parent);
-        lv_obj_set_size(button[i].ui_circle_label, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-        lv_obj_align_to(button[i].ui_circle_label, button[i].ui_circle, LV_ALIGN_CENTER, button[i].x_po_verify, button[i].y_po_verify);
-        lv_label_set_text(button[i].ui_circle_label, button[i].txt);
-        lv_obj_add_event_cb(button[i].ui_circle, icon_cb, LV_EVENT_ALL, (void *)i);
-    }
-
-}
-
-
-
-
-void ui_intercom_home_page_screen_init()
-{
-    ui_Screen_intercom_homepage = lv_obj_create(NULL);
-    lv_obj_clear_flag(ui_Screen_intercom_homepage, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_img_opa(ui_Screen_intercom_homepage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_add_style(ui_Screen_intercom_homepage, &style_txt_s, LV_PART_MAIN);
-
-
-    bg_pic = lv_img_create(ui_Screen_intercom_homepage);
-    lv_obj_set_pos(bg_pic, 0, 0);
-    lv_img_set_src(bg_pic, BG_PIC_0);
-
-    //back img
-    ui_back = lv_img_create(ui_Screen_intercom_homepage);
-    lv_img_set_src(ui_back, IMG_RETURN_BTN);
-    lv_obj_set_width(ui_back, LV_SIZE_CONTENT);   /// 32
-    lv_obj_set_height(ui_back, LV_SIZE_CONTENT);    /// 32
-    lv_obj_align(ui_back, LV_ALIGN_TOP_LEFT, 10, 10);
-    lv_obj_add_flag(ui_back, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
-    lv_obj_clear_flag(ui_back, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_add_event_cb(ui_back, back_icon_cb, LV_EVENT_ALL, 0);
-
-
-    ui_intercom_call_Label_0 = lv_label_create(ui_Screen_intercom_homepage);
-    lv_label_set_text(ui_intercom_call_Label_0, "楼宇对讲");
-    lv_obj_set_style_text_color(ui_intercom_call_Label_0, lv_color_white(), LV_PART_MAIN);
-    lv_obj_add_style(ui_intercom_call_Label_0, &style_txt_m, LV_PART_MAIN);
-    lv_obj_align_to(ui_intercom_call_Label_0, ui_back,
-                    LV_ALIGN_OUT_RIGHT_MID,
-                    5, 0);
-
-
-    function_keys(ui_Screen_intercom_homepage, ui_back);
 }
 
 void intercom_homepage_ui_init()
 {
-    if (!ui_Screen_intercom_homepage)
-        ui_intercom_home_page_screen_init();
-    lv_disp_load_scr(ui_Screen_intercom_homepage);
+    if (main)
+        return;
+
+    main = lv_obj_create(lv_scr_act());
+    lv_obj_remove_style_all(main);
+    lv_obj_set_style_pad_all(main, 10, LV_PART_MAIN);
+    lv_obj_set_size(main, lv_pct(100), lv_pct(100));
+    lv_obj_refr_size(main);
+
+    btn_return = lv_img_create(main);
+    lv_obj_set_pos(btn_return, 20, 20);
+    lv_img_set_src(btn_return, IMG_RETURN_BTN);
+    lv_obj_add_flag(btn_return, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(btn_return, btn_return_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_refr_size(btn_return);
+    lv_obj_refr_pos(btn_return);
+
+    label_menu = lv_label_create(main);
+    lv_label_set_text(label_menu, "楼宇对讲");
+    lv_obj_add_style(label_menu, &style_txt_m, LV_PART_MAIN);
+    lv_obj_align_to(label_menu, btn_return,
+                    LV_ALIGN_OUT_RIGHT_MID, 5, 0);
+
+    ui_box_area = lv_obj_create(main);
+    lv_obj_remove_style_all(ui_box_area);
+    lv_obj_set_size(ui_box_area, lv_pct(100), lv_pct(90));
+    lv_obj_align(ui_box_area, LV_ALIGN_BOTTOM_MID, 0, 0);
+
+    ui_box_main = ui_btnmatrix_create(ui_box_area, &btn_desc);
+    lv_obj_center(ui_box_main);
 }
+

@@ -201,7 +201,9 @@ lv_obj_t *menu_music_init(lv_obj_t *parent)
 
     cmdarg.cmd = BT_INFO;
     cmdarg.val = &new_info;
+    printf("%s %d\n", __func__, __LINE__);
     wifibt_send_wait(&cmdarg, sizeof(cmdarg));
+    printf("%s %d\n", __func__, __LINE__);
     if (new_info.bt_state == RK_BT_STATE_ON)
     {
         cmdarg.cmd = BT_SINK_ENABLE;
@@ -222,7 +224,7 @@ lv_obj_t *menu_music_init(lv_obj_t *parent)
     lv_obj_refr_size(bg);
     lv_obj_refr_pos(bg);
 
-    bg_snapshot = smart_home_ui_bg_blur();
+    bg_snapshot = get_bg_snapshot();
     bg_img = malloc(sizeof(*bg_img));
     memcpy(bg_img, bg_snapshot, sizeof(*bg_img));
 

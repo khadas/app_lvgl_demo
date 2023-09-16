@@ -13,8 +13,11 @@
 
 #include <lvgl/lvgl.h>
 
+#include "home_ui.h"
 #include "lv_port_file.h"
 #include "lv_port_indev.h"
+#include "ui_btnmatrix.h"
+#include "ui_resource.h"
 
 extern lv_ft_info_t ttf_main_s;
 extern lv_ft_info_t ttf_main_m;

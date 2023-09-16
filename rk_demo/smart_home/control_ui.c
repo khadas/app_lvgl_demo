@@ -212,7 +212,7 @@ lv_obj_t *menu_control_init(lv_obj_t *parent)
     lv_obj_refr_size(bg);
     lv_obj_refr_pos(bg);
 
-    bg_snapshot = smart_home_ui_bg_blur();
+    bg_snapshot = get_bg_snapshot();
     bg_img_aircond_0 = malloc(sizeof(*bg_img_aircond_0));
     bg_img_aircond_1 = malloc(sizeof(*bg_img_aircond_1));
     bg_img_light = malloc(sizeof(*bg_img_light));

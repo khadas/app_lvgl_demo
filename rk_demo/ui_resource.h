@@ -6,14 +6,22 @@
 #define MAIN_BG_PIC     "A:"PATH_PREFIX"/bg.png"
 
 // home page
-#define IMG_RETURN_BTN  "A:"PATH_PREFIX"/return.png"
+#define IMG_RETURN_BTN  "A:"PATH_PREFIX"/arrow-left-fill.png"
 #define IMG_RK_LOGO     "A:"PATH_PREFIX"/logo.png"
 #define IMG_PHONE       "A:"PATH_PREFIX"/phone.png"
 #define IMG_WIFI_ON     "A:"PATH_PREFIX"/wifi.png"
 #define IMG_WIFI_OFF    "A:"PATH_PREFIX"/wifi-off.png"
-#define IMG_SMART_HOME  "A:"PATH_PREFIX"/smart_home.png"
-#define IMG_SETTING     "A:"PATH_PREFIX"/setting.png"
-#define IMG_FURNITURE   "A:"PATH_PREFIX"/furniture_control.png"
+#define IMG_SMART_HOME  "A:"PATH_PREFIX"/home.png"
+#define IMG_SETTING     "A:"PATH_PREFIX"/sliders.png"
+#define IMG_FURNITURE   "A:"PATH_PREFIX"/cpu.png"
+
+// setting page
+#define ICON_WIFI       "A:"PATH_PREFIX"/wifi-fill.png"
+#define ICON_BT         "A:"PATH_PREFIX"/bluetooth-fill.png"
+#define ICON_WALLPAPER  "A:"PATH_PREFIX"/image-2-fill.png"
+#define ICON_DATA       "A:"PATH_PREFIX"/calendar-2-fill.png"
+#define ICON_ABOUT      "A:"PATH_PREFIX"/information-fill.png"
+#define IMG_CANCEL      "A:"PATH_PREFIX"/cancel.png"
 
 // furniture control page
 #define IMG_ICEBOX          "A:"PATH_PREFIX"/icebox.png"
@@ -63,6 +71,13 @@
 #define IMG_INTERCOM_BACKWARD       "A:"PATH_PREFIX"/backward.png"
 #define IMG_INTERCOM_RECTANGLE1     "A:"PATH_PREFIX"/rectangle_1.png"
 #define IMG_INTERCOM_CONTUINE       "A:"PATH_PREFIX"/continue.png"
+
+#define BG_COLOR                    (lv_color_hex(0x484B5B))
+#define GRAD_COLOR                  (lv_color_hex(0x2C2D35))
+#define MAIN_COLOR                  (lv_color_hex(0x434650))
+#define MAIN_COLOR_PRESS            (lv_color_hex(0xb2b2b2))
+#define HL_ORANGE                   (lv_color_hex(0xFFAB44))
+#define HL_BLUE                     (lv_color_hex(0x239CFF))
 
 #endif
 
