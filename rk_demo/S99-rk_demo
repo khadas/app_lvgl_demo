@@ -3,7 +3,9 @@
 start() {
 	set -a
 	mkdir -p /userdata/cfg
-	cp /etc/wpa_supplicant.conf /userdata/cfg/
+	if [ ! -f /userdata/cfg/wpa_supplicant.conf ];then
+		cp /etc/wpa_supplicant.conf /userdata/cfg/
+	fi
 	amixer -c 0 cset numid=33 0
 	amixer -c 0 cset numid=34 0
 	export LV_DRIVERS_SET_PLANE=CURSOR
@@ -16,10 +18,10 @@ start() {
 }
 
 case "$1" in
-  start)
+	start)
 	start
 	;;
-  *)
+	*)
 	echo "Usage: $0 {start}"
 	exit 1
 esac
