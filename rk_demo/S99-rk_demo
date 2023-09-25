@@ -11,7 +11,7 @@ start() {
 	export LV_DRIVERS_SET_PLANE=CURSOR
 	modetest -M rockchip -aw 68:zpos:1
 	modetest -M rockchip -aw 69:zpos:1
-	ulimit -n 90000
+	ulimit -n 1024
 	set +a
 	rk_demo &
 	udhcpc &
