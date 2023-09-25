@@ -21,8 +21,8 @@
 #include "hal_sdl.h"
 #include "hal_drm.h"
 
-static int g_indev_rotation = 90;
-static int g_disp_rotation = LV_DISP_ROT_90;
+static int g_indev_rotation = 0;
+static int g_disp_rotation = LV_DISP_ROT_NONE;
 
 static int quit = 0;
 
