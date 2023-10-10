@@ -1,8 +1,10 @@
 #define MAX_FILE_COUNT 10
 #define PATH_VIDEO "/oem/"
+#include <ctype.h>
+#include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <dirent.h>
+#include <string.h>
 //#include <errno.h>
 #include "main.h"
 #include "player_ui.h"
@@ -216,6 +218,54 @@ void video_name_callback(lv_event_t *event)
     }
 }
 
+static char *strlwr(char *s)
+{
+  char *p = s;
+  for(;*s;s++) {
+    *s = tolower(*s);
+  }
+  return p;
+}
+
+static char *strrstr(const char *str, const char *token)
+{
+    int len = strlen(token);
+    const char *p = str + strlen(str);
+
+    while (str <= --p)
+        if (p[0] == token[0] && strncmp(p, token, len) == 0)
+            return (char *)p;
+    return NULL;
+}
+
+int file_is_supported(char *filepath)
+{
+    int ret = 0;
+
+    if (strstr(filepath, ".") == NULL)
+        return 0;
+
+    char *suffix = strlwr(strdup(strrstr(filepath, ".") + 1));
+    static const char *formats[] =
+    {
+        "mp4", "mp3"
+    };
+
+    for (int i = 0; i < sizeof(formats) / sizeof(formats[0]); i++) {
+        if (strcmp(suffix, formats[i]) == 0) {
+            ret = 1;
+            break;
+        }
+    }
+
+    printf("%s is %ssupported, [%s]\n", filepath, ret ? "" : "not ", suffix);
+
+    free(suffix);
+
+    return ret;
+}
+
+
 void player_list_button_callback(lv_event_t *event)
 {
     printf("player_list_button_callback is into \n");
@@ -249,14 +299,17 @@ void player_list_button_callback(lv_event_t *event)
         {
             if (entry->d_type == DT_REG)
             {
-                //add_file_to_list(entry->d_name);
-                lv_obj_t *obj_text = lv_list_add_btn(video_list, NULL, entry->d_name);
-                lv_obj_add_flag(obj_text, LV_OBJ_FLAG_CLICKABLE);
-                lv_obj_add_event_cb(obj_text, video_name_callback, LV_EVENT_CLICKED, entry->d_name);
-                file_count++;
-                if (file_count >= MAX_FILE_COUNT)
+                if (file_is_supported(entry->d_name))
                 {
-                    break;
+                    //add_file_to_list(entry->d_name);
+                    lv_obj_t *obj_text = lv_list_add_btn(video_list, NULL, entry->d_name);
+                    lv_obj_add_flag(obj_text, LV_OBJ_FLAG_CLICKABLE);
+                    lv_obj_add_event_cb(obj_text, video_name_callback, LV_EVENT_CLICKED, entry->d_name);
+                    file_count++;
+                    if (file_count >= MAX_FILE_COUNT)
+                    {
+                        break;
+                    }
                 }
             }
         }
