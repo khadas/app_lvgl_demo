@@ -36,8 +36,7 @@ static void btn_return_cb(lv_event_t *event)
 
 void icebox_ui_init(void)
 {
-    int x, y;
-    int ofs;
+    lv_area_t area;
 
     if (main)
         return;
@@ -57,16 +56,17 @@ void icebox_ui_init(void)
     //lv_obj_set_flex_flow(ui_icebox_box, LV_FLEX_FLOW_ROW);//行
 
     bg_snapshot = get_bg_snapshot();
+
     text_bg = lv_img_create(ui_icebox_box);
     lv_obj_set_width(text_bg, lv_pct(100));
     lv_obj_set_height(text_bg, lv_pct(100));
+    lv_obj_center(text_bg);
     lv_obj_refr_pos(text_bg);
-    x = lv_obj_get_x(text_bg) + lv_obj_get_x(ui_icebox_box);
-    y = lv_obj_get_y(text_bg) + lv_obj_get_y(ui_icebox_box);
-    ofs = (y * bg_snapshot->header.w + x) * lv_img_cf_get_px_size(bg_snapshot->header.cf) / 8;
-    bg_snapshot->data = bg_snapshot->data + ofs;
+    lv_obj_refr_size(text_bg);
+    lv_obj_get_content_coords(text_bg, &area);
     lv_img_set_src(text_bg, bg_snapshot);
-    lv_obj_clear_flag(text_bg, LV_OBJ_FLAG_SCROLLABLE);
+    lv_img_set_offset_x(text_bg, -area.x1);
+    lv_img_set_offset_y(text_bg, -area.y1);
 
     ui_icebox_text_box = lv_obj_create(text_bg);
     lv_obj_remove_style_all(ui_icebox_text_box);

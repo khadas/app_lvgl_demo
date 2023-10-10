@@ -104,8 +104,7 @@ static struct btn_matrix_desc btn_desc = {
 
 void furniture_control_ui_init(void)
 {
-    int x, y;
-    int ofs;
+    lv_area_t area;
 
     if (main)
         return;
@@ -123,17 +122,19 @@ void furniture_control_ui_init(void)
     lv_obj_set_width(furniture_control_ui_box, lv_pct(100));
     lv_obj_set_height(furniture_control_ui_box, lv_pct(33));
     lv_obj_center(furniture_control_ui_box);
+    lv_obj_refr_size(furniture_control_ui_box);
+    lv_obj_refr_pos(furniture_control_ui_box);
 
     bg_snapshot = get_bg_snapshot();
     v_bg = lv_img_create(furniture_control_ui_box);
     lv_obj_set_width(v_bg, lv_pct(100));
     lv_obj_set_height(v_bg, lv_pct(100));
+    lv_obj_refr_size(v_bg);
     lv_obj_refr_pos(v_bg);
-    x = lv_obj_get_x(v_bg) + lv_obj_get_x(furniture_control_ui_box);
-    y = lv_obj_get_y(v_bg) + lv_obj_get_y(furniture_control_ui_box);
-    ofs = (y * bg_snapshot->header.w + x) * lv_img_cf_get_px_size(bg_snapshot->header.cf) / 8;
-    bg_snapshot->data = bg_snapshot->data + ofs;
+    lv_obj_get_content_coords(v_bg, &area);
     lv_img_set_src(v_bg, bg_snapshot);
+    lv_img_set_offset_x(v_bg, -area.x1);
+    lv_img_set_offset_y(v_bg, -area.y1);
     lv_obj_clear_flag(v_bg, LV_OBJ_FLAG_SCROLLABLE);
 
     ui_box_main = ui_btnmatrix_create(v_bg, &btn_desc);

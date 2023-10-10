@@ -16,8 +16,6 @@ static lv_obj_t *bg;
 
 static lv_img_dsc_t *bg_snapshot;
 
-static lv_img_dsc_t *bg_img;
-
 static lv_obj_t *area_player;
 static lv_obj_t *area_label;
 static lv_obj_t *slider;
@@ -193,17 +191,23 @@ static void bt_timer_cb(struct _lv_timer_t *tmr)
     }
 }
 
+void menu_music_scroll_cb(lv_event_t * event)
+{
+    lv_area_t area;
+
+    lv_obj_get_content_coords(bg, &area);
+    lv_img_set_offset_x(bg, -area.x1);
+    lv_img_set_offset_y(bg, -area.y1);
+}
+
 lv_obj_t *menu_music_init(lv_obj_t *parent)
 {
     lv_obj_t *obj;
-    int x, y;
-    int ofs;
+    lv_area_t area;
 
     cmdarg.cmd = BT_INFO;
     cmdarg.val = &new_info;
-    printf("%s %d\n", __func__, __LINE__);
     wifibt_send_wait(&cmdarg, sizeof(cmdarg));
-    printf("%s %d\n", __func__, __LINE__);
     if (new_info.bt_state == RK_BT_STATE_ON)
     {
         cmdarg.cmd = BT_SINK_ENABLE;
@@ -225,15 +229,11 @@ lv_obj_t *menu_music_init(lv_obj_t *parent)
     lv_obj_refr_pos(bg);
 
     bg_snapshot = get_bg_snapshot();
-    bg_img = malloc(sizeof(*bg_img));
-    memcpy(bg_img, bg_snapshot, sizeof(*bg_img));
 
-    x = lv_obj_get_x(bg);
-    y = lv_obj_get_y(bg);
-    ofs = (y * bg_img->header.w + x)
-          * lv_img_cf_get_px_size(bg_img->header.cf) / 8;
-    bg_img->data = bg_snapshot->data + ofs;
-    lv_img_set_src(bg, bg_img);
+    lv_obj_get_content_coords(bg, &area);
+    lv_img_set_src(bg, bg_snapshot);
+    lv_img_set_offset_x(bg, -area.x1);
+    lv_img_set_offset_y(bg, -area.y1);
 
     obj = lv_label_create(bg);
     lv_label_set_text(obj, "蓝牙音乐");
@@ -322,7 +322,6 @@ void menu_music_deinit(void)
     lv_obj_del(bg);
     bg = NULL;
 
-    free(bg_img);
     lv_timer_del(timer);
     lv_timer_del(pos_timer);
 

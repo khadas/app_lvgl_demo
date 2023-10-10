@@ -21,6 +21,7 @@ struct submenu_s
 {
     char *name;
     void (*init)(lv_obj_t *parent);
+    void (*scroll_cb)(lv_event_t *event);
     void (*deinit)(void);
     lv_obj_t *menu;
 };
@@ -43,6 +44,11 @@ static void submenu_##name##_destroy(void)  \
 {   \
     if (submenu_desc[enum_t].menu)\
         menu_##name##_deinit();\
+}   \
+static void submenu_##name##_scroll(lv_event_t *event)  \
+{   \
+    if (submenu_desc[enum_t].menu)\
+        menu_##name##_scroll_cb(event);\
 }
 
 SUBMENU_COMMON_DEFINE(SUBMENU_INFO, info)
@@ -51,9 +57,9 @@ SUBMENU_COMMON_DEFINE(SUBMENU_MUSIC, music)
 
 static struct submenu_s submenu_desc[SUBMENU_MAX] =
 {
-    {"首页",   submenu_info,    submenu_info_destroy,    NULL},
-    {"控制",   submenu_control, submenu_control_destroy, NULL},
-    {"播放器", submenu_music,   submenu_music_destroy,   NULL}
+    {"首页",   submenu_info,    submenu_info_scroll,    submenu_info_destroy,    NULL},
+    {"控制",   submenu_control, submenu_control_scroll, submenu_control_destroy, NULL},
+    {"播放器", submenu_music,   submenu_music_scroll,   submenu_music_destroy,   NULL}
 };
 
 static void btn_return_cb(lv_event_t *e)
@@ -73,6 +79,15 @@ static void btn_return_cb(lv_event_t *e)
         break;
     default:
         break;
+    }
+}
+
+static void scroll_cb(lv_event_t * event)
+{
+    for (int i = SUBMENU_MIN; i < SUBMENU_MAX; i++)
+    {
+        if (submenu_desc[i].scroll_cb)
+            submenu_desc[i].scroll_cb(event);
     }
 }
 
@@ -98,9 +113,11 @@ void smart_home_ui_init(void)
     lv_obj_remove_style_all(area_submenu);
     lv_obj_set_size(area_submenu, lv_pct(100), lv_pct(90));
     lv_obj_set_pos(area_submenu, 0, lv_pct(10));
+    lv_obj_add_event_cb(area_submenu, scroll_cb, LV_EVENT_SCROLL, NULL);
     for (int i = SUBMENU_MIN; i < SUBMENU_MAX; i++)
     {
         obj = lv_tileview_add_tile(area_submenu, i, 0, LV_DIR_LEFT | LV_DIR_RIGHT);
+        lv_obj_set_style_pad_all(obj, 0, LV_PART_MAIN);
         submenu_desc[i].init(obj);
     }
 }

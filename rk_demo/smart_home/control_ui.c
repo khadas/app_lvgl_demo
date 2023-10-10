@@ -14,10 +14,6 @@ static lv_obj_t *bg;
 
 static lv_img_dsc_t *bg_snapshot;
 
-static lv_img_dsc_t *bg_img_aircond_0;
-static lv_img_dsc_t *bg_img_aircond_1;
-static lv_img_dsc_t *bg_img_light;
-
 static lv_obj_t *area_aircond_0;
 static lv_obj_t *area_aircond_1;
 static lv_obj_t *area_light;
@@ -49,20 +45,17 @@ static lv_obj_t *light_menu(lv_obj_t *parent,
     lv_obj_t *cont;
     lv_obj_t *depart;
     lv_obj_t *light;
-    int x, y;
-    int ofs;
+    lv_area_t area;
 
     light = lv_img_create(parent);
     lv_obj_set_size(light, lv_pct(100), 150);
     lv_obj_align(light, LV_ALIGN_TOP_MID, 0, 0);
     lv_obj_refr_size(light);
     lv_obj_refr_pos(light);
-    x = lv_obj_get_x(light) + lv_obj_get_x(bg);
-    y = lv_obj_get_y(light) + lv_obj_get_y(bg);
-    ofs = (y * img->header.w + x)
-          * lv_img_cf_get_px_size(img->header.cf) / 8;
-    img->data = bg_snapshot->data + ofs;
-    lv_img_set_src(light, img);
+    lv_obj_get_content_coords(light, &area);
+    lv_img_set_src(light, bg_snapshot);
+    lv_img_set_offset_x(light, -area.x1);
+    lv_img_set_offset_y(light, -area.y1);
     lv_obj_clear_flag(light, LV_OBJ_FLAG_SCROLLABLE);
 
     obj = lv_label_create(light);
@@ -116,19 +109,16 @@ static lv_obj_t *aircond_menu(lv_obj_t *parent,
     lv_obj_t *area_set;
     lv_obj_t *obj;
     lv_obj_t *temp;
-    int x, y;
-    int ofs;
+    lv_area_t area;
 
     area_aircond = lv_img_create(parent);
     lv_obj_set_size(area_aircond, lv_pct(100), 500);
     lv_obj_refr_size(area_aircond);
     lv_obj_refr_pos(area_aircond);
-    x = lv_obj_get_x(area_aircond) + lv_obj_get_x(bg);
-    y = lv_obj_get_y(area_aircond) + lv_obj_get_y(bg);
-    ofs = (y * img->header.w + x)
-          * lv_img_cf_get_px_size(img->header.cf) / 8;
-    img->data = bg_snapshot->data + ofs;
-    lv_img_set_src(area_aircond, img);
+    lv_obj_get_content_coords(area_aircond, &area);
+    lv_img_set_src(area_aircond, bg_snapshot);
+    lv_img_set_offset_x(area_aircond, -area.x1);
+    lv_img_set_offset_y(area_aircond, -area.y1);
     lv_obj_clear_flag(area_aircond, LV_OBJ_FLAG_SCROLLABLE);
 
     obj = lv_label_create(area_aircond);
@@ -201,6 +191,23 @@ static lv_obj_t *aircond_menu(lv_obj_t *parent,
     return area_aircond;
 }
 
+void menu_control_scroll_cb(lv_event_t * event)
+{
+    lv_area_t area;
+
+    lv_obj_get_content_coords(area_light, &area);
+    lv_img_set_offset_x(area_light, -area.x1);
+    lv_img_set_offset_y(area_light, -area.y1);
+
+    lv_obj_get_content_coords(area_aircond_0, &area);
+    lv_img_set_offset_x(area_aircond_0, -area.x1);
+    lv_img_set_offset_y(area_aircond_0, -area.y1);
+
+    lv_obj_get_content_coords(area_aircond_1, &area);
+    lv_img_set_offset_x(area_aircond_1, -area.x1);
+    lv_img_set_offset_y(area_aircond_1, -area.y1);
+}
+
 lv_obj_t *menu_control_init(lv_obj_t *parent)
 {
     bg = lv_obj_create(parent);
@@ -209,22 +216,15 @@ lv_obj_t *menu_control_init(lv_obj_t *parent)
     lv_obj_center(bg);
     lv_obj_set_flex_flow(bg, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_row(bg, 30, 0);
+    lv_obj_add_event_cb(bg, menu_control_scroll_cb, LV_EVENT_SCROLL, NULL);
     lv_obj_refr_size(bg);
     lv_obj_refr_pos(bg);
 
     bg_snapshot = get_bg_snapshot();
-    bg_img_aircond_0 = malloc(sizeof(*bg_img_aircond_0));
-    bg_img_aircond_1 = malloc(sizeof(*bg_img_aircond_1));
-    bg_img_light = malloc(sizeof(*bg_img_light));
-    memcpy(bg_img_aircond_0, bg_snapshot, sizeof(*bg_img_aircond_0));
-    memcpy(bg_img_aircond_1, bg_snapshot, sizeof(*bg_img_aircond_1));
-    memcpy(bg_img_light, bg_snapshot, sizeof(*bg_img_light));
 
-    area_light = light_menu(bg, bg_img_light);
-
-    area_aircond_0 = aircond_menu(bg, "客厅空调", bg_img_aircond_0);
-
-    area_aircond_1 = aircond_menu(bg, "卧室空调", bg_img_aircond_1);
+    area_light = light_menu(bg, bg_snapshot);
+    area_aircond_0 = aircond_menu(bg, "客厅空调", bg_snapshot);
+    area_aircond_1 = aircond_menu(bg, "卧室空调", bg_snapshot);
 
     return bg;
 }
@@ -233,9 +233,5 @@ void menu_control_deinit(void)
 {
     lv_obj_del(bg);
     bg = NULL;
-
-    free(bg_img_aircond_0);
-    free(bg_img_aircond_1);
-    free(bg_img_light);
 }
 

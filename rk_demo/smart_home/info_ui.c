@@ -18,16 +18,28 @@ static lv_obj_t *area_date;
 static lv_obj_t *area_weather;
 static lv_obj_t *area_scene;
 
-static lv_img_dsc_t *bg_img_date;
-static lv_img_dsc_t *bg_img_weather;
-static lv_img_dsc_t *bg_img_scene;
+void menu_info_scroll_cb(lv_event_t * event)
+{
+    lv_area_t area;
+
+    lv_obj_get_content_coords(area_date, &area);
+    lv_img_set_offset_x(area_date, -area.x1);
+    lv_img_set_offset_y(area_date, -area.y1);
+
+    lv_obj_get_content_coords(area_weather, &area);
+    lv_img_set_offset_x(area_weather, -area.x1);
+    lv_img_set_offset_y(area_weather, -area.y1);
+
+    lv_obj_get_content_coords(area_scene, &area);
+    lv_img_set_offset_x(area_scene, -area.x1);
+    lv_img_set_offset_y(area_scene, -area.y1);
+}
 
 lv_obj_t *menu_info_init(lv_obj_t *parent)
 {
     lv_obj_t *obj;
     lv_obj_t *label;
-    int x, y;
-    int ofs;
+    lv_area_t area;
 
     bg = lv_obj_create(parent);
     lv_obj_remove_style_all(bg);
@@ -38,25 +50,16 @@ lv_obj_t *menu_info_init(lv_obj_t *parent)
     lv_obj_refr_pos(bg);
 
     bg_snapshot = get_bg_snapshot();
-    bg_img_date = malloc(sizeof(*bg_img_date));
-    bg_img_weather = malloc(sizeof(*bg_img_weather));
-    bg_img_scene = malloc(sizeof(*bg_img_scene));
-
-    memcpy(bg_img_date, bg_snapshot, sizeof(*bg_img_date));
-    memcpy(bg_img_weather, bg_snapshot, sizeof(*bg_img_weather));
-    memcpy(bg_img_scene, bg_snapshot, sizeof(*bg_img_scene));
 
     area_date = lv_img_create(bg);
     lv_obj_set_size(area_date, 300, 300);
     lv_obj_align(area_date, LV_ALIGN_CENTER, -160, -160);
     lv_obj_refr_size(area_date);
     lv_obj_refr_pos(area_date);
-    x = lv_obj_get_x(area_date) + lv_obj_get_x(bg);
-    y = lv_obj_get_y(area_date) + lv_obj_get_y(bg);
-    ofs = (y * bg_img_date->header.w + x)
-          * lv_img_cf_get_px_size(bg_img_date->header.cf) / 8;
-    bg_img_date->data = bg_snapshot->data + ofs;
-    lv_img_set_src(area_date, bg_img_date);
+    lv_obj_get_content_coords(area_date, &area);
+    lv_img_set_src(area_date, bg_snapshot);
+    lv_img_set_offset_x(area_date, -area.x1);
+    lv_img_set_offset_y(area_date, -area.y1);
 
     obj = lv_label_create(area_date);
     lv_label_set_text(obj, "10:32");
@@ -74,12 +77,10 @@ lv_obj_t *menu_info_init(lv_obj_t *parent)
     lv_obj_align(area_weather, LV_ALIGN_CENTER, 160, -160);
     lv_obj_refr_size(area_weather);
     lv_obj_refr_pos(area_weather);
-    x = lv_obj_get_x(area_weather) + lv_obj_get_x(bg);
-    y = lv_obj_get_y(area_weather) + lv_obj_get_y(bg);
-    ofs = (y * bg_img_weather->header.w + x)
-          * lv_img_cf_get_px_size(bg_img_weather->header.cf) / 8;
-    bg_img_weather->data = bg_snapshot->data + ofs;
-    lv_img_set_src(area_weather, bg_img_weather);
+    lv_obj_get_content_coords(area_weather, &area);
+    lv_img_set_src(area_weather, bg_snapshot);
+    lv_img_set_offset_x(area_weather, -area.x1);
+    lv_img_set_offset_y(area_weather, -area.y1);
 
     obj = lv_label_create(area_weather);
     lv_label_set_text(obj, "32℃");
@@ -98,12 +99,10 @@ lv_obj_t *menu_info_init(lv_obj_t *parent)
     lv_obj_align(area_scene, LV_ALIGN_CENTER, 0, 160);
     lv_obj_refr_size(area_scene);
     lv_obj_refr_pos(area_scene);
-    x = lv_obj_get_x(area_scene) + lv_obj_get_x(bg);
-    y = lv_obj_get_y(area_scene) + lv_obj_get_y(bg);
-    ofs = (y * bg_img_scene->header.w + x)
-          * lv_img_cf_get_px_size(bg_img_scene->header.cf) / 8;
-    bg_img_scene->data = bg_snapshot->data + ofs;
-    lv_img_set_src(area_scene, bg_img_scene);
+    lv_obj_get_content_coords(area_scene, &area);
+    lv_img_set_src(area_scene, bg_snapshot);
+    lv_img_set_offset_x(area_scene, -area.x1);
+    lv_img_set_offset_y(area_scene, -area.y1);
 
     obj = lv_btn_create(area_scene);
     lv_obj_align(obj, LV_ALIGN_CENTER, -150, 0);
@@ -132,9 +131,5 @@ void menu_info_deinit(void)
 {
     lv_obj_del(bg);
     bg = NULL;
-
-    free(bg_img_date);
-    free(bg_img_weather);
-    free(bg_img_scene);
 }
 
