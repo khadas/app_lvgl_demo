@@ -6,7 +6,6 @@
 ///////////////////// VARIABLES ////////////////////
 static lv_obj_t *main = NULL;
 static lv_obj_t *btn_return;
-static lv_obj_t *label_menu;
 
 static lv_obj_t *ui_icebox_box = NULL;
 static lv_obj_t *ui_icebox_text_box = NULL;
@@ -19,7 +18,6 @@ static lv_obj_t *ui_icebox_tem;
 static lv_obj_t *ui_Label1;
 static lv_obj_t *ui_Label3;
 static lv_obj_t *ui_rice;
-static lv_obj_t *btn_return;
 static lv_img_dsc_t *bg_snapshot;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
@@ -112,12 +110,6 @@ void icebox_ui_init(void)
     lv_img_set_src(ui_rice, IMG_RICE);
     lv_obj_center(ui_rice);
 
-    btn_return = lv_img_create(main);
-    lv_obj_set_pos(btn_return, 30, 30);
-    lv_img_set_src(btn_return, IMG_RETURN_BTN);
-    lv_obj_add_flag(btn_return, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_event_cb(btn_return, btn_return_cb, LV_EVENT_CLICKED, NULL);
-    lv_obj_refr_size(btn_return);
-    lv_obj_refr_pos(btn_return);
+    btn_return = ui_return_btn_create(main, btn_return_cb, NULL);
 }
 

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "home_ui.h"
+#include "main.h"
 #include "ui_intercom_homepage.h"
 #include "audio_server.h"
 #include "local_ip.h"
@@ -12,7 +13,6 @@ static lv_obj_t *btn_return;
 static lv_obj_t *bg_pic;
 static lv_obj_t *ui_rectangle;
 static lv_obj_t *ui_circle[15];
-static lv_obj_t *label_menu;
 static lv_obj_t *ui_intercom_call_Label_1;
 static lv_obj_t *ui_call_break;
 static lv_obj_t *ui_ip_label;
@@ -180,19 +180,7 @@ void intercom_call_ui_init()
     lv_obj_set_size(main, lv_pct(100), lv_pct(100));
     lv_obj_refr_size(main);
 
-    btn_return = lv_img_create(main);
-    lv_obj_set_pos(btn_return, 20, 20);
-    lv_img_set_src(btn_return, IMG_RETURN_BTN);
-    lv_obj_add_flag(btn_return, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_event_cb(btn_return, btn_return_cb, LV_EVENT_CLICKED, NULL);
-    lv_obj_refr_size(btn_return);
-    lv_obj_refr_pos(btn_return);
-
-    label_menu = lv_label_create(main);
-    lv_label_set_text(label_menu, "对讲呼叫");
-    lv_obj_add_style(label_menu, &style_txt_m, LV_PART_MAIN);
-    lv_obj_align_to(label_menu, btn_return,
-                    LV_ALIGN_OUT_RIGHT_MID, 5, 0);
+    btn_return = ui_return_btn_create(main, btn_return_cb, "对讲呼叫");
 
     ui_rectangle = lv_img_create(main);
     lv_img_set_src(ui_rectangle, IMG_INTERCOM_RECTANGLE1);

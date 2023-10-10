@@ -28,7 +28,6 @@ struct submenu_s
 static lv_obj_t *main = NULL;
 static lv_obj_t *bg_pic;
 static lv_obj_t *btn_return;
-static lv_obj_t *label_menu;
 static lv_obj_t *area_submenu;
 
 static lv_obj_t *sub_menu[SUBMENU_MAX];
@@ -57,7 +56,7 @@ static struct submenu_s submenu_desc[SUBMENU_MAX] =
     {"播放器", submenu_music,   submenu_music_destroy,   NULL}
 };
 
-static void btn_drawed_cb(lv_event_t *e)
+static void btn_return_cb(lv_event_t *e)
 {
     switch (e->code)
     {
@@ -71,7 +70,6 @@ static void btn_drawed_cb(lv_event_t *e)
         }
         lv_obj_del(main);
         main = NULL;
-        label_menu = NULL;
         break;
     default:
         break;
@@ -94,19 +92,7 @@ void smart_home_ui_init(void)
     lv_obj_set_size(main, lv_pct(100), lv_pct(100));
     lv_obj_refr_size(main);
 
-    btn_return = lv_img_create(main);
-    lv_obj_set_pos(btn_return, 20, 20);
-    lv_img_set_src(btn_return, IMG_RETURN_BTN);
-    lv_obj_add_flag(btn_return, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_event_cb(btn_return, btn_drawed_cb, LV_EVENT_CLICKED, NULL);
-    lv_obj_refr_size(btn_return);
-    lv_obj_refr_pos(btn_return);
-
-    label_menu = lv_label_create(main);
-    lv_label_set_text(label_menu, "智能家居");
-    lv_obj_add_style(label_menu, &style_txt_m, LV_PART_MAIN);
-    lv_obj_align_to(label_menu, btn_return,
-                    LV_ALIGN_OUT_RIGHT_MID, 5, 0);
+    btn_return = ui_return_btn_create(main, btn_return_cb, "智能家居");
 
     area_submenu = lv_tileview_create(main);
     lv_obj_remove_style_all(area_submenu);

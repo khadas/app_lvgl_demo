@@ -32,7 +32,6 @@ struct submenu_s
 
 static lv_obj_t *main = NULL;
 static lv_obj_t *btn_return;
-static lv_obj_t *label_menu;
 static lv_obj_t *ui_cont;
 static lv_obj_t *ui_box_main;
 static lv_obj_t *ui_sliders;
@@ -331,22 +330,10 @@ void setting_ui_init(void)
     lv_obj_set_size(main, lv_pct(100), lv_pct(100));
     lv_obj_refr_size(main);
 
-    btn_return = lv_img_create(main);
-    lv_obj_set_pos(btn_return, 20, 20);
-    lv_img_set_src(btn_return, IMG_RETURN_BTN);
-    lv_obj_add_flag(btn_return, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_event_cb(btn_return, btn_return_cb, LV_EVENT_CLICKED, NULL);
-    lv_obj_refr_size(btn_return);
-    lv_obj_refr_pos(btn_return);
-
-    label_menu = lv_label_create(main);
-    lv_label_set_text(label_menu, "系统设置");
-    lv_obj_add_style(label_menu, &style_txt_m, LV_PART_MAIN);
-    lv_obj_align_to(label_menu, btn_return,
-                    LV_ALIGN_OUT_RIGHT_MID, 5, 0);
+    btn_return = ui_return_btn_create(main, btn_return_cb, "系统设置");
 
     ui_box_main = ui_btnmatrix_create(main, &setting_desc);
-    lv_obj_align(ui_box_main, LV_ALIGN_TOP_MID, 0, 80);
+    lv_obj_align(ui_box_main, LV_ALIGN_TOP_MID, 0, 128);
 
     lv_obj_set_style_bg_color(ui_wifi, HL_BLUE, LV_PART_MAIN);
 

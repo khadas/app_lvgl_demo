@@ -14,7 +14,6 @@ static RKADK_MW_PTR pPlayer = NULL;
 
 static lv_obj_t *main = NULL;
 static lv_obj_t *btn_return;
-static lv_obj_t *label_menu;
 
 static lv_obj_t *rtsp_mode;
 static lv_obj_t *obj;
@@ -363,23 +362,13 @@ void monitor_ui_init()
     lv_obj_refr_size(main);
 
     icon_box = lv_obj_create(main);
+    lv_obj_clear_flag(icon_box, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_pad_all(icon_box, 0, LV_PART_MAIN);
     lv_obj_set_width(icon_box, lv_pct(100));
     lv_obj_set_height(icon_box, lv_pct(10));
     lv_obj_align(icon_box, LV_ALIGN_TOP_LEFT, 0, 0);
 
-    btn_return = lv_img_create(icon_box);
-    lv_obj_set_pos(btn_return, 20, 20);
-    lv_img_set_src(btn_return, IMG_RETURN_BTN);
-    lv_obj_add_flag(btn_return, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_event_cb(btn_return, btn_return_cb, LV_EVENT_CLICKED, NULL);
-    lv_obj_refr_size(btn_return);
-    lv_obj_refr_pos(btn_return);
-
-    label_menu = lv_label_create(icon_box);
-    lv_label_set_text(label_menu, "视频监控");
-    lv_obj_add_style(label_menu, &style_txt_m, LV_PART_MAIN);
-    lv_obj_align_to(label_menu, btn_return,
-                    LV_ALIGN_OUT_RIGHT_MID, 5, 0);
+    btn_return = ui_return_btn_create(icon_box, btn_return_cb, "视频监控");
 
     ui_rtsp_label = lv_label_create(icon_box);
     lv_label_set_text(ui_rtsp_label, "输入RTSP地址");

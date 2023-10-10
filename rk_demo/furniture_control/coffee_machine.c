@@ -6,7 +6,6 @@
 ///////////////////// VARIABLES ////////////////////
 static lv_obj_t *main = NULL;
 static lv_obj_t *btn_return;
-static lv_obj_t *label_menu = NULL;
 
 static lv_obj_t *coffee_machine_box = NULL;
 static lv_obj_t *coffee_machine_png_box = NULL;
@@ -90,19 +89,7 @@ void coffee_machine_ui_init(void)
     lv_obj_set_size(main, lv_pct(100), lv_pct(100));
     lv_obj_refr_size(main);
 
-    btn_return = lv_img_create(main);
-    lv_obj_set_pos(btn_return, 30, 30);
-    lv_img_set_src(btn_return, IMG_RETURN_BTN);
-    lv_obj_add_flag(btn_return, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_event_cb(btn_return, btn_return_cb, LV_EVENT_CLICKED, NULL);
-    lv_obj_refr_size(btn_return);
-    lv_obj_refr_pos(btn_return);
-
-    label_menu = lv_label_create(main);
-    lv_label_set_text(label_menu, "咖啡机");
-    lv_obj_add_style(label_menu, &style_txt_m, LV_PART_MAIN);
-    lv_obj_align_to(label_menu, btn_return,
-                    LV_ALIGN_OUT_RIGHT_MID, 5, 0);
+    btn_return = ui_return_btn_create(main, btn_return_cb, "咖啡机");
 
     coffee_machine_box = lv_obj_create(main);
     lv_obj_remove_style_all(coffee_machine_box);
