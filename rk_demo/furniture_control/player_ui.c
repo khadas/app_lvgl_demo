@@ -21,7 +21,6 @@ static lv_obj_t *main = NULL;
 static lv_obj_t *btn_return;
 static lv_obj_t *player_box = NULL;
 static lv_obj_t *icon_box = NULL;
-static lv_obj_t *player_box_canvas = NULL;
 static lv_obj_t *player_box_button = NULL;
 static lv_obj_t *player_start_button = NULL;
 static lv_obj_t *player_stop_button = NULL;
@@ -30,10 +29,8 @@ static lv_obj_t *video_label = NULL;
 static lv_obj_t *video_list_box = NULL;
 static lv_obj_t *video_list = NULL;
 
-
 static lv_style_t style_txt;
 static lv_style_t style_list;
-//static lv_img_dsc_t * bg_snapshot;
 
 static RKADK_PLAYER_CFG_S stPlayCfg;
 static RKADK_MW_PTR pPlayer = NULL;
@@ -383,6 +380,49 @@ void player_stop_button_callback(lv_event_t *event)
     }
 }
 
+static struct btn_desc player_btn[] =
+{
+    {
+        &player_list_button,
+        IMG_PLAYER_LIST,
+        NULL,
+        {0, 0, 1, 1},
+        common_draw,
+        player_list_button_callback,
+        NULL
+    },
+    {
+        &player_start_button,
+        IMG_PLAYER_START,
+        NULL,
+        {1, 0, 2, 1},
+        common_draw,
+        player_start_button_callback,
+        NULL
+    },
+    {
+        &player_stop_button,
+        IMG_PLAYER_STOP,
+        NULL,
+        {2, 0, 3, 1},
+        common_draw,
+        player_stop_button_callback,
+        NULL
+    }
+};
+
+static lv_coord_t col_dsc[] = {200, 200, 200, LV_GRID_TEMPLATE_LAST};
+static lv_coord_t row_dsc[] = {200, LV_GRID_TEMPLATE_LAST};
+
+static struct btn_matrix_desc btn_desc = {
+    .col_dsc = col_dsc,
+    .row_dsc = row_dsc,
+    .pad = 5,
+    .gap = 40,
+    .desc = player_btn,
+    .btn_cnt = sizeof(player_btn) / sizeof(player_btn[0]),
+};
+
 ///////////////////// SCREENS ////////////////////
 void player_ui_init(void)
 {
@@ -413,47 +453,17 @@ void player_ui_init(void)
     lv_obj_set_height(player_box, lv_pct(50));
     lv_obj_align(player_box, LV_ALIGN_TOP_LEFT, 0, lv_pct(50));
 
-    player_box_button = lv_obj_create(player_box);
-    lv_obj_remove_style_all(player_box_button);
-    lv_obj_set_width(player_box_button, lv_pct(100));
-    lv_obj_set_height(player_box_button, lv_pct(30));
-    lv_obj_align(player_box_button, LV_ALIGN_TOP_LEFT, 0, lv_pct(10));
+    player_box_button = ui_btnmatrix_create(player_box, &btn_desc);
 
-    player_start_button = lv_img_create(player_box_button);
-    lv_img_set_src(player_start_button, IMG_PLAYER_START);
-    lv_obj_set_width(player_start_button, 128);   /// 64
-    lv_obj_set_height(player_start_button, 128);    /// 64
-    lv_obj_set_align(player_start_button, LV_ALIGN_CENTER);
-    lv_obj_add_flag(player_start_button, LV_OBJ_FLAG_CLICKABLE);
-    if (player_start_button != NULL)
-    {
-        lv_obj_add_event_cb(player_start_button, player_start_button_callback, LV_EVENT_CLICKED, NULL);
-    }
-
-    player_stop_button = lv_img_create(player_box_button);
-    lv_img_set_src(player_stop_button, IMG_PLAYER_STOP);
-    lv_obj_set_width(player_stop_button, 128);   /// 64
-    lv_obj_set_height(player_stop_button, 128);    /// 64
-    lv_obj_align(player_stop_button, LV_ALIGN_CENTER, 250, 0);
-    lv_obj_add_flag(player_stop_button, LV_OBJ_FLAG_CLICKABLE);
-    if (player_stop_button != NULL)
-    {
-        lv_obj_add_event_cb(player_stop_button, player_stop_button_callback, LV_EVENT_CLICKED, NULL);
-    }
-
-
-    player_list_button = lv_img_create(player_box_button);
-    lv_img_set_src(player_list_button, IMG_PLAYER_LIST);
-    lv_obj_set_width(player_list_button, 128);   /// 64
-    lv_obj_set_height(player_list_button, 128);    /// 64
-    lv_obj_align(player_list_button, LV_ALIGN_CENTER, -250, 0);
-    lv_obj_add_flag(player_list_button, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
-    lv_obj_clear_flag(player_list_button, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_add_flag(player_list_button, LV_OBJ_FLAG_CLICKABLE);
-    if (player_list_button != NULL)
-    {
-        lv_obj_add_event_cb(player_list_button, player_list_button_callback, LV_EVENT_CLICKED, NULL);
-    }
+    lv_obj_set_style_bg_opa(player_start_button, LV_OPA_COVER, LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(player_stop_button, LV_OPA_COVER, LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(player_list_button, LV_OPA_COVER, LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(player_start_button, LV_OPA_TRANSP, LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(player_stop_button, LV_OPA_TRANSP, LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(player_list_button, LV_OPA_TRANSP, LV_PART_MAIN);
+    lv_obj_set_style_shadow_width(player_start_button, 0, LV_PART_MAIN);
+    lv_obj_set_style_shadow_width(player_stop_button, 0, LV_PART_MAIN);
+    lv_obj_set_style_shadow_width(player_list_button, 0, LV_PART_MAIN);
 
     video_label = lv_label_create(player_box);
     lv_obj_set_width(video_label, LV_SIZE_CONTENT);   /// 1
@@ -461,6 +471,5 @@ void player_ui_init(void)
     lv_obj_align(video_label, LV_ALIGN_CENTER, 0, lv_pct(10));
     lv_obj_add_style(video_label, &style_txt_m, LV_PART_MAIN);
     lv_label_set_text(video_label, "");
-
 }
 
