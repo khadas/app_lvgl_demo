@@ -52,5 +52,5 @@ endif()
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 install(DIRECTORY resource DESTINATION share)
-install(PROGRAMS S99-rk_demo DESTINATION /etc/init.d)
+install(PROGRAMS S00-lv_demo S99-lv_demo-end DESTINATION /etc/init.d)
 install(FILES asound.conf DESTINATION /etc)

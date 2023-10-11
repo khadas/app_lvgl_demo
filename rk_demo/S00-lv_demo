@@ -13,8 +13,8 @@ start() {
 	modetest -M rockchip -aw 69:zpos:1
 	ulimit -n 1024
 	set +a
+	touch /tmp/.lv_warmup
 	rk_demo &
-	udhcpc &
 }
 
 case "$1" in

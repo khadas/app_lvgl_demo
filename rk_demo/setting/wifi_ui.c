@@ -10,8 +10,10 @@
 #include "cJSON.h"
 #include "Rk_wifi.h"
 #include "ui_resource.h"
+#include "wifibt.h"
 
 static int init_done = 0;
+static int waiting_scanning = 0;
 
 static lv_obj_t *bg;
 static lv_obj_t *item_scan;
@@ -39,20 +41,9 @@ static lv_anim_t icon_anim;
 static lv_style_t style_txt;
 static lv_style_t style_list;
 
-static cJSON *aps = NULL;
-
-static volatile bool rkwifi_gonff = false;
-static RK_WIFI_RUNNING_State_e wifi_state = 0;
-static int wifi_result = 0;
 
 static void lv_saved_wifi_list(lv_obj_t *parent);
 static void connect_wifi(lv_event_t *e);
-
-int wifi_connected(void)
-{
-    return wifi_state == RK_WIFI_State_CONNECTED ||
-           wifi_state == RK_WIFI_State_DHCP_OK;
-}
 
 static void read_saved_wifi(int check)
 {
@@ -60,7 +51,7 @@ static void read_saved_wifi(int check)
     int ap_cnt = 0;
 
     RK_wifi_getSavedInfo(&wsi, &ap_cnt);
-    if (ap_cnt <= 0)
+    if (ap_cnt <= 1)
     {
         printf("not found saved ap!\n");
         return;
@@ -98,74 +89,6 @@ static void read_saved_wifi(int check)
 
     if (wsi != NULL)
         free(wsi);
-}
-
-static void printf_connect_info(RK_WIFI_INFO_Connection_s *info)
-{
-    if (!info)
-        return;
-
-    printf("	id: %d\n", info->id);
-    printf("	bssid: %s\n", info->bssid);
-    printf("	ssid: %s\n", info->ssid);
-    printf("	freq: %d\n", info->freq);
-    printf("	mode: %s\n", info->mode);
-    printf("	wpa_state: %s\n", info->wpa_state);
-    printf("	ip_address: %s\n", info->ip_address);
-    printf("	mac_address: %s\n", info->mac_address);
-}
-
-static int rk_wifi_state_callback(RK_WIFI_RUNNING_State_e state, RK_WIFI_INFO_Connection_s *info)
-{
-    printf("%s state: %d\n", __func__, state);
-
-    if (state != RK_WIFI_State_SCAN_RESULTS)
-        wifi_state = state;
-
-    switch (state)
-    {
-    case RK_WIFI_State_IDLE:
-        break;
-    case RK_WIFI_State_CONNECTING:
-        break;
-    case RK_WIFI_State_CONNECTFAILED:
-        printf("RK_WIFI_State_CONNECTFAILED\n");
-        break;
-    case RK_WIFI_State_CONNECTFAILED_WRONG_KEY:
-        printf("RK_WIFI_State_CONNECTFAILED_WRONG_KEY\n");
-        break;
-    case RK_WIFI_State_CONNECTED:
-        printf("RK_WIFI_State_CONNECTED\n");
-        //printf_connect_info(info);
-        //RK_wifi_get_connected_ap_rssi();
-        break;
-    case RK_WIFI_State_DISCONNECTED:
-        printf("RK_WIFI_State_DISCONNECTED\n");
-        break;
-    case RK_WIFI_State_OPEN:
-        rkwifi_gonff = true;
-        printf("RK_WIFI_State_OPEN\n");
-        break;
-    case RK_WIFI_State_OFF:
-        rkwifi_gonff = false;
-        printf("RK_WIFI_State_OFF\n");
-        break;
-    case RK_WIFI_State_SCAN_RESULTS:
-        char *scan_r;
-        printf("RK_WIFI_State_SCAN_RESULTS\n");
-        scan_r = RK_wifi_scan_r();
-        if (aps)
-            cJSON_Delete(aps);
-        aps = cJSON_Parse(scan_r);
-        wifi_result = 1;
-        free(scan_r);
-        break;
-    case RK_WIFI_State_DHCP_OK:
-        printf("RK_WIFI_State_DHCP_OK\n");
-        break;
-    }
-
-    return 0;
 }
 
 static void style_init(void)
@@ -206,6 +129,7 @@ static void connect_wifi(lv_event_t *e)
     char title[128];
     static const char *btns[] = {"确认", "取消", ""};
 
+    waiting_scanning = 0;
     lv_obj_t *btn = lv_event_get_user_data(e);
     printf("try connect %s\n", lv_list_get_btn_text(item_list_scaned, btn));
     snprintf(title, sizeof(title), "连接到%s", lv_list_get_btn_text(item_list_scaned, btn));
@@ -224,12 +148,20 @@ static void connect_wifi(lv_event_t *e)
 
 static void icon_anim_end(lv_anim_t *anim)
 {
+    static cJSON *aps = NULL;
+    char *scan_r;
+
     if (!init_done)
         return;
 
     lv_obj_clear_flag(item_scan, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(item_scan_icon, LV_OBJ_FLAG_HIDDEN);
 
+    scan_r = RK_wifi_scan_r();
+    if (!scan_r)
+        return;
+
+    aps = cJSON_Parse(scan_r);
     if (aps)
     {
         cJSON *sub;
@@ -249,7 +181,9 @@ static void icon_anim_end(lv_anim_t *anim)
                                   (ssid && (strlen(ssid) > 0)) ? ssid : bssid);
             lv_obj_add_event_cb(btn, connect_wifi, LV_EVENT_CLICKED, btn);
         }
+        cJSON_Delete(aps);
     }
+    free(scan_r);
 }
 
 static void icon_anim_cb(void *var, int32_t v)
@@ -263,6 +197,7 @@ static void scan_btn_cb(lv_event_t *e)
     lv_obj_clear_flag(item_scan_icon, LV_OBJ_FLAG_HIDDEN);
     lv_anim_start(&icon_anim);
     RK_wifi_scan();
+    waiting_scanning = 1;
 }
 
 static void label_drawed_cb(lv_event_t *e)
@@ -276,32 +211,25 @@ static void label_drawed_cb(lv_event_t *e)
 
 static void wifi_update(lv_timer_t *timer)
 {
-    static RK_WIFI_RUNNING_State_e last_state = 0;
+    static int last_state = -1;
 
-    if (last_state != wifi_state)
+    if (last_state != wifi_connected())
     {
-        last_state = wifi_state;
-        switch (last_state)
-        {
-        case RK_WIFI_State_DHCP_OK:
-        case RK_WIFI_State_CONNECTED:
+        last_state = wifi_connected();
+        if (last_state)
             read_saved_wifi(init_done);
-            break;
-        default:
-            break;
-        }
     }
-    if (wifi_result)
+    if (waiting_scanning == 1
+         && wifi_scanning_done())
     {
+        waiting_scanning = 0;
         lv_anim_del(&icon_anim, NULL);
-        wifi_result = 0;
+        icon_anim_end(NULL);
     }
 }
 
 lv_obj_t *menu_wifi_init(lv_obj_t *parent)
 {
-    RK_wifi_register_callback(rk_wifi_state_callback);
-
     style_init();
 
     bg = lv_img_create(parent);
@@ -377,7 +305,6 @@ lv_obj_t *menu_wifi_init(lv_obj_t *parent)
     lv_anim_set_time(&icon_anim, 1000);
     lv_anim_set_exec_cb(&icon_anim, icon_anim_cb);
     lv_anim_set_path_cb(&icon_anim, lv_anim_path_linear);
-    lv_anim_set_deleted_cb(&icon_anim, icon_anim_end);
     lv_anim_set_repeat_count(&icon_anim, 3/*LV_ANIM_REPEAT_INFINITE*/);
     scan_btn_cb(NULL);
 

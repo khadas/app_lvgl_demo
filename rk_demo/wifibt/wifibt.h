@@ -54,6 +54,8 @@ struct bt_info
 int wifibt_send(void *buf, int len);
 int wifibt_send_wait(void *buf, int len);
 int run_wifibt_server(void);
+int wifi_scanning_done(void);
+int wifi_connected(void);
 
 #endif
 
