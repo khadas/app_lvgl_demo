@@ -235,6 +235,14 @@ void rk_demo_init(void)
     home_ui_init();
 }
 
+void rk_demo_bg_set_img(const char *img)
+{
+    lv_img_set_src(bg_pic, img);
+    lv_snapshot_free(bg_snapshot);
+    bg_snapshot = NULL;
+    bg_pic_snapshot_blur();
+}
+
 void rk_demo_bg_hide(void)
 {
     if (bg_pic)

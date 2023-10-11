@@ -15,13 +15,26 @@ static lv_obj_t *area_screen_timeout;
 static lv_obj_t *area_locked_screen;
 static lv_obj_t *area_wallpaper;
 
-static char *wallpapers[4] =
+static char *wallpapers_thumb[4] =
 {
     WALLPAPER_0,
     WALLPAPER_1,
     WALLPAPER_2,
     WALLPAPER_3,
 };
+
+static char *wallpapers[4] =
+{
+    BG_PIC_0,
+    BG_PIC_1,
+    BG_PIC_2,
+    BG_PIC_3,
+};
+
+static void wallpaper_cb(lv_event_t *event)
+{
+    rk_demo_bg_set_img(lv_event_get_user_data(event));
+}
 
 lv_obj_t *menu_wallpaper_init(lv_obj_t *parent)
 {
@@ -65,7 +78,7 @@ lv_obj_t *menu_wallpaper_init(lv_obj_t *parent)
     {
         obj = lv_img_create(area_depart);
         lv_obj_set_size(obj, 160, 120);
-        lv_img_set_src(obj, wallpapers[i]);
+        lv_img_set_src(obj, wallpapers_thumb[i]);
     }
 
     area_wallpaper = lv_obj_create(bg);
@@ -86,7 +99,9 @@ lv_obj_t *menu_wallpaper_init(lv_obj_t *parent)
     {
         obj = lv_img_create(area_depart);
         lv_obj_set_size(obj, 160, 120);
-        lv_img_set_src(obj, wallpapers[i]);
+        lv_img_set_src(obj, wallpapers_thumb[i]);
+        lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_event_cb(obj, wallpaper_cb, LV_EVENT_CLICKED, wallpapers[i]);
     }
 
     return bg;

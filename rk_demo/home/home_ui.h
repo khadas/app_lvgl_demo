@@ -9,6 +9,7 @@ void rk_demo_init(void);
 void home_ui_init(void);
 void rk_demo_bg_hide(void);
 void rk_demo_bg_show(void);
+void rk_demo_bg_set_img(const char *img);
 
 #endif
 
