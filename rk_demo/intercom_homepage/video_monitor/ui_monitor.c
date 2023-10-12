@@ -15,24 +15,20 @@ static RKADK_MW_PTR pPlayer = NULL;
 static lv_obj_t *main = NULL;
 static lv_obj_t *btn_return;
 
-static lv_obj_t *rtsp_mode;
-static lv_obj_t *obj;
-static lv_obj_t *ui_monitor_Label_1;
+static lv_obj_t *ui_checkbox_audio;
+static lv_obj_t *ui_checkbox_video;
+static lv_obj_t *ui_monitor_name;
 static lv_obj_t *ui_rtsp_label;
+static lv_obj_t *ui_rtsp_addr;
 
-static lv_obj_t *rtsp_button;
-static lv_obj_t *ui_circular_0;
-static lv_obj_t *rtsp_connect;
-static lv_obj_t *ui_circular_1;
-static lv_obj_t *ui_circular_2;
-static lv_obj_t *ui_circular_3;
-static lv_obj_t *ui_circular_mid;
-
+static lv_obj_t *ui_control_box;
+static lv_obj_t *ui_control;
+static lv_obj_t *ui_name;
 static lv_obj_t *ui_pause;
-static lv_obj_t *ui_contuine;
+static lv_obj_t *ui_continue;
 static lv_obj_t *ui_webcam;
 static lv_obj_t *ui_forward;
-static lv_obj_t *btn_returnward;
+static lv_obj_t *ui_backward;
 static lv_obj_t *kb;
 
 static lv_obj_t *player_box = NULL;
@@ -44,16 +40,103 @@ extern lv_style_t style_txt_m;
 static lv_style_t style_txt;
 static lv_style_t style_list;
 
-int network_enable;
-int video_stop;
-int video_pause;
-int thread_start;
-pthread_t video_thread;
-RKADK_BOOL bVideoEnable = true;
-RKADK_BOOL bAudioEnable = false;
+static int network_enable;
+static int video_stop;
+static int video_pause;
+static int thread_start;
+static pthread_t video_thread;
+static RKADK_BOOL bVideoEnable = true;
+static RKADK_BOOL bAudioEnable = false;
 
-char rtsp_address[128];
+static char rtsp_address[128];
 
+static void rtsp_play_start_callback(lv_event_t *event);
+static void rtsp_play_pause_callback(lv_event_t *event);
+static void ui_name_draw(lv_obj_t *parent, struct btn_desc *desc);
+static void ui_control_draw(lv_obj_t *parent, struct btn_desc *desc);
+
+static struct btn_desc vm_btn[] =
+{
+    {
+        &ui_webcam,
+        IMG_INTERCOM_WEBCAM,
+        NULL,
+        {2, 0, 3, 1},
+        common_draw,
+        rtsp_play_start_callback,
+        NULL
+    },
+    {
+        &ui_backward,
+        IMG_INTERCOM_BACKWARD,
+        NULL,
+        {0, 2, 1, 3},
+        common_draw,
+        NULL,
+        NULL
+    },
+    {
+        &ui_name,
+        NULL,
+        NULL,
+        {1, 1, 4, 4},
+        ui_name_draw,
+        NULL,
+        NULL
+    },
+    {
+        &ui_forward,
+        IMG_INTERCOM_ARROWUP,
+        NULL,
+        {4, 2, 5, 3},
+        common_draw,
+        NULL,
+        NULL
+    },
+    {
+        &ui_control,
+        NULL,
+        NULL,
+        {2, 4, 3, 5},
+        ui_control_draw,
+        rtsp_play_pause_callback,
+        NULL
+    }
+};
+
+static lv_coord_t col_dsc[] = {80, 10, 80, 10, 80, LV_GRID_TEMPLATE_LAST};
+static lv_coord_t row_dsc[] = {80, 10, 80, 10, 80, LV_GRID_TEMPLATE_LAST};
+
+static struct btn_matrix_desc btn_desc = {
+    .col_dsc = col_dsc,
+    .row_dsc = row_dsc,
+    .pad = 5,
+    .gap = 20,
+    .desc = vm_btn,
+    .btn_cnt = sizeof(vm_btn) / sizeof(vm_btn[0]),
+};
+
+static void ui_name_draw(lv_obj_t *parent, struct btn_desc *desc)
+{
+    ui_monitor_name = lv_label_create(parent);
+    lv_label_set_text(ui_monitor_name, "主机1");
+    lv_obj_add_style(ui_monitor_name, &style_txt_m, LV_PART_MAIN);
+    lv_obj_add_flag(ui_monitor_name, LV_OBJ_FLAG_IGNORE_LAYOUT);
+    lv_obj_center(ui_monitor_name);
+}
+
+static void ui_control_draw(lv_obj_t *parent, struct btn_desc *desc)
+{
+    ui_pause = lv_img_create(ui_control);
+    lv_img_set_src(ui_pause, IMG_INTERCOM_PAUSE);
+    lv_obj_add_flag(ui_pause, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_IGNORE_LAYOUT);
+    lv_obj_center(ui_pause);
+
+    ui_continue = lv_img_create(ui_control);
+    lv_img_set_src(ui_continue, IMG_INTERCOM_CONTUINE);
+    lv_obj_add_flag(ui_continue, LV_OBJ_FLAG_IGNORE_LAYOUT);
+    lv_obj_center(ui_continue);
+}
 
 static void rkadk_deinit(void)
 {
@@ -70,10 +153,9 @@ static void btn_return_cb(lv_event_t *e)
     if (code == LV_EVENT_CLICKED)
     {
         intercom_homepage_ui_init();
-        if (network_enable == 1)
+        if (thread_start)
         {
-            video_stop = 1;
-            thread_start = 0;
+            RKADK_PLAYER_Stop(pPlayer);
             pthread_join(video_thread, NULL);
         }
         lv_obj_del(main);
@@ -83,12 +165,11 @@ static void btn_return_cb(lv_event_t *e)
     }
 }
 
-int is_network_enable(void)
+static int is_network_enable(void)
 {
     int ret = system("ping 114.114.114.114 -c 1 -W 1 > /dev/null");
     return !ret;
 }
-
 
 static void style_init(void)
 {
@@ -148,6 +229,9 @@ static RKADK_VOID PlayerEventFnTest(RKADK_MW_PTR pPlayer,
     break;
   case RKADK_PLAYER_EVENT_EOF:
     printf("+++++ RKADK_PLAYER_EVENT_EOF +++++\n");
+    lv_obj_add_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_continue, LV_OBJ_FLAG_HIDDEN);
+    video_stop = 1;
     break;
   case RKADK_PLAYER_EVENT_SOF:
     printf("+++++ RKADK_PLAYER_EVENT_SOF +++++\n");
@@ -157,18 +241,28 @@ static RKADK_VOID PlayerEventFnTest(RKADK_MW_PTR pPlayer,
     break;
   case RKADK_PLAYER_EVENT_ERROR:
     printf("+++++ RKADK_PLAYER_EVENT_ERROR +++++\n");
+    lv_obj_add_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_continue, LV_OBJ_FLAG_HIDDEN);
+    video_stop = 1;
     break;
   case RKADK_PLAYER_EVENT_PREPARED:
     printf("+++++ RKADK_PLAYER_EVENT_PREPARED +++++\n");
     break;
   case RKADK_PLAYER_EVENT_PLAY:
     printf("+++++ RKADK_PLAYER_EVENT_PLAY +++++\n");
+    lv_obj_add_flag(ui_continue, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
     break;
   case RKADK_PLAYER_EVENT_PAUSED:
     printf("+++++ RKADK_PLAYER_EVENT_PAUSED +++++\n");
+    lv_obj_add_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_continue, LV_OBJ_FLAG_HIDDEN);
     break;
   case RKADK_PLAYER_EVENT_STOPPED:
     printf("+++++ RKADK_PLAYER_EVENT_STOPPED +++++\n");
+    lv_obj_add_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_continue, LV_OBJ_FLAG_HIDDEN);
+    video_stop = 1;
     break;
   default:
     printf("+++++ Unknown event(%d) +++++\n", enEvent);
@@ -204,11 +298,8 @@ static void rkadk_init(void)
     }
 }
 
-
-void* rtsp_play()
+static void* rtsp_play()
 {
-    //rtsp_address,eg:rtsp://192.168.1.101:8554/
-    printf("rtsp_address = %s\n", rtsp_address);
     if (pPlayer != NULL)
     {
         printf("video_name_callback: stop and deinit pPlayer\n");
@@ -220,6 +311,7 @@ void* rtsp_play()
         printf("video_name_callback: rkadk_init pPlayer\n");
         rkadk_init();
     }
+    strcpy(rtsp_address, lv_textarea_get_text(ui_rtsp_addr));
     int ret = RKADK_PLAYER_SetDataSource(pPlayer, rtsp_address);
     if (ret)
     {
@@ -239,85 +331,77 @@ void* rtsp_play()
         usleep(1000 * 100);
     }
 
+    thread_start = 0;
+
     return NULL;
 }
 
+static void rtsp_play_start_callback(lv_event_t *event){
+    printf("rtsp_play_start_callback into\n");
 
-void rtsp_play_start_callback(lv_event_t *event){
-    printf("rtsp_play_stop_callback into\n");
-    int ret = RKADK_PLAYER_Play(pPlayer);
-    if (ret)
-    {
-        printf("rkadk: Pause failed, ret = %d\n", ret);
+    network_enable = is_network_enable();
+    if (network_enable){
+        if (thread_start)
+        {
+            RKADK_PLAYER_Stop(pPlayer);
+            pthread_join(video_thread, NULL);
+        }
+        video_stop = 0;
+        thread_start = 1;
+        pthread_create(&video_thread, NULL, rtsp_play, NULL);
+    } else {
+        printf("network disable\n");
     }
 }
 
-void rtsp_play_stop_callback(lv_event_t *event)
+static void rtsp_play_pause_callback(lv_event_t *event)
 {
-    printf("rtsp_play_stop_callback into\n");
+    printf("rtsp_play_pause_callback into\n");
+    if (!thread_start)
+    {
+        rtsp_play_start_callback(event);
+        return;
+    }
+
     if (!video_pause){
         RKADK_PLAYER_Pause(pPlayer);
-        lv_obj_add_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_contuine, LV_OBJ_FLAG_HIDDEN);
     } else {
         RKADK_PLAYER_Play(pPlayer);
-        lv_obj_add_flag(ui_contuine, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
     }
     video_pause = !video_pause;
 }
 
-static void event_cb(lv_event_t *e)
+static void kb_cb(lv_event_t *e)
 {
     lv_obj_t *obj = lv_event_get_target(e);
-    lv_obj_t *ibox = lv_obj_get_parent(obj);
 
-    const char *psk;
-
-    if (strcmp(lv_inputbox_get_active_btn_text(ibox), "确认") == 0)
-    {
-        psk = lv_textarea_get_text(lv_inputbox_get_text_area(ibox));
-        strcpy(rtsp_address, psk);
-        network_enable = is_network_enable();
-        if (network_enable){
-            if (thread_start)
-            {
-                video_stop = 1;
-                pthread_join(video_thread, NULL);
-            }
-            video_stop = 0;
-            thread_start = 1;
-            pthread_create(&video_thread, NULL, rtsp_play, NULL);
-        } else {
-            printf("network disable\n");
-        }
-    }
-    lv_msgbox_close(ibox);
     lv_obj_del(kb);
-}
-
-
-static void connect_rtsp()
-{
-    static const char *btns[] = {"确认", "取消", ""};
-
-    lv_obj_t *ibox = lv_inputbox_create(NULL, NULL, "请输入rtsp地址", btns, false);
-    lv_obj_add_event_cb(ibox, event_cb, LV_EVENT_VALUE_CHANGED, NULL);
-    lv_obj_add_style(ibox, &style_txt, LV_PART_MAIN);
-    lv_obj_set_size(ibox, lv_pct(80), lv_pct(20));
-    lv_obj_align(ibox, LV_ALIGN_TOP_MID, 0, lv_pct(15));
-
-    kb = lv_keyboard_create(lv_layer_sys());
-    lv_obj_set_size(kb, lv_pct(100), lv_pct(30));
-    lv_obj_set_align(kb, LV_ALIGN_BOTTOM_MID);
-    lv_textarea_set_password_mode(lv_inputbox_get_text_area(ibox), false);
-    lv_keyboard_set_textarea(kb, lv_inputbox_get_text_area(ibox));
+    kb = NULL;
 }
 
 static void rtsp_address_get(lv_event_t *e)
 {
     video_pause = 0;
-    connect_rtsp();
+
+    if (kb)
+        return;
+
+    kb = lv_keyboard_create(lv_layer_sys());
+    lv_obj_set_size(kb, lv_pct(100), lv_pct(30));
+    lv_obj_set_align(kb, LV_ALIGN_BOTTOM_MID);
+    lv_textarea_set_password_mode(ui_rtsp_addr, false);
+    lv_keyboard_set_textarea(kb, ui_rtsp_addr);
+    lv_obj_add_event_cb(kb, kb_cb, LV_EVENT_CANCEL, NULL);
+    lv_obj_add_event_cb(kb, kb_cb, LV_EVENT_READY, NULL);
+}
+
+static void ui_checkbox_cb(lv_event_t *e)
+{
+    lv_obj_t *obj = lv_event_get_target(e);
+    RKADK_BOOL *flag = lv_event_get_user_data(e);
+    *flag = lv_obj_has_state(obj, LV_STATE_CHECKED);
+
+    printf("bVideoEnable=%d, bAudioEnable=%d\n", bVideoEnable, bAudioEnable);
 }
 
 static void obj_event_handler(lv_event_t *e)
@@ -344,6 +428,8 @@ static void obj_event_handler(lv_event_t *e)
 
 void monitor_ui_init()
 {
+    lv_obj_t *obj;
+
     video_pause = 0;
     network_enable = 0;
     thread_start = 0;
@@ -370,97 +456,54 @@ void monitor_ui_init()
 
     btn_return = ui_return_btn_create(icon_box, btn_return_cb, "视频监控");
 
-    ui_rtsp_label = lv_label_create(icon_box);
-    lv_label_set_text(ui_rtsp_label, "输入RTSP地址");
-    lv_obj_add_style(ui_rtsp_label, &style_txt_m, LV_PART_MAIN);
-    lv_obj_align(ui_rtsp_label, LV_ALIGN_RIGHT_MID, 0, 0);
-    lv_obj_add_flag(ui_rtsp_label, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_event_cb(ui_rtsp_label, rtsp_address_get, LV_EVENT_CLICKED, NULL);
-
     player_box = lv_obj_create(main);
     lv_obj_set_width(player_box, lv_pct(100));
     lv_obj_set_height(player_box, lv_pct(50));
-    lv_obj_align(player_box, LV_ALIGN_TOP_LEFT, 0, lv_pct(50));
+    lv_obj_set_flex_flow(player_box, LV_FLEX_FLOW_COLUMN);
+    lv_obj_align(player_box, LV_ALIGN_BOTTOM_MID, 0, 0);
 
-    rtsp_mode = lv_obj_create(player_box);
-    lv_obj_remove_style_all(rtsp_mode);
-    lv_obj_set_width(rtsp_mode, lv_pct(30));
-    lv_obj_set_height(rtsp_mode, lv_pct(20));
-    obj = lv_label_create(rtsp_mode);
-    lv_label_set_text(obj, "模式选择");
-    lv_obj_add_style(obj, &style_txt_m, LV_PART_MAIN);
-    lv_obj_align(rtsp_mode, LV_ALIGN_RIGHT_MID, 0, -70);
-    obj = lv_dropdown_create(rtsp_mode);
-    lv_obj_add_style(obj, &style_txt_s, LV_PART_MAIN);
-    lv_obj_add_style(lv_dropdown_get_list(obj), &style_txt_s, LV_PART_MAIN);
-    lv_dropdown_set_options(obj, "视频\n""音视频\n""音频");
-    lv_obj_align(obj, LV_ALIGN_RIGHT_MID, -40, 20);
-    lv_obj_add_event_cb(obj, obj_event_handler, LV_EVENT_ALL, NULL);
+    ui_rtsp_label = lv_label_create(player_box);
+    lv_label_set_text(ui_rtsp_label, "RTSP地址:");
+    lv_obj_add_style(ui_rtsp_label, &style_txt_s, LV_PART_MAIN);
+    lv_obj_refr_size(ui_rtsp_label);
+    lv_obj_refr_pos(ui_rtsp_label);
 
-    ui_circular_0 = lv_img_create(player_box);
-    lv_img_set_src(ui_circular_0, IMG_INTERCOM_ROUND);
-    lv_obj_set_size(ui_circular_0, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_set_pos(ui_circular_0, 30, 160);
-    btn_returnward = lv_img_create(player_box);
-    lv_img_set_src(btn_returnward, IMG_INTERCOM_BACKWARD);
-    lv_obj_set_size(btn_returnward, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_align_to(btn_returnward, ui_circular_0, LV_ALIGN_CENTER, 0, -3);
+    ui_rtsp_addr = lv_textarea_create(player_box);
+    lv_obj_set_width(ui_rtsp_addr, lv_pct(100));
+    lv_textarea_set_text(ui_rtsp_addr, "rtsp://192.168.1.120:8554/");
+    lv_textarea_set_password_mode(ui_rtsp_addr, false);
+    lv_textarea_set_one_line(ui_rtsp_addr, true);
+    lv_obj_add_style(ui_rtsp_addr, &style_txt_m, LV_PART_MAIN);
+    lv_obj_add_flag(ui_rtsp_addr, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(ui_rtsp_addr, rtsp_address_get, LV_EVENT_CLICKED, NULL);
 
-    //circular_right
-    ui_circular_1 = lv_img_create(player_box);
-    lv_img_set_src(ui_circular_1, IMG_INTERCOM_ROUND);
-    lv_obj_set_size(ui_circular_1, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_align_to(ui_circular_1, ui_circular_0, LV_ALIGN_OUT_RIGHT_MID, 170, 0);
-    ui_forward = lv_img_create(player_box);
-    lv_img_set_src(ui_forward, IMG_INTERCOM_ARROWUP);
-    lv_obj_set_size(ui_forward, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_align_to(ui_forward, ui_circular_1, LV_ALIGN_CENTER, 0, -3);
+    ui_checkbox_video = lv_checkbox_create(player_box);
+    lv_checkbox_set_text(ui_checkbox_video, "视频");
+    lv_obj_add_style(ui_checkbox_video, &style_txt_m, LV_PART_MAIN);
+    if (bVideoEnable)
+        lv_obj_add_state(ui_checkbox_video, LV_STATE_CHECKED);
+    lv_obj_add_event_cb(ui_checkbox_video, ui_checkbox_cb, LV_EVENT_VALUE_CHANGED, &bVideoEnable);
 
-    ui_circular_mid = lv_img_create(player_box);
-    lv_img_set_src(ui_circular_mid, IMG_INTERCOM_ROUND);
-    lv_img_set_zoom(ui_circular_mid, 500);
-    lv_obj_set_size(ui_circular_mid, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_align_to(ui_circular_mid, ui_circular_0, LV_ALIGN_OUT_RIGHT_MID, 50, 0);
-    ui_monitor_Label_1 = lv_label_create(player_box);
-    lv_obj_set_size(ui_monitor_Label_1, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_align_to(ui_monitor_Label_1, ui_circular_mid, LV_ALIGN_CENTER, -3, -5);
-    lv_label_set_text(ui_monitor_Label_1, "主机1");
-    lv_obj_add_style(ui_monitor_Label_1, &style_txt_s, LV_PART_MAIN);
+    ui_checkbox_audio = lv_checkbox_create(player_box);
+    lv_checkbox_set_text(ui_checkbox_audio, "音频");
+    lv_obj_add_style(ui_checkbox_audio, &style_txt_m, LV_PART_MAIN);
+    if (bAudioEnable)
+        lv_obj_add_state(ui_checkbox_audio, LV_STATE_CHECKED);
+    lv_obj_add_event_cb(ui_checkbox_audio, ui_checkbox_cb, LV_EVENT_VALUE_CHANGED, &bAudioEnable);
 
-    //webcam
-    ui_circular_2 = lv_img_create(player_box);
-    lv_img_set_src(ui_circular_2, IMG_INTERCOM_ROUND);
-    lv_obj_set_size(ui_circular_2, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_align_to(ui_circular_2, ui_circular_mid, LV_ALIGN_OUT_TOP_MID, 0, -30);
-    ui_webcam = lv_img_create(player_box);
-    lv_img_set_src(ui_webcam, IMG_INTERCOM_WEBCAM);
-    lv_obj_set_size(ui_webcam, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_align_to(ui_webcam, ui_circular_2, LV_ALIGN_CENTER, 0, -3);
+    ui_control_box = ui_btnmatrix_create(player_box, &btn_desc);
+    lv_obj_add_flag(ui_control_box, LV_OBJ_FLAG_IGNORE_LAYOUT);
+    lv_obj_center(ui_control_box);
 
-
-    //pause
-    ui_circular_3 = lv_img_create(player_box);
-    lv_img_set_src(ui_circular_3, IMG_INTERCOM_ROUND);
-    lv_obj_set_size(ui_circular_3, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_align_to(ui_circular_3, ui_circular_mid, LV_ALIGN_OUT_BOTTOM_MID, 0, 30);
-    lv_obj_add_flag(ui_circular_3, LV_OBJ_FLAG_CLICKABLE);
-
-    ui_pause = lv_img_create(player_box);
-    lv_img_set_src(ui_pause, IMG_INTERCOM_PAUSE);
-    lv_obj_set_size(ui_pause, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_align_to(ui_pause, ui_circular_3, LV_ALIGN_CENTER, 0, -3);
-    lv_obj_add_flag(ui_circular_3, LV_OBJ_FLAG_CLICKABLE);
-
-    ui_contuine = lv_img_create(player_box);
-    lv_img_set_src(ui_contuine, IMG_INTERCOM_CONTUINE);
-    lv_obj_set_size(ui_contuine, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_align_to(ui_contuine, ui_circular_3, LV_ALIGN_CENTER, 0, -3);
-    lv_obj_add_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
-
-    if (ui_circular_3 != NULL)
-    {
-        lv_obj_add_event_cb(ui_circular_3, rtsp_play_stop_callback, LV_EVENT_CLICKED, NULL);
-    }
-
+    lv_obj_set_style_bg_color(ui_control,  lv_color_white(), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(ui_name,     lv_color_white(), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(ui_webcam,   lv_color_white(), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(ui_forward,  lv_color_white(), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(ui_backward, lv_color_white(), LV_PART_MAIN);
+    lv_obj_set_style_radius(ui_control,  200, LV_PART_MAIN);
+    lv_obj_set_style_radius(ui_name,     200, LV_PART_MAIN);
+    lv_obj_set_style_radius(ui_webcam,   200, LV_PART_MAIN);
+    lv_obj_set_style_radius(ui_forward,  200, LV_PART_MAIN);
+    lv_obj_set_style_radius(ui_backward, 200, LV_PART_MAIN);
 }
 
