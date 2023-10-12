@@ -86,6 +86,8 @@ int ao_init(void)
         goto ai_chn_err;
     }
 
+    RK_MPI_AO_SetTrackMode(aoDevId, AUDIO_TRACK_OUT_STEREO);
+
     result = RK_MPI_AO_EnableChn(aoDevId, aoChn);
     if (result != 0)
     {
@@ -95,8 +97,6 @@ int ao_init(void)
 
     result = RK_MPI_AO_EnableReSmp(aoDevId, aoChn,
                                    AUDIO_RATE);
-
-    RK_MPI_AO_SetTrackMode(aoDevId, AUDIO_TRACK_OUT_STEREO);
 
 #if ADEC_EN
     adAttr.stCodecAttr.enType = RK_AUDIO_ID_PCM_ALAW;
