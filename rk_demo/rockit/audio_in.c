@@ -146,6 +146,7 @@ int ai_init(void)
     aeAttr.stCodecAttr.enBitwidth = AUDIO_BITS;
     //aeAttr.stCodecAttr.pstResv = RK_NULL;
     aeAttr.u32BufCount = 4;
+    aeAttr.u32Depth = aeAttr.u32BufCount;
 
     result = RK_MPI_AENC_CreateChn(aeChn, &aeAttr);
     if (result)

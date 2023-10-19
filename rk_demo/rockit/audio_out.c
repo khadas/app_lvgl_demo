@@ -107,6 +107,7 @@ int ao_init(void)
     adAttr.enMode = ADEC_MODE_STREAM;
     adAttr.u32BufCount = 4;
     adAttr.u32BufSize = 50 * 1024;
+    adAttr.u32Depth = 0;
 
     result = RK_MPI_ADEC_CreateChn(adChn, &adAttr);
     if (result)
