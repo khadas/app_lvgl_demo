@@ -66,14 +66,14 @@ int ao_init(void)
     result = RK_MPI_AO_SetPubAttr(aoDevId, &aoAttr);
     if (result != 0)
     {
-        RK_LOGE("ai set attr fail, reason = %d", result);
+        RK_LOGE("ai set attr fail, reason = %x", result);
         return -1;
     }
 
     result = RK_MPI_AO_Enable(aoDevId);
     if (result != 0)
     {
-        RK_LOGE("ai enable fail, reason = %d", result);
+        RK_LOGE("ai enable fail, reason = %x", result);
         return -1;
     }
 
@@ -161,9 +161,10 @@ int ao_push(int (*hook)(void *, char *, int), void *arg)
     RK_S32 result;
     RK_U8 *buf;
     int size = 1024;
+    int ret;
 
     buf = malloc(size * sizeof(RK_U8));
-    if ((size = hook(arg, buf, size)) <= 0)
+    if ((ret = hook(arg, buf, size)) != size)
     {
         free(buf);
         return RK_FAILURE;
@@ -231,15 +232,35 @@ int ao_push(int (*hook)(void *, char *, int), void *arg)
 
 int ao_deinit(void)
 {
-    RK_MPI_AO_DisableChn(aoDevId, aoChn);
-
+    int ret = 0;
 #if ADEC_EN
-    RK_MPI_SYS_UnBind(&adecBindAttr, &aoBindAttr);
+    ret = RK_MPI_SYS_UnBind(&adecBindAttr, &aoBindAttr);
+    if (ret)
+    {
+        RK_LOGE("ai disable chn failed:0x%x\n", ret);
+    }
 
-    RK_MPI_ADEC_DestroyChn(adChn);
 #endif
 
-    RK_MPI_AO_Disable(aoDevId);
+    ret = RK_MPI_AO_DisableChn(aoDevId, aoChn);
+    if (ret)
+    {
+        RK_LOGE("ai disable chn failed:0x%x\n", ret);
+    }
+
+    ret = RK_MPI_AO_Disable(aoDevId);
+    if (ret)
+    {
+        RK_LOGE("ai disable chn failed:0x%x\n", ret);
+    }
+
+#if ADEC_EN
+    ret = RK_MPI_ADEC_DestroyChn(adChn);
+    if (ret)
+    {
+        RK_LOGE("ai disable chn failed:0x%x\n", ret);
+    }
+#endif
 
     return 0;
 }

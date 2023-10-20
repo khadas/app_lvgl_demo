@@ -70,14 +70,14 @@ int ai_init(void)
     result = RK_MPI_AI_SetPubAttr(aiDevId, &aiAttr);
     if (result != 0)
     {
-        RK_LOGE("ai set attr fail, reason = %d", result);
+        RK_LOGE("ai set attr fail, reason = %x", result);
         return -1;
     }
 
     result = RK_MPI_AI_Enable(aiDevId);
     if (result != 0)
     {
-        RK_LOGE("ai enable fail, reason = %d", result);
+        RK_LOGE("ai enable fail, reason = %x", result);
         return -1;
     }
 
@@ -118,7 +118,7 @@ int ai_init(void)
     result = memcmp(&stAiVqeConfig, &stAiVqeConfig2, sizeof(AI_VQE_CONFIG_S));
     if (result != RK_SUCCESS)
     {
-        RK_LOGE("%s: set/get vqe config is different: %d", __func__, result);
+        RK_LOGE("%s: set/get vqe config is different: %x", __func__, result);
         goto vqe_err;
     }
 
@@ -233,19 +233,42 @@ int ai_fetch(int (*hook)(void *, char *, int), void *arg)
 
 int ai_deinit(void)
 {
-    RK_MPI_AI_DisableChn(aiDevId, aiChn);
+    int ret = 0;
+#if AENC_EN
+    ret = RK_MPI_SYS_UnBind(&aiBindAttr, &aencBindAttr);
+    if (ret)
+    {
+        RK_LOGE("ai unbind aenc failed:0x%x\n", ret);
+    }
+#endif
+
+    ret = RK_MPI_AI_DisableChn(aiDevId, aiChn);
+    if (ret)
+    {
+        RK_LOGE("ai disable chn failed:0x%x\n", ret);
+    }
 
 #if AVQE_EN
-    RK_MPI_AI_DisableVqe(aiDevId, aiVqeChn);
+    ret = RK_MPI_AI_DisableVqe(aiDevId, aiVqeChn);
+    if (ret)
+    {
+        RK_LOGE("ai disable vqe failed:0x%x\n", ret);
+    }
 #endif
+
+    ret = RK_MPI_AI_Disable(aiDevId);
+    if (ret)
+    {
+        RK_LOGE("ai disable failed:0x%x\n", ret);
+    }
 
 #if AENC_EN
-    RK_MPI_SYS_UnBind(&aiBindAttr, &aencBindAttr);
-
-    RK_MPI_AENC_DestroyChn(aeChn);
+    ret = RK_MPI_AENC_DestroyChn(aeChn);
+    if (ret)
+    {
+        RK_LOGE("aenc destroy chn failed:0x%x\n", ret);
+    }
 #endif
-
-    RK_MPI_AI_Disable(aiDevId);
 
     return 0;
 }

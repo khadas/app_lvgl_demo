@@ -18,10 +18,29 @@ static int state = STATE_IDLE;
 
 static int ao_read(void *arg, char *buf, int len)
 {
-    int cfd = *(int *)arg;
-    int num = read(cfd, buf, len);
+    if (!buf)
+    {
+        RK_LOGE("buf is NULL");
+        return 0;
+    }
 
-    return num;
+    int cfd = *(int *)arg;
+    int num = 0, tmpNum = 0, tmpLen = len;
+    while ((num < len) && (state == STATE_RUNNING)) {
+        tmpNum = read(cfd, (void*)(&buf[num]), tmpLen);
+        if (tmpNum <= 0)
+            return 0;
+        num += tmpNum;
+        tmpLen -= tmpNum;
+
+        if (!tmpNum)
+            break;
+    }
+
+    if (tmpNum)
+        return num;
+    else
+        return 0;
 }
 
 static int audio_server_init(void)
@@ -80,7 +99,13 @@ static void *audio_server(void *arg)
 
         run_audio_client(clientIP);
 
-        ao_init();
+        ret = ao_init();
+        if (ret == -1)
+        {
+            printf("ao init error\n");
+            break;
+        }
+
         while (1)
         {
             if (ao_push(ao_read, &cfd) == -1)

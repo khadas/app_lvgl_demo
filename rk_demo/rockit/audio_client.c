@@ -13,11 +13,18 @@
 #include "rk_debug.h"
 #include "rk_mpi_sys.h"
 
-static int fd;
+static int fd = -1;
 static int state = STATE_IDLE;
+static pthread_t tid = 0;
 
 static int ai_write(void *arg, char *buf, int len)
 {
+    if (!buf)
+    {
+        RK_LOGE("buf is NULL");
+        return 0;
+    }
+
     int num = write(fd, buf, len);
 
     return num;
@@ -25,7 +32,14 @@ static int ai_write(void *arg, char *buf, int len)
 
 static void *do_cap(void *arg)
 {
-    ai_init();
+    int result = 0;
+    result = ai_init();
+    if (result != 0)
+    {
+        RK_LOGE("ai init fail", result);
+        return NULL;
+    }
+
     state = STATE_RUNNING;
     while (state == STATE_RUNNING)
     {
@@ -47,12 +61,15 @@ int audio_client_state(void)
 int exit_audio_client(void)
 {
     state = STATE_EXIT;
+    if (tid) {
+        pthread_join(tid, RK_NULL);
+        tid = 0;
+    }
 }
 
 int run_audio_client(char *ip)
 {
     struct sockaddr_in serveraddr;
-    pthread_t tid;
     int ret;
 
     if (state == STATE_RUNNING)
