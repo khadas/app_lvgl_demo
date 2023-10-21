@@ -13,78 +13,112 @@
 #include "rk_debug.h"
 #include "rk_mpi_sys.h"
 
-static int fd = -1;
-static int state = STATE_IDLE;
-static pthread_t tid = 0;
+struct audio_client
+{
+    int fd;
+    int state;
+    pthread_t tid;
+};
 
 static int ai_write(void *arg, char *buf, int len)
 {
+    struct audio_client *client = (struct audio_client *)arg;
+
     if (!buf)
     {
         RK_LOGE("buf is NULL");
         return 0;
     }
 
-    int num = write(fd, buf, len);
+    int num = write(client->fd, buf, len);
 
     return num;
 }
 
 static void *do_cap(void *arg)
 {
+    struct audio_client *client = (struct audio_client *)arg;
     int result = 0;
+
     result = ai_init();
     if (result != 0)
     {
         RK_LOGE("ai init fail", result);
-        return NULL;
+        client->state = STATE_ERROR;
+        goto end;
     }
 
-    state = STATE_RUNNING;
-    while (state == STATE_RUNNING)
+    client->state = STATE_RUNNING;
+    while (client->state == STATE_RUNNING)
     {
-        if (ai_fetch(ai_write, NULL) == -1)
+        if (ai_fetch(ai_write, client) == -1)
             break;
     }
     ai_deinit();
 
-    close(fd);
-    fd = -1;
-    state = STATE_IDLE;
+    client->state = STATE_IDLE;
+end:
+    close(client->fd);
+    client->fd = -1;
+
+    return NULL;
 }
 
-int audio_client_state(void)
+int audio_client_state(void *arg)
 {
-    return state;
+    struct audio_client *client = (struct audio_client *)arg;
+
+    if (!client)
+        return STATE_IDLE;
+
+    return client->state;
 }
 
-int exit_audio_client(void)
+int audio_client_del(void *arg)
 {
-    state = STATE_EXIT;
-    if (tid) {
-        pthread_join(tid, RK_NULL);
-        tid = 0;
+    struct audio_client *client = (struct audio_client *)arg;
+
+    if (!client)
+    {
+        printf("%s null ptr\n", __func__);
+        return -1;
     }
+
+    client->state = STATE_EXIT;
+    if (client->tid) {
+        pthread_join(client->tid, RK_NULL);
+        client->tid = 0;
+    }
+
+    free(client);
+
+    return 0;
 }
 
-int run_audio_client(char *ip)
+void *audio_client_new(char *ip)
 {
+    struct audio_client *client;
     struct sockaddr_in serveraddr;
+    int fd;
     int ret;
 
-    if (state == STATE_RUNNING)
-        return 0;
+    client = calloc(1, sizeof(*client));
+    if (!client)
+    {
+        printf("audio client calloc failed %d\n", sizeof(*client));
+        return NULL;
+    }
 
-    state = STATE_RUNNING;
     fd = socket(AF_INET, SOCK_STREAM, 0);
-
     if (fd < 0)
     {
         printf("socket error\n");
-        return fd;
+        goto fd_err;
     }
 
-    printf("coonnect to [%s]\n", ip);
+    client->fd = fd;
+
+    printf("connect to [%s]\n", ip);
     serveraddr.sin_family = AF_INET;
     inet_pton(AF_INET, ip, &serveraddr.sin_addr.s_addr);
     serveraddr.sin_port = htons(9999);
@@ -93,20 +127,23 @@ int run_audio_client(char *ip)
     if (ret < 0)
     {
         printf("connect error\n");
-        close(fd);
-        fd = -1;
-        return ret;
+        goto conn_err;
     }
 
-    ret = pthread_create(&tid, NULL, do_cap, NULL);
+    ret = pthread_create(&client->tid, NULL, do_cap, client);
     if (ret < 0)
     {
         printf("pthread error\n");
-        close(fd);
-        fd = -1;
-        state = STATE_IDLE;
+        goto conn_err;
     }
 
-    return ret;
+    return client;
+
+conn_err:
+    close(fd);
+fd_err:
+    free(client);
+
+    return NULL;
 }
 

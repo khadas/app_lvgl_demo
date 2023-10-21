@@ -6,13 +6,21 @@ enum
     STATE_IDLE,
     STATE_RUNNING,
     STATE_EXIT,
+    STATE_ERROR,
+    STATE_PAUSE,
 };
 
-int run_audio_server(void);
-int exit_audio_server(void);
-int run_audio_client(char *ip);
-int exit_audio_client(void);
-int audio_client_state(void);
+void *audio_server_new(void);
+int audio_server_del(void *arg);
+int audio_server_state(void *arg);
+int audio_server_auto_connect(void *arg, int en);
+int audio_server_connected(void *arg);
+int audio_server_connect(void *arg, char *ip);
+int audio_server_disconnect(void *arg);
+
+void *audio_client_new(char *ip);
+int audio_client_del(void *arg);
+int audio_client_state(void *arg);
 
 #endif
 

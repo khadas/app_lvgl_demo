@@ -166,6 +166,7 @@ int ao_push(int (*hook)(void *, char *, int), void *arg)
     buf = malloc(size * sizeof(RK_U8));
     if ((ret = hook(arg, buf, size)) != size)
     {
+        printf("input size error %d\n", ret);
         free(buf);
         return RK_FAILURE;
     }

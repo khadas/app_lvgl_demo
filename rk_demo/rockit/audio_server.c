@@ -13,45 +13,55 @@
 #include "rk_debug.h"
 #include "rk_mpi_sys.h"
 
-static int fd;
-static int state = STATE_IDLE;
+struct audio_server
+{
+    int fd;
+    int remote_client;
+    int state;
+    void *client;
+    pthread_t tid;
+};
 
 static int ao_read(void *arg, char *buf, int len)
 {
+    struct audio_server *server = (struct audio_server *)arg;
+    int num = 0;
+    int _len = len;
+
     if (!buf)
     {
         RK_LOGE("buf is NULL");
         return 0;
     }
 
-    int cfd = *(int *)arg;
-    int num = 0, tmpNum = 0, tmpLen = len;
-    while ((num < len) && (state == STATE_RUNNING)) {
-        tmpNum = read(cfd, (void*)(&buf[num]), tmpLen);
-        if (tmpNum <= 0)
+    while (_len && (server->state == STATE_RUNNING))
+    {
+        num = read(server->remote_client,
+                   buf + (len - _len), _len);
+        if (num <= 0)
             return 0;
-        num += tmpNum;
-        tmpLen -= tmpNum;
-
-        if (!tmpNum)
-            break;
+        _len -= num;
     }
 
-    if (tmpNum)
-        return num;
-    else
+    if (server->state != STATE_RUNNING)
         return 0;
+
+    return len;
 }
 
 static int audio_server_init(void)
 {
     struct sockaddr_in saddr;
+    int fd;
     int ret;
 
     fd = socket(AF_INET, SOCK_STREAM, 0);
 
     if (fd < 0)
+    {
+        printf("new socket failed");
         return fd;
+    }
 
     saddr.sin_family = AF_INET;
     saddr.sin_addr.s_addr = INADDR_ANY;
@@ -59,13 +69,18 @@ static int audio_server_init(void)
     ret = bind(fd, (struct sockaddr *)&saddr, sizeof(saddr));
 
     if (ret < 0)
+    {
+        printf("bind socket failed");
+        close(fd);
         return ret;
+    }
 
     return fd;
 }
 
 static void *audio_server(void *arg)
 {
+    struct audio_server *server = (struct audio_server *)arg;
     char clientIP[16];
     unsigned short clientPort;
     struct sockaddr_in clientaddr;
@@ -73,88 +88,197 @@ static void *audio_server(void *arg)
     int cfd;
     int ret;
 
-    state = STATE_RUNNING;
-    while (state == STATE_RUNNING)
+    server->state = STATE_RUNNING;
+    while (server->state == STATE_RUNNING)
     {
         printf("start listening...\n");
-        ret = listen(fd, 8);
+        ret = listen(server->fd, 8);
         if (ret == -1)
         {
             printf("listen error\n");
+            server->state = STATE_ERROR;
             break;
         }
 
         len = sizeof(clientaddr);
-        cfd = accept(fd, (struct sockaddr *)&clientaddr, &len);
+        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+        cfd = accept(server->fd, (struct sockaddr *)&clientaddr, &len);
+        pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 
         if (cfd == -1)
         {
             printf("accept error\n");
-            break;
+            continue;
         }
+
+        server->remote_client = cfd;
 
         inet_ntop(AF_INET, &clientaddr.sin_addr.s_addr, clientIP, sizeof(clientIP));
         clientPort = ntohs(clientaddr.sin_port);
         printf("client ip is %s, port is %d\n", clientIP, clientPort);
 
-        run_audio_client(clientIP);
-
+        if (audio_server_connect(server, clientIP) < 0)
+        {
+            printf("connect to %s error\n", clientIP);
+            goto ao_err;
+        }
         ret = ao_init();
         if (ret == -1)
         {
             printf("ao init error\n");
-            break;
+            goto ao_err;
         }
 
-        while (1)
+        server->state = STATE_RUNNING;
+        while (server->state == STATE_RUNNING)
         {
-            if (ao_push(ao_read, &cfd) == -1)
+            if (ao_push(ao_read, server) == -1)
             {
                 printf("ao push failed\n");
                 break;
             }
         }
         ao_deinit();
-
+ao_err:
         close(cfd);
-
-        exit_audio_client();
+        if (server->client)
+            audio_client_del(server->client);
+        server->client = NULL;
+        server->remote_client = -1;
+        if (server->state == STATE_PAUSE)
+            server->state = STATE_RUNNING;
     }
-    close(fd);
-    fd = -1;
-    state = STATE_IDLE;
+    close(server->fd);
+    server->fd = -1;
+    if (server->state != STATE_ERROR)
+        server->state = STATE_IDLE;
     printf("audio server exit\n");
+
+    return NULL;
 }
 
-int exit_audio_server(void)
+int audio_server_state(void *arg)
 {
-    if (state == STATE_RUNNING)
-        state = STATE_EXIT;
+    struct audio_server *server = (struct audio_server *)arg;
+
+    if (!server || !server->client)
+        return STATE_IDLE;
+
+    return audio_client_state(server->client);
+}
+
+int audio_server_connect(void *arg, char *ip)
+{
+    struct audio_server *server = (struct audio_server *)arg;
+
+    if (!server)
+    {
+        printf("%s null ptr\n", __func__);
+        return -1;
+    }
+
+    if (server->client)
+        printf("server is connected\n");
+    else
+        server->client = audio_client_new(ip);
 
     return 0;
 }
 
-int run_audio_server(void)
+int audio_server_connected(void *arg)
 {
+    struct audio_server *server = (struct audio_server *)arg;
+
+    if (!server)
+    {
+        printf("%s null ptr\n", __func__);
+        return -1;
+    }
+
+    return server->client != NULL;
+}
+
+int audio_server_disconnect(void *arg)
+{
+    struct audio_server *server = (struct audio_server *)arg;
+
+    if (!server)
+    {
+        printf("%s null ptr\n", __func__);
+        return -1;
+    }
+
+    if (server->state != STATE_RUNNING)
+    {
+        printf("%s wrong state %d\n", __func__, server->state);
+        return -1;
+    }
+
+    server->state = STATE_PAUSE;
+}
+
+int audio_server_del(void *arg)
+{
+    struct audio_server *server = (struct audio_server *)arg;
+
+    if (!server || !server->tid)
+    {
+        printf("%s %p error\n", __func__, server);
+        return -1;
+    }
+
+    server->state = STATE_EXIT;
+    pthread_cancel(server->tid);
+    pthread_join(server->tid, NULL);
+    if (server->fd != -1)
+    {
+        close(server->fd);
+        server->fd = -1;
+    }
+
+    free(server);
+
+    return 0;
+}
+
+void *audio_server_new(void)
+{
+    struct audio_server *server;
     pthread_t tid;
+    int fd;
     int ret;
 
-    ret = audio_server_init();
-    if (ret < 0)
+    server = calloc(1, sizeof(*server));
+    if (!server)
     {
-        printf("audio server init failed\n");
-        return ret;
+        printf("audio server calloc failed %d\n", sizeof(*server));
+        return NULL;
     }
 
-    ret = pthread_create(&tid, NULL, audio_server, NULL);
-    if (ret < 0)
+    fd = audio_server_init();
+    if (fd < 0)
     {
-        close(fd);
-        fd = -1;
-        state = STATE_IDLE;
-        printf("audio server start failed\n");
+        printf("audio server init failed %d\n", fd);
+        ret = fd;
+        goto fd_err;
     }
 
-    return ret;
+    server->fd = fd;
+
+    ret = pthread_create(&server->tid, NULL, audio_server, server);
+    if (ret < 0)
+    {
+        printf("audio server start failed %d\n", ret);
+        goto t_err;
+    }
+
+    return server;
+
+t_err:
+    close(fd);
+fd_err:
+    free(server);
+
+    return NULL;
 }
 

@@ -19,6 +19,8 @@ static lv_obj_t *ui_ip_label;
 
 static lv_timer_t *timer;
 
+static void *server = NULL;
+
 extern lv_obj_t *ui_Screen_intercom_homepage;
 extern lv_style_t style_txt_s;
 extern lv_style_t style_txt_m;
@@ -96,10 +98,10 @@ static void icon_cb(lv_event_t *e)
         }
         if (type == 12)
         {
-            if (audio_client_state() != STATE_RUNNING)
-                run_audio_client(lv_label_get_text(ui_intercom_call_Label_1));
+            if (!audio_server_connected(server))
+                audio_server_connect(server, lv_label_get_text(ui_intercom_call_Label_1));
             else
-                exit_audio_client();
+                audio_server_disconnect(server);
         }
     }
 }
@@ -114,12 +116,10 @@ static void btn_return_cb(lv_event_t *e)
         lv_obj_del(main);
         main = NULL;
         lv_timer_del(timer);
-        exit_audio_client();
-        exit_audio_server();
+        audio_server_del(server);
+        server = NULL;
     }
 }
-
-
 
 void intercom_call_button(lv_obj_t *parent, lv_obj_t *referent)
 {
@@ -145,11 +145,14 @@ void intercom_call_button(lv_obj_t *parent, lv_obj_t *referent)
 
 static void state_update(lv_timer_t *timer)
 {
-    static int state = STATE_IDLE;
+    static int last_state = STATE_IDLE;
+    int state;
 
-    if (audio_client_state() != state)
+    state = audio_server_state(server);
+
+    if (last_state != state)
     {
-        state = audio_client_state();
+        last_state = state;
         if (state == STATE_RUNNING)
         {
             lv_label_set_text(button[12].ui_circle_label, "挂断");
@@ -215,6 +218,8 @@ void intercom_call_ui_init()
 
     timer = lv_timer_create(state_update, 100, NULL);
     lv_timer_enable(timer);
-    run_audio_server();
+    server = audio_server_new();
+    if (!server)
+        printf("create audio server failed\n");
 }
 
