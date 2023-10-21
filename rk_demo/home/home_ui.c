@@ -8,6 +8,7 @@
 #include "ui_intercom_homepage.h"
 #include "smart_home_ui.h"
 #include "furniture_control_ui.h"
+#include "wifibt.h"
 
 static lv_obj_t *scr = NULL;
 static lv_obj_t *bg_pic;

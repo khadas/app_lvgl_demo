@@ -3,7 +3,6 @@
 
 lv_obj_t *menu_wifi_init(lv_obj_t *parent);
 void menu_wifi_deinit(void);
-int wifi_connected(void);
 
 #endif
 
