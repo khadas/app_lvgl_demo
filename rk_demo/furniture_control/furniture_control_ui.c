@@ -59,31 +59,31 @@ static void furniture_control_page_jump_player_callback(lv_event_t *event)
 static struct btn_desc fc_btn[] =
 {
     {
-        &furniture_control_ui_icebox_box,
-        IMG_ICEBOX,
-        "每日菜谱",
-        {0, 0, 1, 1},
-        common_draw,
-        furniture_control_page_jump_icebox_callback,
-        NULL
+        .obj  = &furniture_control_ui_icebox_box,
+        .img  = IMG_ICEBOX,
+        .text = "每日菜谱",
+        .w    = 1,
+        .h    = 1,
+        .draw = common_draw,
+        .cb   = furniture_control_page_jump_icebox_callback,
     },
     {
-        &furniture_control_ui_player_box,
-        IMG_PLAYER,
-        "宣传视频",
-        {1, 0, 2, 1},
-        common_draw,
-        furniture_control_page_jump_player_callback,
-        NULL
+        .obj  = &furniture_control_ui_player_box,
+        .img  = IMG_PLAYER,
+        .text = "宣传视频",
+        .w    = 1,
+        .h    = 1,
+        .draw = common_draw,
+        .cb   = furniture_control_page_jump_player_callback,
     },
     {
-        &furniture_control_ui_coffee_box,
-        IMG_COFFEE,
-        "咖啡机",
-        {2, 0, 3, 1},
-        common_draw,
-        furniture_control_page_jump_coffee_machine_callback,
-        NULL
+        .obj  = &furniture_control_ui_coffee_box,
+        .img  = IMG_COFFEE,
+        .text = "咖啡机",
+        .w    = 1,
+        .h    = 1,
+        .draw = common_draw,
+        .cb   = furniture_control_page_jump_coffee_machine_callback,
     }
 };
 

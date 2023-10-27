@@ -147,6 +147,7 @@ lv_obj_t *menu_language_init(lv_obj_t *parent)
     lv_obj_add_style(obj, &style_txt_m, LV_PART_MAIN);
     obj = lv_dropdown_create(area_language);
     lv_obj_add_style(obj, &style_txt_s, LV_PART_MAIN);
+    lv_obj_add_style(lv_dropdown_get_list(obj), &style_txt_s, LV_PART_MAIN);
     lv_dropdown_set_options(obj, "中文\nEnglish");
     lv_obj_align(obj, LV_ALIGN_RIGHT_MID, 0, 0);
 

@@ -20,6 +20,11 @@
 #include "ui_common.h"
 #include "ui_resource.h"
 
+#define LARGE
+#define ROCKIT_EN   1
+#define WIFIBT_EN   1
+#define BT_EN       1
+
 extern lv_ft_info_t ttf_main_s;
 extern lv_ft_info_t ttf_main_m;
 extern lv_ft_info_t ttf_main_l;

@@ -10,7 +10,11 @@ lv_obj_t *ui_return_btn_create(lv_obj_t *parent, lv_event_cb_t cb, const char *t
 
     obj = lv_obj_create(parent);
     lv_obj_remove_style_all(obj);
+#ifdef LARGE
     lv_obj_set_size(obj, 80, 128);
+#else
+    lv_obj_set_size(obj, 50, 50);
+#endif
     lv_obj_set_pos(obj, 0, 0);
     lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(obj, cb, LV_EVENT_CLICKED, NULL);

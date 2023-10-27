@@ -13,7 +13,9 @@ static lv_obj_t *scr = NULL;
 static lv_obj_t *bg_pic;
 static lv_obj_t *ui_label_time;
 static lv_obj_t *ui_label_date;
+#if WIFIBT_EN
 static lv_obj_t *ui_wifi;
+#endif
 static lv_timer_t *timer_date;
 static lv_timer_t *timer_snapshot;
 
@@ -31,43 +33,50 @@ static void page_switch(lv_event_t *e);
 static struct btn_desc home_btn[] =
 {
     {
-        &ui_smart_home,
-        IMG_SMART_HOME,
-        "智能家居",
-        {0, 0, 1, 1},
-        common_draw,
-        page_switch,
-        smart_home_ui_init
+        .obj  = &ui_smart_home,
+        .img  = IMG_SMART_HOME,
+        .text = "智能家居",
+        .w    = 1,
+        .h    = 1,
+        .draw = common_draw,
+        .cb   = page_switch,
+        .user_data = (void *)smart_home_ui_init,
+    },
+#ifdef LARGE
+    {
+        .obj  = &ui_furniture_control,
+        .img  = IMG_FURNITURE,
+        .text = "家居显控",
+        .w    = 1,
+        .h    = 1,
+        .draw = common_draw,
+        .cb   = page_switch,
+        .user_data = (void *)furniture_control_ui_init,
     },
     {
-        &ui_furniture_control,
-        IMG_FURNITURE,
-        "家居显控",
-        {1, 0, 2, 1},
-        common_draw,
-        page_switch,
-        furniture_control_ui_init
+        .obj  = &ui_phone,
+        .img  = IMG_PHONE,
+        .text = "楼宇对讲",
+        .w    = 1,
+        .h    = 1,
+        .draw = common_draw,
+        .cb   = page_switch,
+        .user_data = (void *)intercom_homepage_ui_init,
     },
+#endif
     {
-        &ui_phone,
-        IMG_PHONE,
-        "楼宇对讲",
-        {0, 1, 1, 2},
-        common_draw,
-        page_switch,
-        intercom_homepage_ui_init
-    },
-    {
-        &ui_setting,
-        IMG_SETTING,
-        "系统设置",
-        {1, 1, 2, 2},
-        common_draw,
-        page_switch,
-        setting_ui_init
+        .obj  = &ui_setting,
+        .img  = IMG_SETTING,
+        .text = "系统设置",
+        .w    = 1,
+        .h    = 1,
+        .draw = common_draw,
+        .cb   = page_switch,
+        .user_data = (void *)setting_ui_init,
     }
 };
 
+#ifdef LARGE
 static lv_coord_t col_dsc[] = {200, 200, LV_GRID_TEMPLATE_LAST};
 static lv_coord_t row_dsc[] = {200, 200, LV_GRID_TEMPLATE_LAST};
 
@@ -79,6 +88,19 @@ struct btn_matrix_desc home_desc = {
     .desc = home_btn,
     .btn_cnt = sizeof(home_btn) / sizeof(home_btn[0]),
 };
+#else
+static lv_coord_t col_dsc[] = {120, 120, 120, 120, LV_GRID_TEMPLATE_LAST};
+static lv_coord_t row_dsc[] = {120, LV_GRID_TEMPLATE_LAST};
+
+struct btn_matrix_desc home_desc = {
+    .col_dsc = col_dsc,
+    .row_dsc = row_dsc,
+    .pad = 3,
+    .gap = 20,
+    .desc = home_btn,
+    .btn_cnt = sizeof(home_btn) / sizeof(home_btn[0]),
+};
+#endif
 
 static void page_switch(lv_event_t *e)
 {
@@ -107,6 +129,7 @@ static void date_update(lv_timer_t *timer)
     lv_obj_align(ui_label_time, LV_ALIGN_TOP_LEFT, 50, 50);
     lv_obj_align_to(ui_label_date, ui_label_time, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
 
+#if WIFIBT_EN
     if (wifi_connected())
     {
         lv_img_set_src(ui_wifi, IMG_WIFI_ON);
@@ -115,6 +138,7 @@ static void date_update(lv_timer_t *timer)
     {
         lv_img_set_src(ui_wifi, IMG_WIFI_OFF);
     }
+#endif
 }
 
 void bg_pic_snapshot_blur(void)
@@ -144,7 +168,7 @@ void bg_pic_snapshot_blur(void)
     lv_canvas_blur_ver(canvas, &area, 100);
     lv_canvas_blur_hor(canvas, &area, 100);
     lv_draw_rect_dsc_init(&dsc);
-    dsc.bg_opa = 70;
+    dsc.bg_opa = LV_OPA_30;
     dsc.bg_color = lv_color_black();
     lv_canvas_draw_rect(canvas, 0, 0,
                         bg_snapshot->header.w,
@@ -172,12 +196,18 @@ static void take_snapshot(lv_timer_t *timer)
 
 void home_ui_init(void)
 {
+    lv_area_t area1, area2, area3;
+
     if (main)
         return;
 
     main = lv_obj_create(lv_scr_act());
     lv_obj_remove_style_all(main);
+#ifdef LARGE
+    lv_obj_set_style_pad_all(main, 20, LV_PART_MAIN);
+#else
     lv_obj_set_style_pad_all(main, 10, LV_PART_MAIN);
+#endif
     lv_obj_set_size(main, lv_pct(100), lv_pct(100));
     lv_obj_refr_size(main);
 
@@ -186,27 +216,48 @@ void home_ui_init(void)
 
     ui_logo = lv_img_create(main);
     lv_img_set_src(ui_logo, IMG_RK_LOGO);
-    lv_obj_align(ui_logo, LV_ALIGN_BOTTOM_RIGHT, -10, -10);
+    lv_obj_align(ui_logo, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
 
+#if WIFIBT_EN
     ui_wifi = lv_img_create(main);
     lv_img_set_src(ui_wifi, IMG_WIFI_OFF);
-    lv_obj_align(ui_wifi, LV_ALIGN_TOP_RIGHT, -10, 10);
+    lv_obj_align(ui_wifi, LV_ALIGN_TOP_RIGHT, 0, 0);
+#endif
 
     ui_label_time = lv_label_create(main);
     lv_obj_set_width(ui_label_time, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_label_time, LV_SIZE_CONTENT);
-    lv_obj_align(ui_label_time, LV_ALIGN_TOP_LEFT, 0, 0);
     lv_obj_add_style(ui_label_time, &style_txt_l, LV_PART_MAIN);
 
     ui_label_date = lv_label_create(main);
     lv_obj_set_width(ui_label_date, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_label_date, LV_SIZE_CONTENT);
-    lv_obj_align_to(ui_label_date, ui_label_time, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 0);
     lv_obj_add_style(ui_label_date, &style_txt_m, LV_PART_MAIN);
 
     date_update(NULL);
     timer_date = lv_timer_create(date_update, 1000, NULL);
     lv_timer_enable(timer_date);
+
+    /* check area overlap */
+    lv_obj_refr_size(ui_label_time);
+    lv_obj_refr_size(ui_label_date);
+    lv_obj_refr_size(ui_box_main);
+    lv_obj_refr_pos(ui_label_time);
+    lv_obj_refr_pos(ui_label_date);
+    lv_obj_refr_pos(ui_box_main);
+
+    lv_obj_get_content_coords(ui_label_date, &area1);
+    lv_obj_get_content_coords(ui_box_main, &area2);
+    lv_obj_get_content_coords(main, &area3);
+
+    if ((area3.x2 - area3.x1) < (area2.x2 - area2.x1))
+    {
+        lv_obj_set_width(ui_box_main, lv_pct(100));
+        lv_obj_set_align(ui_box_main, LV_ALIGN_LEFT_MID);
+    }
+
+    if (area2.y1 < area1.y2)
+        lv_obj_set_y(ui_box_main, area1.y2 - area2.y1 + 5);
 }
 
 void rk_demo_init(void)

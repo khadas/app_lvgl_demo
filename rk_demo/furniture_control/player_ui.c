@@ -407,31 +407,28 @@ void player_stop_button_callback(lv_event_t *event)
 static struct btn_desc player_btn[] =
 {
     {
-        &player_list_button,
-        IMG_PLAYER_LIST,
-        NULL,
-        {0, 0, 1, 1},
-        common_draw,
-        player_list_button_callback,
-        NULL
+        .obj  = &player_list_button,
+        .img  = IMG_PLAYER_LIST,
+        .w    = 1,
+        .h    = 1,
+        .draw = common_draw,
+        .cb   = player_list_button_callback,
     },
     {
-        &player_start_button,
-        IMG_PLAYER_START,
-        NULL,
-        {1, 0, 2, 1},
-        common_draw,
-        player_start_button_callback,
-        NULL
+        .obj  = &player_start_button,
+        .img  = IMG_PLAYER_START,
+        .w    = 1,
+        .h    = 1,
+        .draw = common_draw,
+        .cb   = player_start_button_callback,
     },
     {
-        &player_stop_button,
-        IMG_PLAYER_STOP,
-        NULL,
-        {2, 0, 3, 1},
-        common_draw,
-        player_stop_button_callback,
-        NULL
+        .obj  = &player_stop_button,
+        .img  = IMG_PLAYER_STOP,
+        .w    = 1,
+        .h    = 1,
+        .draw = common_draw,
+        .cb   = player_stop_button_callback,
     }
 };
 

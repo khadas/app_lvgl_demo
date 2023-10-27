@@ -58,49 +58,34 @@ static void ui_control_draw(lv_obj_t *parent, struct btn_desc *desc);
 static struct btn_desc vm_btn[] =
 {
     {
-        &ui_webcam,
-        IMG_INTERCOM_WEBCAM,
-        NULL,
-        {2, 0, 3, 1},
-        common_draw,
-        rtsp_play_start_callback,
-        NULL
+        .obj  = &ui_webcam,
+        .img  = IMG_INTERCOM_WEBCAM,
+        .area = {2, 0, 3, 1},
+        .draw = common_draw,
+        .cb   = rtsp_play_start_callback,
     },
     {
-        &ui_backward,
-        IMG_INTERCOM_BACKWARD,
-        NULL,
-        {0, 2, 1, 3},
-        common_draw,
-        NULL,
-        NULL
+        .obj  = &ui_backward,
+        .img  = IMG_INTERCOM_BACKWARD,
+        .area = {0, 2, 1, 3},
+        .draw = common_draw,
     },
     {
-        &ui_name,
-        NULL,
-        NULL,
-        {1, 1, 4, 4},
-        ui_name_draw,
-        NULL,
-        NULL
+        .obj  = &ui_name,
+        .area = {1, 1, 4, 4},
+        .draw = ui_name_draw,
     },
     {
-        &ui_forward,
-        IMG_INTERCOM_ARROWUP,
-        NULL,
-        {4, 2, 5, 3},
-        common_draw,
-        NULL,
-        NULL
+        .obj  = &ui_forward,
+        .img  = IMG_INTERCOM_ARROWUP,
+        .area = {4, 2, 5, 3},
+        .draw = common_draw,
     },
     {
-        &ui_control,
-        NULL,
-        NULL,
-        {2, 4, 3, 5},
-        ui_control_draw,
-        rtsp_play_pause_callback,
-        NULL
+        .obj  = &ui_control,
+        .area = {2, 4, 3, 5},
+        .draw = ui_control_draw,
+        .cb   = rtsp_play_pause_callback,
     }
 };
 
@@ -157,6 +142,11 @@ static void btn_return_cb(lv_event_t *e)
         {
             RKADK_PLAYER_Stop(pPlayer);
             pthread_join(video_thread, NULL);
+        }
+        if (kb)
+        {
+            lv_obj_del(kb);
+            kb = NULL;
         }
         lv_obj_del(main);
         main = NULL;

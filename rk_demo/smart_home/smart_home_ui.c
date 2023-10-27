@@ -12,7 +12,9 @@ enum
     SUBMENU_MIN = 0,
     SUBMENU_INFO = SUBMENU_MIN,
     SUBMENU_CONTROL,
+#if BT_EN
     SUBMENU_MUSIC,
+#endif
     SUBMENU_MAX,
     SUBMENU_DEFAULT = SUBMENU_INFO,
 };
@@ -53,13 +55,17 @@ static void submenu_##name##_scroll(lv_event_t *event)  \
 
 SUBMENU_COMMON_DEFINE(SUBMENU_INFO, info)
 SUBMENU_COMMON_DEFINE(SUBMENU_CONTROL, control)
+#if BT_EN
 SUBMENU_COMMON_DEFINE(SUBMENU_MUSIC, music)
+#endif
 
 static struct submenu_s submenu_desc[SUBMENU_MAX] =
 {
     {"首页",   submenu_info,    submenu_info_scroll,    submenu_info_destroy,    NULL},
     {"控制",   submenu_control, submenu_control_scroll, submenu_control_destroy, NULL},
+#if BT_EN
     {"播放器", submenu_music,   submenu_music_scroll,   submenu_music_destroy,   NULL}
+#endif
 };
 
 static void btn_return_cb(lv_event_t *e)

@@ -49,19 +49,30 @@ static void read_saved_wifi(int check)
 {
     RK_WIFI_SAVED_INFO_s *wsi;
     int ap_cnt = 0;
+    int start = 0;
 
     RK_wifi_getSavedInfo(&wsi, &ap_cnt);
-    if (ap_cnt <= 1)
+    if (ap_cnt < 1)
     {
         printf("not found saved ap!\n");
         return;
+    }
+
+    if ((strncmp(wsi[0].ssid, "SSID", 4) == 0))
+    {
+        start = 1;
+        if (ap_cnt <= 1)
+        {
+            printf("not found saved ap!\n");
+            return;
+        }
     }
 
     if (!check)
         return;
 
     lv_obj_clean(item_list_saved);
-    for (int i = 1; i < ap_cnt; i++)
+    for (int i = start; i < ap_cnt; i++)
     {
         lv_obj_t *btn;
         char *ssid, *bssid;
@@ -72,6 +83,8 @@ static void read_saved_wifi(int check)
                wsi[i].ssid,
                wsi[i].bssid,
                wsi[i].state);
+        if ((strncmp(wsi[i].ssid, "SSID", 4) == 0))
+            continue;
         btn = lv_list_add_btn(item_list_saved, NULL,
                               (ssid && (strlen(ssid) > 0)) ? ssid : bssid);
         lv_obj_add_event_cb(btn, connect_wifi, LV_EVENT_CLICKED, btn);
@@ -86,6 +99,10 @@ static void read_saved_wifi(int check)
             lv_obj_align_to(label, btn, LV_ALIGN_RIGHT_MID, 0, 0);
         }
     }
+    lv_obj_refr_size(part_scaned);
+    lv_obj_refr_pos(part_scaned);
+    lv_obj_align_to(item_scan, part_scaned, LV_ALIGN_OUT_TOP_RIGHT, 0, 0);
+    lv_obj_align_to(item_scan_icon, item_scan, LV_ALIGN_CENTER, 0, 0);
 
     if (wsi != NULL)
         free(wsi);
@@ -137,13 +154,19 @@ static void connect_wifi(lv_event_t *e)
     lv_obj_t *ibox = lv_inputbox_create(NULL, title, "请输入密码", btns, false);
     lv_obj_add_event_cb(ibox, event_cb, LV_EVENT_VALUE_CHANGED, btn);
     lv_obj_add_style(ibox, &style_txt, LV_PART_MAIN);
-    lv_obj_set_size(ibox, lv_pct(80), lv_pct(20));
+    lv_obj_set_size(ibox, lv_pct(80), lv_pct(50));
     lv_obj_align(ibox, LV_ALIGN_TOP_MID, 0, lv_pct(15));
 
     kb = lv_keyboard_create(lv_layer_sys());
     lv_obj_set_size(kb, lv_pct(100), lv_pct(30));
     lv_obj_set_align(kb, LV_ALIGN_BOTTOM_MID);
     lv_keyboard_set_textarea(kb, lv_inputbox_get_text_area(ibox));
+}
+
+static void icon_anim_deled(lv_anim_t *anim)
+{
+    lv_obj_clear_flag(item_scan, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(item_scan_icon, LV_OBJ_FLAG_HIDDEN);
 }
 
 static void icon_anim_end(lv_anim_t *anim)
@@ -271,8 +294,8 @@ lv_obj_t *menu_wifi_init(lv_obj_t *parent)
     lv_obj_set_width(part_scaned, lv_pct(100));
     lv_obj_set_height(part_scaned, LV_SIZE_CONTENT);
     lv_obj_set_flex_flow(part_scaned, LV_FLEX_FLOW_COLUMN);
-
-    lv_obj_add_event_cb(part_scaned, label_drawed_cb, LV_EVENT_DRAW_POST_END, NULL);
+    lv_obj_refr_size(part_scaned);
+    lv_obj_refr_pos(part_scaned);
 
     item_list_saved = lv_list_create(part_saved);
     lv_obj_set_size(item_list_saved, lv_pct(100), LV_SIZE_CONTENT);
@@ -283,8 +306,6 @@ lv_obj_t *menu_wifi_init(lv_obj_t *parent)
     lv_obj_set_size(item_list_scaned, lv_pct(100), LV_SIZE_CONTENT);
     lv_obj_add_style(item_list_scaned, &style_list, LV_PART_MAIN);
     lv_list_add_btn(item_list_scaned, NULL, "无");
-
-    read_saved_wifi(1);
 
     item_scan = lv_label_create(bg);
     lv_label_set_text(item_scan, "刷新");
@@ -299,11 +320,14 @@ lv_obj_t *menu_wifi_init(lv_obj_t *parent)
     lv_obj_align_to(item_scan_icon, item_scan, LV_ALIGN_CENTER, 0, 0);
     lv_obj_add_flag(item_scan_icon, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_IGNORE_LAYOUT);
 
+    read_saved_wifi(1);
+
     lv_anim_init(&icon_anim);
     lv_anim_set_var(&icon_anim, item_scan_icon);
     lv_anim_set_values(&icon_anim, 0, 3600);
     lv_anim_set_time(&icon_anim, 1000);
     lv_anim_set_exec_cb(&icon_anim, icon_anim_cb);
+    lv_anim_set_deleted_cb(&icon_anim, icon_anim_deled);
     lv_anim_set_path_cb(&icon_anim, lv_anim_path_linear);
     lv_anim_set_repeat_count(&icon_anim, 3/*LV_ANIM_REPEAT_INFINITE*/);
     scan_btn_cb(NULL);

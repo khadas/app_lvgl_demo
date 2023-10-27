@@ -86,18 +86,25 @@ static void font_init(void)
 {
     lv_freetype_init(64, 1, 0);
 
-    ttf_main_s.name = MAIN_FONT;
+#ifdef LARGE
     ttf_main_s.weight = 26;
+    ttf_main_m.weight = 36;
+    ttf_main_l.weight = 140;
+#else
+    ttf_main_s.weight = 22;
+    ttf_main_m.weight = 32;
+    ttf_main_l.weight = 96;
+#endif
+
+    ttf_main_s.name = MAIN_FONT;
     ttf_main_s.style = FT_FONT_STYLE_NORMAL;
     lv_ft_font_init(&ttf_main_s);
 
     ttf_main_m.name = MAIN_FONT;
-    ttf_main_m.weight = 36;
     ttf_main_m.style = FT_FONT_STYLE_NORMAL;
     lv_ft_font_init(&ttf_main_m);
 
     ttf_main_l.name = MAIN_FONT;
-    ttf_main_l.weight = 140;
     ttf_main_l.style = FT_FONT_STYLE_NORMAL;
     lv_ft_font_init(&ttf_main_l);
 }
@@ -134,9 +141,13 @@ int main(int argc, char **argv)
     uint32_t st0 = 0, et0;
 #endif
     signal(SIGINT, sigterm_handler);
-    RK_MPI_SYS_Init();
 
+#if ROCKIT_EN
+    RK_MPI_SYS_Init();
+#endif
+#if WIFIBT_EN
     run_wifibt_server();
+#endif
 
     lvgl_init();
 
@@ -178,7 +189,9 @@ int main(int argc, char **argv)
         usleep(100);
     }
 
+#if ROCKIT_EN
     RK_MPI_SYS_Exit();
+#endif
 
     return 0;
 }

@@ -44,19 +44,28 @@ static lv_obj_t *light_menu(lv_obj_t *parent,
     lv_obj_t *obj;
     lv_obj_t *cont;
     lv_obj_t *depart;
+    lv_obj_t *light_bg;
     lv_obj_t *light;
     lv_area_t area;
 
-    light = lv_img_create(parent);
-    lv_obj_set_size(light, lv_pct(100), 150);
-    lv_obj_align(light, LV_ALIGN_TOP_MID, 0, 0);
-    lv_obj_refr_size(light);
-    lv_obj_refr_pos(light);
-    lv_obj_get_content_coords(light, &area);
-    lv_img_set_src(light, bg_snapshot);
-    lv_img_set_offset_x(light, -area.x1);
-    lv_img_set_offset_y(light, -area.y1);
-    lv_obj_clear_flag(light, LV_OBJ_FLAG_SCROLLABLE);
+    light_bg = lv_img_create(parent);
+    lv_obj_set_style_clip_corner(light_bg, 1, LV_PART_MAIN);
+    lv_obj_set_style_radius(light_bg, 20, LV_PART_MAIN);
+    lv_obj_set_size(light_bg, lv_pct(100), 150);
+    lv_obj_align(light_bg, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_refr_size(light_bg);
+    lv_obj_refr_pos(light_bg);
+    lv_obj_get_content_coords(light_bg, &area);
+    lv_img_set_src(light_bg, bg_snapshot);
+    lv_img_set_offset_x(light_bg, -area.x1);
+    lv_img_set_offset_y(light_bg, -area.y1);
+    lv_obj_clear_flag(light_bg, LV_OBJ_FLAG_SCROLLABLE);
+
+    light = lv_obj_create(light_bg);
+    lv_obj_remove_style_all(light);
+    lv_obj_set_size(light, lv_pct(100), lv_pct(100));
+    lv_obj_set_style_pad_all(light, 10, LV_PART_MAIN);
+    lv_obj_center(light);
 
     obj = lv_label_create(light);
     lv_obj_set_size(obj, lv_pct(100), lv_pct(30));
@@ -67,8 +76,8 @@ static lv_obj_t *light_menu(lv_obj_t *parent,
 
     depart = lv_obj_create(light);
     lv_obj_remove_style_all(depart);
-    lv_obj_set_size(depart, lv_pct(100), lv_pct(50));
-    lv_obj_align(depart, LV_ALIGN_BOTTOM_LEFT, 20, -10);
+    lv_obj_set_size(depart, lv_pct(90), lv_pct(50));
+    lv_obj_align(depart, LV_ALIGN_BOTTOM_MID, 0, -10);
     lv_obj_set_flex_flow(depart, LV_FLEX_FLOW_ROW);
     lv_obj_set_style_pad_column(depart, 10, 0);
 
@@ -89,7 +98,7 @@ static lv_obj_t *light_menu(lv_obj_t *parent,
         lv_obj_align(obj, LV_ALIGN_BOTTOM_MID, 0, 0);
     }
 
-    return light;
+    return light_bg;
 }
 
 static lv_obj_t *aircond_menu(lv_obj_t *parent,
@@ -103,6 +112,14 @@ static lv_obj_t *aircond_menu(lv_obj_t *parent,
         "制热模式",
         "风力：3"
     };
+    lv_align_t align[] =
+    {
+        LV_ALIGN_TOP_LEFT,
+        LV_ALIGN_TOP_RIGHT,
+        LV_ALIGN_BOTTOM_LEFT,
+        LV_ALIGN_BOTTOM_RIGHT,
+    };
+    lv_obj_t *area_aircond_bg;
     lv_obj_t *area_aircond;
     lv_obj_t *area_temp;
     lv_obj_t *area_btn;
@@ -110,16 +127,28 @@ static lv_obj_t *aircond_menu(lv_obj_t *parent,
     lv_obj_t *obj;
     lv_obj_t *temp;
     lv_area_t area;
+    lv_coord_t pw;
 
-    area_aircond = lv_img_create(parent);
-    lv_obj_set_size(area_aircond, lv_pct(100), 500);
-    lv_obj_refr_size(area_aircond);
-    lv_obj_refr_pos(area_aircond);
-    lv_obj_get_content_coords(area_aircond, &area);
-    lv_img_set_src(area_aircond, bg_snapshot);
-    lv_img_set_offset_x(area_aircond, -area.x1);
-    lv_img_set_offset_y(area_aircond, -area.y1);
-    lv_obj_clear_flag(area_aircond, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_get_content_coords(parent, &area);
+    pw = (area.x2 - area.x1);
+
+    area_aircond_bg = lv_img_create(parent);
+    lv_obj_set_style_radius(area_aircond_bg, 20, LV_PART_MAIN);
+    lv_obj_set_style_clip_corner(area_aircond_bg, 1, LV_PART_MAIN);
+    lv_obj_set_size(area_aircond_bg, pw, pw);
+    lv_obj_refr_size(area_aircond_bg);
+    lv_obj_refr_pos(area_aircond_bg);
+    lv_obj_get_content_coords(area_aircond_bg, &area);
+    lv_img_set_src(area_aircond_bg, bg_snapshot);
+    lv_img_set_offset_x(area_aircond_bg, -area.x1);
+    lv_img_set_offset_y(area_aircond_bg, -area.y1);
+    lv_obj_clear_flag(area_aircond_bg, LV_OBJ_FLAG_SCROLLABLE);
+
+    area_aircond = lv_obj_create(area_aircond_bg);
+    lv_obj_remove_style_all(area_aircond);
+    lv_obj_set_size(area_aircond, lv_pct(100), lv_pct(100));
+    lv_obj_set_style_pad_all(area_aircond, 10, LV_PART_MAIN);
+    lv_obj_center(area_aircond);
 
     obj = lv_label_create(area_aircond);
     lv_obj_align(obj, LV_ALIGN_TOP_LEFT, 0, 0);
@@ -164,9 +193,10 @@ static lv_obj_t *aircond_menu(lv_obj_t *parent,
     for (int i = 0; i < 4; i++)
     {
         obj = lv_btn_create(area_btn);
-        lv_obj_align(obj, LV_ALIGN_CENTER, 60 * (i % 2 ? 1 : -1), 60 * (i < 2 ? -1 : 1));
-        lv_obj_set_size(obj, 100, 100);
-        lv_obj_set_style_radius(obj, 50, LV_PART_MAIN);
+        lv_obj_align(obj, align[i], 0, 0);
+        lv_obj_set_size(obj, lv_pct(45), lv_pct(45));
+        lv_obj_set_style_radius(obj, lv_pct(50), LV_PART_MAIN);
+
         obj = lv_label_create(obj);
         lv_label_set_text(obj, btn_name[i]);
         lv_obj_add_style(obj, &style_txt_s, LV_PART_MAIN);
@@ -188,7 +218,7 @@ static lv_obj_t *aircond_menu(lv_obj_t *parent,
     lv_obj_set_style_text_color(obj, lv_color_white(), LV_PART_MAIN);
     lv_obj_align_to(obj, temp, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
 
-    return area_aircond;
+    return area_aircond_bg;
 }
 
 void menu_control_scroll_cb(lv_event_t * event)
