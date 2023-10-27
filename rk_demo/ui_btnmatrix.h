@@ -9,6 +9,8 @@ struct btn_desc
     void *img;
     char *text;
     lv_area_t area;
+    lv_coord_t w;
+    lv_coord_t h;
     void (*draw)(lv_obj_t * parent, struct btn_desc *desc);
     lv_event_cb_t cb;
     void *user_data;

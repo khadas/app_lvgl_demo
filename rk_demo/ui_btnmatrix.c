@@ -32,9 +32,66 @@ void common_draw(lv_obj_t *parent, struct btn_desc *desc)
     }
 }
 
+static int area_empty(lv_coord_t * map, lv_coord_t w, lv_coord_t h, lv_coord_t stride)
+{
+    for (int i = 0; i < h; i++)
+    {
+        for (int j = 0; j < w; j++)
+        {
+            if (map[i * stride + j])
+                return 0;
+        }
+    }
+
+    return 1;
+}
+
+static void area_fill(lv_coord_t * map, lv_coord_t w, lv_coord_t h, lv_coord_t stride)
+{
+    for (int i = 0; i < h; i++)
+    {
+        for (int j = 0; j < w; j++)
+        {
+            map[i * stride + j] = 1;
+        }
+    }
+}
+
 lv_obj_t *ui_btnmatrix_create(lv_obj_t * parent, struct btn_matrix_desc * desc)
 {
     lv_obj_t * main;
+    const lv_coord_t * tmp;
+    lv_coord_t cols = 0;
+    lv_coord_t rows = 0;
+    lv_coord_t x, y, w, h;
+    lv_coord_t * map;
+    int found;
+
+    tmp = desc->col_dsc;
+    while (*tmp != LV_GRID_TEMPLATE_LAST)
+    {
+        cols++;
+        tmp++;
+        if (cols > 100)
+        {
+            printf("invalid col_dsc\n");
+            return NULL;
+        }
+    }
+
+    tmp = desc->row_dsc;
+    while (*tmp != LV_GRID_TEMPLATE_LAST)
+    {
+        rows++;
+        tmp++;
+        if (rows > 100)
+        {
+            printf("invalid row_dsc\n");
+            return NULL;
+        }
+    }
+
+    map = calloc(cols * rows, sizeof(lv_coord_t));
 
     main = lv_obj_create(parent);
     lv_obj_remove_style_all(main);
@@ -49,14 +106,52 @@ lv_obj_t *ui_btnmatrix_create(lv_obj_t * parent, struct btn_matrix_desc * desc)
     {
         lv_obj_t *obj;
 
+        if (desc->desc[i].w > cols || desc->desc[i].h > rows)
+        {
+            printf("item too large [%dx%d] > [%dx%d]\n",
+                   desc->desc[i].w, desc->desc[i].h, cols, rows);
+            continue;
+        }
+
+        if (desc->desc[i].w || desc->desc[i].h)
+        {
+            found = 0;
+            w = desc->desc[i].w;
+            h = desc->desc[i].h;
+            for (int r = 0; r <= (rows - h); r++)
+            {
+                for (int c = 0; c <= (cols - w); c++)
+                {
+                    if (area_empty(&map[r * cols + c], w, h, cols))
+                    {
+                        x = c;
+                        y = r;
+                        found = 1;
+                        break;
+                    }
+                }
+                if (found)
+                    break;
+            }
+            if (!found)
+            {
+                printf("No empty area\n");
+                continue;
+            }
+            area_fill(&map[y * cols + x], w, h, cols);
+        }
+        else
+        {
+            x = desc->desc[i].area.x1;
+            y = desc->desc[i].area.y1;
+            w = desc->desc[i].area.x2 - desc->desc[i].area.x1;
+            h = desc->desc[i].area.y2 - desc->desc[i].area.y1;
+        }
+
         obj = lv_obj_create(main);
         lv_obj_remove_style_all(obj);
-        lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH,
-                             desc->desc[i].area.x1,
-                             desc->desc[i].area.x2 - desc->desc[i].area.x1,
-                             LV_GRID_ALIGN_STRETCH,
-                             desc->desc[i].area.y1,
-                             desc->desc[i].area.y2 - desc->desc[i].area.y1);
+        lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, x, w,
+                             LV_GRID_ALIGN_STRETCH, y, h);
         lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_set_style_bg_color(obj, MAIN_COLOR, LV_PART_MAIN);
@@ -74,6 +169,8 @@ lv_obj_t *ui_btnmatrix_create(lv_obj_t * parent, struct btn_matrix_desc * desc)
         if (desc->desc[i].draw)
             desc->desc[i].draw(obj, &desc->desc[i]);
     }
+
+    free(map);
 
     return main;
 }
