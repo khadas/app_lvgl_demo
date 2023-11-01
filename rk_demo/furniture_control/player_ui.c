@@ -158,6 +158,7 @@ static void rkadk_init(void)
     stPlayCfg.stFrmInfo.u32FrmInfoY = 128;
     stPlayCfg.bEnableBlackBackground = true;
     stPlayCfg.pfnPlayerCallback = PlayerEventFnTest;
+	stPlayCfg.stVdecCfg.u32FrameBufCnt = 15;
     if (RKADK_PLAYER_Create(&pPlayer, &stPlayCfg))
     {
         printf("rkadk: RKADK_PLAYER_Create failed\n");
