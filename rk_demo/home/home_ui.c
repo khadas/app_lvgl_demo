@@ -2,6 +2,7 @@
 #include <time.h>
 #include <lvgl/lvgl.h>
 
+#include "asr.h"
 #include "main.h"
 #include "setting_ui.h"
 #include "ui_resource.h"
@@ -294,6 +295,10 @@ void rk_demo_init(void)
     timer_snapshot = lv_timer_create(take_snapshot, 1000, NULL);
 
     home_ui_init();
+
+#if ASR_EN
+    asr_icon_create(lv_layer_sys());
+#endif
 }
 
 void rk_demo_bg_set_img(const char *img)

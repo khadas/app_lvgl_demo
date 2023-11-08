@@ -27,6 +27,9 @@
 #define WIFIBT_EN   1
 #define BT_EN       1
 #define BT_NAME     "SCO_AUDIO"
+#ifndef ASR_EN
+#define ASR_EN      0
+#endif
 
 #define ARRAY_SIZE(x)   (sizeof(x) / sizeof(x[0]))
 #define ALIGN(x, a) (((x) + (a - 1)) & ~(a - 1))

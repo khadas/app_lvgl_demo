@@ -1,5 +1,6 @@
 #include <lvgl/lvgl.h>
 
+#include "asr.h"
 #include "home_ui.h"
 #include "layout/tile_layout.h"
 #include "main.h"
@@ -56,6 +57,9 @@ static void btn_return_cb(lv_event_t *e)
         }
         lv_obj_del(main);
         main = NULL;
+#if ASR_EN
+        asr_audio_deinit();
+#endif
         break;
     default:
         break;
@@ -108,6 +112,10 @@ void smart_home_ui_init(void)
     lv_obj_t *tl_item;
     int cnt = 0;
     int idx = 0;
+
+#if ASR_EN
+    asr_audio_init();
+#endif
 
     if (main)
     {
