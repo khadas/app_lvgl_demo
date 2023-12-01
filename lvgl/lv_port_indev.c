@@ -109,7 +109,7 @@ void lv_port_indev_init(int rot)
     /*------------------
      * Touchpad
      * -----------------*/
-
+#if USE_EVDEV != 0 || USE_BSD_EVDEV
     /*Initialize your touchpad if you have*/
     evdev_init(rot);
 
@@ -118,7 +118,7 @@ void lv_port_indev_init(int rot)
     indev_drv.type = LV_INDEV_TYPE_POINTER;
     indev_drv.read_cb = evdev_read;
     indev_touchpad = lv_indev_drv_register(&indev_drv);
-
+#endif
 #if USE_KEY
     key_init();
     lv_indev_drv_init(&key_drv);
@@ -128,3 +128,4 @@ void lv_port_indev_init(int rot)
     lv_port_indev_group_create();
 #endif
 }
+

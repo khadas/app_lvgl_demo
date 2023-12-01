@@ -19,7 +19,7 @@ if (LV_DRV_USE_SDL_GPU)
 	add_definitions(-DUSE_SDL_GPU=1)
 endif()
 if (LV_DRV_USE_DRM)
-	add_definitions(-DUSE_DRM=1)
+	add_definitions(-DUSE_DRM=1 -DUSE_EVDEV=1)
 endif()
 
 aux_source_directory(${PROJECT_SOURCE_DIR}/hal SRCS)
