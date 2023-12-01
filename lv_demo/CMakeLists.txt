@@ -18,17 +18,7 @@ elseif (LV_USE_DEMO_MUSIC)
 	add_definitions(-DLV_USE_DEMO_MUSIC=1)
 endif()
 
-if (LV_DRV_USE_SDL_GPU)
-	add_definitions(-DUSE_SDL_GPU=1)
-endif()
-if (LV_DRV_USE_DRM)
-	add_definitions(-DUSE_DRM=1)
-endif()
-
 aux_source_directory(. SRCS)
-aux_source_directory(./hal SRCS)
-aux_source_directory(./lvgl SRCS)
-aux_source_directory(./sys SRCS)
 
 add_executable(${PROJECT_NAME} ${SRCS})
 
