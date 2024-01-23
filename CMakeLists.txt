@@ -33,5 +33,6 @@ else()
 	add_subdirectory(lv_demo)
 #	add_subdirectory(amp_monitor)
 #	add_subdirectory(flexbus)
+#	add_subdirectory(motor_demo)
 endif()
 
