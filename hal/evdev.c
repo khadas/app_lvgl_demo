@@ -13,10 +13,11 @@
 #include <unistd.h>
 #include <fcntl.h>
 #if USE_BSD_EVDEV
-#include <dev/evdev/input.h>
+#include <dev/dev/input.h>
 #else
 #include <linux/input.h>
 #endif
+#include <libevdev-1.0/libevdev/libevdev.h>
 #include <dirent.h>
 
 #include "main.h"
@@ -36,10 +37,16 @@ int map(int x, int in_min, int in_max, int out_min, int out_max);
 /**********************
  *  STATIC VARIABLES
  **********************/
-int evdev_fd;
+struct libevdev *evdev = NULL;
+int evdev_fd = -1;
 int evdev_root_x;
 int evdev_root_y;
 int evdev_button;
+int evdev_min_x = DEFAULT_EVDEV_HOR_MIN;
+int evdev_max_x = DEFAULT_EVDEV_HOR_MAX;
+int evdev_min_y = DEFAULT_EVDEV_VER_MIN;
+int evdev_max_y = DEFAULT_EVDEV_VER_MAX;
+int evdev_calibrate = 0;
 
 int evdev_key_val;
 
@@ -57,7 +64,7 @@ static char tp_event[TP_NAME_LEN] = EVDEV_NAME;
 /**
  * Get touchscreen device event no
  */
-void evdev_get_tp_event(void)
+int evdev_get_tp_event(void)
 {
     int fd = 0, len = 0;
     int i = 0, input_dev_num = 0;
@@ -70,7 +77,7 @@ void evdev_get_tp_event(void)
     if ((pDir = opendir(path)) == NULL)
     {
         printf("%s: open %s filed\n", __func__, path);
-        return;
+        return -1;
     }
 
     while ((ent = readdir(pDir)) != NULL)
@@ -91,15 +98,15 @@ void evdev_get_tp_event(void)
         if (fd == -1)
         {
             printf("%s: open %s failed\n", __func__, file_name);
-            return;
+            continue;
         }
 
         len = read(fd, tp_name, TP_NAME_LEN);
+        close(fd);
         if (len <= 0)
         {
             printf("%s: read %s failed\n", __func__, file_name);
-            close(fd);
-            return;
+            continue;
         }
 
         if (len >= TP_NAME_LEN)
@@ -111,40 +118,26 @@ void evdev_get_tp_event(void)
         {
             sprintf(tp_event, "/dev/input/event%d", i);
             printf("%s: %s = %s%s\n", __func__, file_name, tp_name, tp_event);
+            return 0;
         }
-
-        close(fd);
     }
+
+    return -1;
 }
 
 /**
  * Initialize the evdev interface
  */
-void evdev_init(int rot)
+void evdev_init(lv_disp_drv_t * drv, int rot)
 {
+    int rc = 1;
     evdev_rot = rot;
-    evdev_get_tp_event();
-#if USE_BSD_EVDEV
-    evdev_fd = open(tp_event, O_RDWR | O_NOCTTY);
-#else
-    evdev_fd = open(tp_event, O_RDWR | O_NOCTTY | O_NDELAY);
-#endif
-    if (evdev_fd == -1)
+    if (evdev_get_tp_event() < 0)
     {
-        perror("unable open evdev interface:");
+        printf("%s get tp event failed\n", __func__);
         return;
     }
-
-#if USE_BSD_EVDEV
-    fcntl(evdev_fd, F_SETFL, O_NONBLOCK);
-#else
-    fcntl(evdev_fd, F_SETFL, O_ASYNC | O_NONBLOCK);
-#endif
-
-    evdev_root_x = 0;
-    evdev_root_y = 0;
-    evdev_key_val = 0;
-    evdev_button = LV_INDEV_STATE_REL;
+    evdev_set_file(drv, tp_event);
 }
 /**
  * reconfigure the device file for evdev
@@ -152,12 +145,17 @@ void evdev_init(int rot)
  * @return true: the device file set complete
  *         false: the device file doesn't exist current system
  */
-bool evdev_set_file(char *dev_name)
+bool evdev_set_file(lv_disp_drv_t * drv, char *dev_name)
 {
+    int rc = 1;
+
     if (evdev_fd != -1)
-    {
         close(evdev_fd);
-    }
+    evdev_fd = -1;
+    if (evdev)
+        libevdev_free(evdev);
+    evdev = NULL;
+
 #if USE_BSD_EVDEV
     evdev_fd = open(dev_name, O_RDWR | O_NOCTTY);
 #else
@@ -170,6 +168,37 @@ bool evdev_set_file(char *dev_name)
         return false;
     }
 
+    rc = libevdev_new_from_fd(evdev_fd, &evdev);
+    if (rc < 0)
+    {
+        printf("Failed to init libevdev (%s)\n", strerror(-rc));
+    }
+    else
+    {
+        if (libevdev_has_event_type(evdev, EV_ABS))
+        {
+            const struct input_absinfo *abs;
+            if (libevdev_has_event_code(evdev, EV_ABS, ABS_MT_POSITION_X))
+            {
+                abs = libevdev_get_abs_info(evdev, ABS_MT_POSITION_X);
+                printf("EV_ABS ABS_MT_POSITION_X\n");
+                printf("\tMin\t%6d\n", abs->minimum);
+                printf("\tMax\t%6d\n", abs->maximum);
+                evdev_min_x = abs->minimum;
+                evdev_max_x = abs->maximum;
+            }
+            if (libevdev_has_event_code(evdev, EV_ABS, ABS_MT_POSITION_Y))
+            {
+                abs = libevdev_get_abs_info(evdev, ABS_MT_POSITION_Y);
+                printf("EV_ABS ABS_MT_POSITION_Y\n");
+                printf("\tMin\t%6d\n", abs->minimum);
+                printf("\tMax\t%6d\n", abs->maximum);
+                evdev_min_y = abs->minimum;
+                evdev_max_y = abs->maximum;
+            }
+        }
+    }
+
 #if USE_BSD_EVDEV
     fcntl(evdev_fd, F_SETFL, O_NONBLOCK);
 #else
@@ -180,6 +209,15 @@ bool evdev_set_file(char *dev_name)
     evdev_root_y = 0;
     evdev_key_val = 0;
     evdev_button = LV_INDEV_STATE_REL;
+
+    if ((evdev_min_x != 0) ||
+        (evdev_max_x != drv->hor_res) ||
+        (evdev_min_y != 0) ||
+        (evdev_max_y != drv->ver_res))
+    {
+        evdev_calibrate = 1;
+    }
+    printf("evdev_calibrate = %d\n", evdev_calibrate);
 
     return true;
 }
@@ -296,26 +334,20 @@ void evdev_read(lv_indev_drv_t *drv, lv_indev_data_t *data)
         return ;
     /*Store the collected data*/
 
-#if EVDEV_CALIBRATE
-    if (app_disp_rotation() == LV_DISP_ROT_90 ||
-            app_disp_rotation() == LV_DISP_ROT_270)
+    if (evdev_calibrate)
     {
-        data->point.x = map(evdev_root_x, EVDEV_HOR_MIN, EVDEV_HOR_MAX,
-                            0, drv->disp->driver->ver_res);
-        data->point.y = map(evdev_root_y, EVDEV_VER_MIN, EVDEV_VER_MAX,
+        data->point.x = map(evdev_root_x,
+                            evdev_min_x, evdev_max_x,
                             0, drv->disp->driver->hor_res);
+        data->point.y = map(evdev_root_y,
+                            evdev_min_y, evdev_max_y,
+                            0, drv->disp->driver->ver_res);
     }
     else
     {
-        data->point.x = map(evdev_root_x, EVDEV_HOR_MIN, EVDEV_HOR_MAX,
-                            0, drv->disp->driver->hor_res);
-        data->point.y = map(evdev_root_y, EVDEV_VER_MIN, EVDEV_VER_MAX,
-                            0, drv->disp->driver->ver_res);
+        data->point.x = evdev_root_x;
+        data->point.y = evdev_root_y;
     }
-#else
-    data->point.x = evdev_root_x;
-    data->point.y = evdev_root_y;
-#endif
 
     data->state = evdev_button;
 

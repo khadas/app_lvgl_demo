@@ -103,6 +103,7 @@ void lv_port_indev_init(int rot)
 
     static lv_indev_drv_t indev_drv;
     static lv_indev_drv_t key_drv;
+    lv_disp_t * disp;
 
     rot_indev = rot;
 
@@ -111,7 +112,8 @@ void lv_port_indev_init(int rot)
      * -----------------*/
 #if USE_EVDEV != 0 || USE_BSD_EVDEV
     /*Initialize your touchpad if you have*/
-    evdev_init(rot);
+    disp = lv_disp_get_default();
+    evdev_init(disp->driver, rot);
 
     /*Register a touchpad input device*/
     lv_indev_drv_init(&indev_drv);

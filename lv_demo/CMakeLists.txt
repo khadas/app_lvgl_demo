@@ -40,7 +40,7 @@ if (LV_DRV_USE_SDL_GPU)
 	target_link_libraries(${PROJECT_NAME} SDL2)
 endif()
 if (LV_DRV_USE_DRM)
-	target_link_libraries(${PROJECT_NAME} drm)
+	target_link_libraries(${PROJECT_NAME} drm evdev)
 endif()
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
