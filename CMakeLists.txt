@@ -31,5 +31,6 @@ if (LV_USE_RK_DEMO)
 	add_subdirectory(rk_demo)
 else()
 	add_subdirectory(lv_demo)
+#	add_subdirectory(amp_monitor)
 endif()
 
