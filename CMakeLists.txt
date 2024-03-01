@@ -32,5 +32,6 @@ if (LV_USE_RK_DEMO)
 else()
 	add_subdirectory(lv_demo)
 #	add_subdirectory(amp_monitor)
+#	add_subdirectory(flexbus)
 endif()
 
