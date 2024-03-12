@@ -29,4 +29,6 @@ if (LV_DRV_USE_DRM)
 endif()
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+install(FILES overlay/logo_lvgl.png DESTINATION /usr/share/icons)
+install(FILES overlay/05-flexbus-launcher.ini DESTINATION /etc/xdg/weston/weston.ini.d)
 
