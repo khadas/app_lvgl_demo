@@ -10,6 +10,7 @@
 #include "player_ui.h"
 #include "furniture_control_ui.h"
 
+#if MULTIMEDIA_EN
 #include "rkadk_common.h"
 #include "rkadk_media_comm.h"
 #include "rkadk_log.h"
@@ -494,4 +495,4 @@ void player_ui_init(void)
     lv_obj_add_style(video_label, &style_txt_m, LV_PART_MAIN);
     lv_label_set_text(video_label, "");
 }
-
+#endif

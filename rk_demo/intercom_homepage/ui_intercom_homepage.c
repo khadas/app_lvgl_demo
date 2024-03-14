@@ -27,7 +27,9 @@ static struct btn_desc button[] =
         .h    = 1,
         .draw = common_draw,
         .cb   = page_switch,
+#if MULTIMEDIA_EN
         .user_data = (void *)monitor_ui_init,
+#endif
     },
     {
         .obj  = &ui_box[1],
@@ -36,7 +38,9 @@ static struct btn_desc button[] =
         .h    = 1,
         .draw = common_draw,
         .cb   = page_switch,
+#if MULTIMEDIA_EN
         .user_data = (void *)intercom_call_ui_init,
+#endif
     },
     {
         .obj  = &ui_box[2],

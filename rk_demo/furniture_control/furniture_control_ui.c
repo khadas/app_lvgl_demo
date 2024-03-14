@@ -50,10 +50,12 @@ static void furniture_control_page_jump_coffee_machine_callback(lv_event_t *even
 
 static void furniture_control_page_jump_player_callback(lv_event_t *event)
 {
+#if MULTIMEDIA_EN
     printf("furniture_control_page_jump_player_callback is into \n");
     player_ui_init();
     lv_obj_del(main);
     main = NULL;
+#endif
 }
 
 static struct btn_desc fc_btn[] =

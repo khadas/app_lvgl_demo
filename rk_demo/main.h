@@ -21,7 +21,7 @@
 #include "ui_resource.h"
 
 #define LARGE
-#define ROCKIT_EN   1
+#define ROCKIT_EN   MULTIMEDIA_EN
 #define WIFIBT_EN   1
 #define BT_EN       1
 

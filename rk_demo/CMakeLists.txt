@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.8)
 
 project(rk_demo)
 
+add_definitions(-DMULTIMEDIA_EN=${RK_DEMO_MULTIMEDIA_EN})
+
 include_directories(
 	${PROJECT_SOURCE_DIR}/
 	${PROJECT_SOURCE_DIR}/home
@@ -25,14 +27,20 @@ aux_source_directory(./smart_home SRCS)
 aux_source_directory(./intercom_homepage SRCS)
 aux_source_directory(./intercom_homepage/video_monitor SRCS)
 aux_source_directory(./intercom_homepage/intercom_call SRCS)
-aux_source_directory(./rockit SRCS)
 aux_source_directory(./wifibt SRCS)
+
+if (RK_DEMO_MULTIMEDIA_EN)
+	aux_source_directory(./rockit SRCS)
+endif()
 
 add_executable(${PROJECT_NAME} ${SRCS})
 
 target_link_libraries(${PROJECT_NAME}
-	lvgl pthread m lv_drivers freetype rkwifibt rockit rkadk
+	lvgl pthread m lv_drivers freetype rkwifibt
 )
+if (RK_DEMO_MULTIMEDIA_EN)
+	target_link_libraries(${PROJECT_NAME} rockit rkadk)
+endif()
 
 if (LV_DRV_USE_SDL_GPU)
 	target_link_libraries(${PROJECT_NAME} SDL2)

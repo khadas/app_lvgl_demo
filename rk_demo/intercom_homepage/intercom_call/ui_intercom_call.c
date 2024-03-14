@@ -7,6 +7,7 @@
 #include "audio_server.h"
 #include "local_ip.h"
 
+#if MULTIMEDIA_EN
 static lv_obj_t *main = NULL;
 
 static lv_obj_t *btn_return;
@@ -222,4 +223,4 @@ void intercom_call_ui_init()
     if (!server)
         printf("create audio server failed\n");
 }
-
+#endif

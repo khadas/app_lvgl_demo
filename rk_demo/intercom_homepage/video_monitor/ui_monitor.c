@@ -3,6 +3,7 @@
 #include "main.h"
 #include <time.h>
 
+#if MULTIMEDIA_EN
 #include "rkadk_common.h"
 #include "rkadk_media_comm.h"
 #include "rkadk_log.h"
@@ -496,4 +497,4 @@ void monitor_ui_init()
     lv_obj_set_style_radius(ui_forward,  200, LV_PART_MAIN);
     lv_obj_set_style_radius(ui_backward, 200, LV_PART_MAIN);
 }
-
+#endif

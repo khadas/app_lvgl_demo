@@ -44,7 +44,7 @@ static char *btn_img[] =
 };
 
 static int bt_sink_enabled = 0;
-static int volume = 100;
+static intptr_t volume = 100;
 static int mute = 0;
 static int g_pos = 0;
 
