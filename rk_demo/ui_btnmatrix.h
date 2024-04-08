@@ -11,6 +11,7 @@ struct btn_desc
     lv_area_t area;
     lv_coord_t w;
     lv_coord_t h;
+    lv_obj_t *(*create)(lv_obj_t *parent);
     void (*draw)(lv_obj_t *parent, struct btn_desc *desc);
     lv_event_cb_t cb;
     void *user_data;

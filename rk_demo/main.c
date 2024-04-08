@@ -38,6 +38,10 @@ lv_style_t style_txt_s;
 lv_style_t style_txt_m;
 lv_style_t style_txt_l;
 
+lv_dir_t scr_dir;
+lv_coord_t scr_w;
+lv_coord_t scr_h;
+
 static int g_indev_rotation = 0;
 static int g_disp_rotation = LV_DISP_ROT_NONE;
 
@@ -56,6 +60,19 @@ int app_disp_rotation(void)
     return g_disp_rotation;
 }
 
+static void check_scr(void)
+{
+    scr_w = LV_HOR_RES;
+    scr_h = LV_VER_RES;
+
+    if (scr_w >= scr_h)
+        scr_dir = LV_DIR_HOR;
+    else
+        scr_dir = LV_DIR_VER;
+
+    printf("%s %dx%d\n", __func__, scr_w, scr_h);
+}
+
 static void lvgl_init(void)
 {
     lv_init();
@@ -67,21 +84,29 @@ static void lvgl_init(void)
     lv_port_indev_init(g_indev_rotation);
 #endif
     lv_port_fs_init();
+
+    check_scr();
 }
 
 static void font_init(void)
 {
     lv_freetype_init(64, 1, 0);
 
-#ifdef LARGE
-    ttf_main_s.weight = 26;
-    ttf_main_m.weight = 36;
-    ttf_main_l.weight = 140;
-#else
-    ttf_main_s.weight = 22;
-    ttf_main_m.weight = 32;
-    ttf_main_l.weight = 96;
-#endif
+    if (scr_dir == LV_DIR_HOR)
+    {
+        ttf_main_s.weight = ALIGN(RK_PCT_W(2), 2);
+        ttf_main_m.weight = ALIGN(RK_PCT_W(3), 2);
+        ttf_main_l.weight = ALIGN(RK_PCT_W(9), 2);
+    }
+    else
+    {
+        ttf_main_s.weight = ALIGN(RK_PCT_H(2), 2);
+        ttf_main_m.weight = ALIGN(RK_PCT_H(3), 2);
+        ttf_main_l.weight = ALIGN(RK_PCT_H(9), 2);
+    }
+
+    printf("%s s %d m %d l %d\n", __func__,
+           ttf_main_s.weight, ttf_main_m.weight, ttf_main_l.weight);
 
     ttf_main_s.name = MAIN_FONT;
     ttf_main_s.style = FT_FONT_STYLE_NORMAL;

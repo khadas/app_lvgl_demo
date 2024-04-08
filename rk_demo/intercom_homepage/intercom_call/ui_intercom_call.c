@@ -183,7 +183,7 @@ void intercom_call_ui_init()
 
     main = lv_obj_create(lv_scr_act());
     lv_obj_remove_style_all(main);
-    lv_obj_set_style_pad_all(main, 10, LV_PART_MAIN);
+    lv_obj_set_style_pad_all(main, 0, LV_PART_MAIN);
     lv_obj_set_size(main, lv_pct(100), lv_pct(100));
     lv_obj_refr_size(main);
 

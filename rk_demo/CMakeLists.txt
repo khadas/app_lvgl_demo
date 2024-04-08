@@ -27,6 +27,7 @@ aux_source_directory(./smart_home SRCS)
 aux_source_directory(./intercom_homepage SRCS)
 aux_source_directory(./intercom_homepage/video_monitor SRCS)
 aux_source_directory(./intercom_homepage/intercom_call SRCS)
+aux_source_directory(./layout SRCS)
 aux_source_directory(./wifibt SRCS)
 
 if (RK_DEMO_MULTIMEDIA_EN)

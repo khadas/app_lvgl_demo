@@ -94,15 +94,16 @@ void coffee_machine_ui_init(void)
     coffee_machine_box = lv_obj_create(main);
     lv_obj_remove_style_all(coffee_machine_box);
     lv_obj_set_width(coffee_machine_box, lv_pct(100));
-    lv_obj_set_height(coffee_machine_box, lv_pct(80));
-    lv_obj_align(coffee_machine_box, LV_ALIGN_TOP_LEFT, 0, lv_pct(10));
-    //lv_obj_set_flex_flow(coffee_machine_box, LV_FLEX_FLOW_COLUMN);//列
+    lv_obj_set_height(coffee_machine_box, lv_pct(90));
+    lv_obj_align(coffee_machine_box, LV_ALIGN_TOP_MID, 0, lv_pct(10));
+    lv_obj_set_style_pad_all(coffee_machine_box, 0, LV_PART_MAIN);
+    lv_obj_set_style_pad_gap(coffee_machine_box, 0, LV_PART_MAIN);
+    lv_obj_set_flex_flow(coffee_machine_box, LV_FLEX_FLOW_COLUMN);//列
 
     coffee_machine_png_box = lv_obj_create(coffee_machine_box);
     lv_obj_remove_style_all(coffee_machine_png_box);
     lv_obj_set_width(coffee_machine_png_box, lv_pct(100));
-    lv_obj_set_height(coffee_machine_png_box, 400);
-    lv_obj_align(coffee_machine_png_box, LV_ALIGN_TOP_LEFT, 0, 250);
+    lv_obj_set_height(coffee_machine_png_box, 300);
     if (coffee_machine_png_box != NULL)
     {
         lv_obj_add_event_cb(coffee_machine_png_box,
@@ -157,8 +158,6 @@ void coffee_machine_ui_init(void)
     coffee_machine_box_name = lv_obj_create(coffee_machine_box);
     lv_obj_remove_style_all(coffee_machine_box_name);
     lv_obj_set_width(coffee_machine_box_name, lv_pct(100));
-    lv_obj_set_height(coffee_machine_box_name, lv_pct(20));
-    lv_obj_align(coffee_machine_box_name, LV_ALIGN_TOP_LEFT, 0, lv_pct(55));
 
     coffee_machine_name = lv_label_create(coffee_machine_box_name);
     lv_obj_add_style(coffee_machine_name, &style_txt_m, LV_PART_MAIN);
@@ -171,7 +170,6 @@ void coffee_machine_ui_init(void)
     lv_obj_remove_style_all(coffee_machine_button_box);
     lv_obj_set_width(coffee_machine_button_box, lv_pct(100));
     lv_obj_set_height(coffee_machine_button_box, lv_pct(20));
-    lv_obj_align(coffee_machine_button_box, LV_ALIGN_TOP_LEFT, 0, lv_pct(75));
 
     coffee_machine_button = lv_btn_create(coffee_machine_button_box);
     lv_obj_set_width(coffee_machine_button, lv_pct(40));

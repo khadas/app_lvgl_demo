@@ -50,8 +50,12 @@ static int cur_menu = SUBMENU_MAX;
 static struct submenu_s submenu_desc[SUBMENU_MAX];
 
 static void sliders_draw(lv_obj_t *parent, struct btn_desc *desc);
+#if WIFIBT_EN
 static void menu_switch_cb(lv_event_t *e);
+#if BT_EN
 static void switch_toggled(lv_event_t *e);
+#endif
+#endif
 
 #define SUBMENU_COMMON_DEFINE(enum_t, name) \
 static void submenu_##name(void)  \
@@ -77,8 +81,12 @@ SUBMENU_COMMON_DEFINE(SUBMENU_ABOUT, about)
 
 static struct submenu_s submenu_desc[SUBMENU_MAX] =
 {
+#if WIFIBT_EN
     {"WIFI",        submenu_wifi,    submenu_wifi_destroy, NULL},
+#if BT_EN
     {"蓝牙",        submenu_bt,      submenu_bt_destroy,   NULL},
+#endif
+#endif
     {"锁屏和壁纸",  submenu_wallpaper,  submenu_wallpaper_destroy, NULL},
     {"语言和日期",  submenu_language,  submenu_language_destroy, NULL},
     {"关于",        submenu_about,  submenu_about_destroy, NULL}
@@ -92,6 +100,7 @@ static struct btn_desc setting_btn[] =
         .h    = 1,
         .draw = sliders_draw,
     },
+#if WIFIBT_EN
     {
         .obj  = &ui_wifi,
         .img  = ICON_WIFI,
@@ -102,6 +111,7 @@ static struct btn_desc setting_btn[] =
         .cb   = menu_switch_cb,
         .user_data = (void *)SUBMENU_WIFI
     },
+#if BT_EN
     {
         .obj  = &ui_bt,
         .img  = ICON_BT,
@@ -112,6 +122,8 @@ static struct btn_desc setting_btn[] =
         .cb   = switch_toggled,
         .user_data = (void *)SUBMENU_BT
     },
+#endif
+#endif
     {
         .obj  = &ui_wallpaper,
         .img  = ICON_WALLPAPER,
@@ -237,6 +249,7 @@ static void sliders_draw(lv_obj_t *parent, struct btn_desc *desc)
     lv_obj_add_event_cb(obj_d, slider_event_cb, LV_EVENT_VALUE_CHANGED, label_dp);
 }
 
+#if BT_EN
 static struct wifibt_cmdarg cmdarg;
 static struct bt_info new_info;
 static void switch_toggled(lv_event_t *e)
@@ -257,6 +270,7 @@ static void switch_toggled(lv_event_t *e)
     }
     bt_query(&cmdarg, sizeof(cmdarg));
 }
+#endif
 
 static void menu_switch_cb(lv_event_t *e)
 {
@@ -321,7 +335,7 @@ void setting_ui_init(void)
 
     main = lv_obj_create(lv_scr_act());
     lv_obj_remove_style_all(main);
-    lv_obj_set_style_pad_all(main, 10, LV_PART_MAIN);
+    lv_obj_set_style_pad_all(main, 0, LV_PART_MAIN);
     lv_obj_set_size(main, lv_pct(100), lv_pct(100));
     lv_obj_refr_size(main);
 
@@ -332,6 +346,7 @@ void setting_ui_init(void)
 
     lv_obj_set_style_bg_color(ui_wifi, HL_BLUE, LV_PART_MAIN);
 
+#if BT_EN
     cmdarg.cmd = BT_INFO;
     cmdarg.val = &new_info;
     bt_query_wait(&cmdarg, sizeof(cmdarg));
@@ -339,6 +354,9 @@ void setting_ui_init(void)
         lv_obj_set_style_bg_color(ui_bt, HL_BLUE, LV_PART_MAIN);
     else
         lv_obj_set_style_bg_color(ui_bt, MAIN_COLOR, LV_PART_MAIN);
+#else
+    lv_obj_set_style_bg_color(ui_bt, MAIN_COLOR, LV_PART_MAIN);
+#endif
 
     submenu_mask = lv_obj_create(lv_scr_act());
     lv_obj_add_flag(submenu_mask, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_CLICKABLE);
@@ -350,11 +368,7 @@ void setting_ui_init(void)
                         submenu_mask);
 
     submenu_area = lv_obj_create(submenu_mask);
-#ifdef LARGE
     lv_obj_set_size(submenu_area, lv_pct(70), lv_pct(70));
-#else
-    lv_obj_set_size(submenu_area, lv_pct(90), lv_pct(70));
-#endif
     lv_obj_set_style_bg_color(submenu_area, lv_color_white(), LV_PART_MAIN);
     lv_obj_center(submenu_area);
     lv_obj_refr_size(submenu_area);
@@ -363,10 +377,6 @@ void setting_ui_init(void)
     cancel_btn = lv_img_create(submenu_mask);
     lv_obj_add_flag(cancel_btn, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_img_set_src(cancel_btn, IMG_CANCEL);
-#ifdef LARGE
     lv_obj_align_to(cancel_btn, submenu_area, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
-#else
-    lv_obj_align_to(cancel_btn, submenu_area, LV_ALIGN_OUT_BOTTOM_MID, 0, 5);
-#endif
 }
 

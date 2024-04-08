@@ -1,3 +1,4 @@
+#include <math.h>
 #include <time.h>
 #include <lvgl/lvgl.h>
 
@@ -26,13 +27,13 @@ static lv_obj_t *ui_smart_home;
 static lv_obj_t *ui_furniture_control;
 static lv_obj_t *ui_phone;
 static lv_obj_t *ui_setting;
-static lv_obj_t *ui_logo;
 static lv_img_dsc_t *bg_snapshot = NULL;
 
 static void page_switch(lv_event_t *e);
 
 static struct btn_desc home_btn[] =
 {
+#if SMART_HOME
     {
         .obj  = &ui_smart_home,
         .img  = IMG_SMART_HOME,
@@ -43,7 +44,8 @@ static struct btn_desc home_btn[] =
         .cb   = page_switch,
         .user_data = (void *)smart_home_ui_init,
     },
-#ifdef LARGE
+#endif
+#if FURNITURE_CTRL
     {
         .obj  = &ui_furniture_control,
         .img  = IMG_FURNITURE,
@@ -54,6 +56,8 @@ static struct btn_desc home_btn[] =
         .cb   = page_switch,
         .user_data = (void *)furniture_control_ui_init,
     },
+#endif
+#if PHONE_PAGE
     {
         .obj  = &ui_phone,
         .img  = IMG_PHONE,
@@ -77,33 +81,16 @@ static struct btn_desc home_btn[] =
     }
 };
 
-#ifdef LARGE
-static lv_coord_t col_dsc[] = {200, 200, LV_GRID_TEMPLATE_LAST};
-static lv_coord_t row_dsc[] = {200, 200, LV_GRID_TEMPLATE_LAST};
+static lv_coord_t *col_dsc;
+static lv_coord_t *row_dsc;
 
 struct btn_matrix_desc home_desc =
 {
-    .col_dsc = col_dsc,
-    .row_dsc = row_dsc,
     .pad = 5,
-    .gap = 88,
-    .desc = home_btn,
-    .btn_cnt = sizeof(home_btn) / sizeof(home_btn[0]),
-};
-#else
-static lv_coord_t col_dsc[] = {120, 120, 120, 120, LV_GRID_TEMPLATE_LAST};
-static lv_coord_t row_dsc[] = {120, LV_GRID_TEMPLATE_LAST};
-
-struct btn_matrix_desc home_desc =
-{
-    .col_dsc = col_dsc,
-    .row_dsc = row_dsc,
-    .pad = 3,
     .gap = 20,
     .desc = home_btn,
-    .btn_cnt = sizeof(home_btn) / sizeof(home_btn[0]),
+    .btn_cnt = ARRAY_SIZE(home_btn),
 };
-#endif
 
 static void page_switch(lv_event_t *e)
 {
@@ -196,30 +183,50 @@ static void take_snapshot(lv_timer_t *timer)
     }
 }
 
-
 void home_ui_init(void)
 {
     lv_area_t area1, area2, area3;
+    lv_coord_t item_w;
+    lv_coord_t cols, rows;
 
     if (main)
         return;
 
     main = lv_obj_create(lv_scr_act());
     lv_obj_remove_style_all(main);
-#ifdef LARGE
-    lv_obj_set_style_pad_all(main, 20, LV_PART_MAIN);
-#else
     lv_obj_set_style_pad_all(main, 10, LV_PART_MAIN);
-#endif
     lv_obj_set_size(main, lv_pct(100), lv_pct(100));
     lv_obj_refr_size(main);
 
-    ui_box_main = ui_btnmatrix_create(main, &home_desc);
-    lv_obj_center(ui_box_main);
+    if (scr_dir == LV_DIR_HOR)
+    {
+        item_w = RK_PCT_H(30);
+        cols = home_desc.btn_cnt;
+        rows = 1;
+    }
+    else
+    {
+        item_w = RK_PCT_W(25);
+        cols = 2;
+        rows = ceil((float)home_desc.btn_cnt / cols);
+    }
 
-    ui_logo = lv_img_create(main);
-    lv_img_set_src(ui_logo, IMG_RK_LOGO);
-    lv_obj_align(ui_logo, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
+    col_dsc = calloc(cols + 1, sizeof(lv_coord_t));
+    row_dsc = calloc(rows + 1, sizeof(lv_coord_t));
+    for (int i = 0; i < cols + 1; i++)
+        col_dsc[i] = item_w;
+    col_dsc[cols] = LV_GRID_TEMPLATE_LAST;
+    for (int i = 0; i < rows + 1; i++)
+        row_dsc[i] = item_w;
+    row_dsc[rows] = LV_GRID_TEMPLATE_LAST;
+    home_desc.col_dsc = col_dsc;
+    home_desc.row_dsc = row_dsc;
+
+    ui_box_main = ui_btnmatrix_create(main, &home_desc);
+    if (scr_dir == LV_DIR_HOR)
+        lv_obj_align(ui_box_main, LV_ALIGN_BOTTOM_MID, 0, -20);
+    else
+        lv_obj_center(ui_box_main);
 
 #if WIFIBT_EN
     ui_wifi = lv_img_create(main);

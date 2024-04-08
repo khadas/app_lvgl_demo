@@ -151,23 +151,31 @@ lv_obj_t *ui_btnmatrix_create(lv_obj_t *parent, struct btn_matrix_desc *desc)
             h = desc->desc[i].area.y2 - desc->desc[i].area.y1;
         }
 
-        obj = lv_obj_create(main);
-        lv_obj_remove_style_all(obj);
+        if (desc->desc[i].create)
+        {
+            obj = desc->desc[i].create(main);
+        }
+        else
+        {
+            obj = lv_obj_create(main);
+            lv_obj_remove_style_all(obj);
+            lv_obj_set_style_bg_color(obj, MAIN_COLOR, LV_PART_MAIN);
+            lv_obj_set_style_bg_color(obj, MAIN_COLOR_PRESS,
+                                      LV_PART_MAIN | LV_STATE_PRESSED);
+            lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, LV_PART_MAIN);
+            lv_obj_set_style_shadow_width(obj, 1, LV_PART_MAIN);
+            lv_obj_set_style_shadow_spread(obj, 2, LV_PART_MAIN);
+            lv_obj_set_style_shadow_color(obj, lv_color_black(), LV_PART_MAIN);
+            lv_obj_set_style_shadow_opa(obj, LV_OPA_20, LV_PART_MAIN);
+            lv_obj_set_style_radius(obj, 16, LV_PART_MAIN);
+        }
         lv_obj_set_grid_cell(obj, LV_GRID_ALIGN_STRETCH, x, w,
                              LV_GRID_ALIGN_STRETCH, y, h);
         lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_set_style_bg_color(obj, MAIN_COLOR, LV_PART_MAIN);
-        lv_obj_set_style_bg_color(obj, MAIN_COLOR_PRESS,
-                                  LV_PART_MAIN | LV_STATE_PRESSED);
-        lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, LV_PART_MAIN);
-        lv_obj_set_style_shadow_width(obj, 1, LV_PART_MAIN);
-        lv_obj_set_style_shadow_spread(obj, 2, LV_PART_MAIN);
-        lv_obj_set_style_shadow_color(obj, lv_color_black(), LV_PART_MAIN);
-        lv_obj_set_style_shadow_opa(obj, LV_OPA_20, LV_PART_MAIN);
-        lv_obj_set_style_radius(obj, 16, LV_PART_MAIN);
-        lv_obj_add_event_cb(obj, desc->desc[i].cb, LV_EVENT_CLICKED,
-                            desc->desc[i].user_data);
+        if (desc->desc[i].cb)
+            lv_obj_add_event_cb(obj, desc->desc[i].cb, LV_EVENT_CLICKED,
+                                desc->desc[i].user_data);
 
         *desc->desc[i].obj = obj;
 

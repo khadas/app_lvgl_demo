@@ -1,6 +1,7 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
+#include <math.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -20,11 +21,18 @@
 #include "ui_common.h"
 #include "ui_resource.h"
 
-#define LARGE
+#define SMART_HOME      1
+#define FURNITURE_CTRL  1
+#define PHONE_PAGE      1
 #define ROCKIT_EN   MULTIMEDIA_EN
 #define WIFIBT_EN   1
 #define BT_EN       1
 #define BT_NAME     "SCO_AUDIO"
+
+#define ARRAY_SIZE(x)   (sizeof(x) / sizeof(x[0]))
+#define ALIGN(x, a) (((x) + (a - 1)) & ~(a - 1))
+#define RK_PCT_W(x) (scr_w ? ((int)((float)scr_w * x / 100)) : lv_pct((int)x))
+#define RK_PCT_H(x) (scr_h ? ((int)((float)scr_h * x / 100)) : lv_pct((int)x))
 
 extern lv_ft_info_t ttf_main_s;
 extern lv_ft_info_t ttf_main_m;
@@ -33,6 +41,10 @@ extern lv_ft_info_t ttf_main_l;
 extern lv_style_t style_txt_s;
 extern lv_style_t style_txt_m;
 extern lv_style_t style_txt_l;
+
+extern lv_dir_t scr_dir;
+extern lv_coord_t scr_w;
+extern lv_coord_t scr_h;
 
 int app_disp_rotation(void);
 
