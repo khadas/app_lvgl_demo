@@ -47,7 +47,8 @@ void socket_reset(void)
         reset = 1;
 }
 
-int socket_read(int32_t *y, int32_t *min, int32_t *max, int32_t *avg, int32_t *cur)
+int socket_read(int32_t *y, int32_t *min, int32_t *max, int32_t *avg,
+                int32_t *cur)
 {
     if (!update)
         return 0;
@@ -88,7 +89,8 @@ void *socket_thread(void *argv)
 
     /* Receive messages, convert to uppercase, and return to client */
 
-    for (;;) {
+    for (;;)
+    {
         int idx;
         len = sizeof(struct sockaddr_un);
         numBytes = recvfrom(sfd, buf, BUF_SIZE, 0,
@@ -99,7 +101,8 @@ void *socket_thread(void *argv)
         buf[numBytes] = '\0';
 
         //printf("Received data: ");
-        for (int j = 0; j < numBytes; j++) {
+        for (int j = 0; j < numBytes; j++)
+        {
             buf[j] = toupper((unsigned char) buf[j]);
             //putchar(buf[j]);
         }

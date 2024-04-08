@@ -65,7 +65,8 @@ static int bt_sink_callback(RK_BT_SINK_STATE state)
     return 0;
 }
 
-static void bt_sink_position_change_callback(const char *bd_addr, int song_len, int song_pos)
+static void bt_sink_position_change_callback(const char *bd_addr, int song_len,
+        int song_pos)
 {
     printf("++++++++ bt sink position change ++++++++\n");
     printf("    remote device address: %s\n", bd_addr);
@@ -75,7 +76,8 @@ static void bt_sink_position_change_callback(const char *bd_addr, int song_len, 
     g_bt_info.pos_changed = true;
 }
 
-static void bt_sink_track_change_callback(const char *bd_addr, BtTrackInfo track_info)
+static void bt_sink_track_change_callback(const char *bd_addr,
+        BtTrackInfo track_info)
 {
     int playing_time;
 
@@ -116,7 +118,8 @@ static void bt_sink_volume_callback(int volume)
     g_bt_info.vol = volume;
 }
 
-static void bt_bond_state_cb(const char *bd_addr, const char *name, RK_BT_BOND_STATE state)
+static void bt_bond_state_cb(const char *bd_addr, const char *name,
+                             RK_BT_BOND_STATE state)
 {
     g_bt_info.bond_state = state;
     switch (state)
@@ -224,14 +227,16 @@ int bt_ble_init(void)
     bt_content.ble_content.advData[7] = 0x19;
 
     //ble name
-    printf("ble_name_len: %s(%d)\n", bt_content.ble_content.ble_name, strlen(bt_content.ble_content.ble_name));
+    printf("ble_name_len: %s(%d)\n", bt_content.ble_content.ble_name,
+           strlen(bt_content.ble_content.ble_name));
     ble_name_len = strlen(bt_content.ble_content.ble_name);
     remain_len = 31 - (bt_content.ble_content.advData[1] + 1)
                  - (bt_content.ble_content.advData[4] + 1);
     len = ble_name_len > remain_len ? remain_len : ble_name_len;
     bt_content.ble_content.advData[8] = len + 1;
     bt_content.ble_content.advData[9] = 0x09;
-    memcpy(&bt_content.ble_content.advData[10], bt_content.ble_content.ble_name, len);
+    memcpy(&bt_content.ble_content.advData[10], bt_content.ble_content.ble_name,
+           len);
 
     bt_content.ble_content.advData[0] = bt_content.ble_content.advData[1] + 1
                                         + bt_content.ble_content.advData[4] + 1
@@ -273,7 +278,8 @@ int bt_ble_init(void)
     bt_content.ble_content.respData[22] = 0x01; //绑定信息长度
     bt_content.ble_content.respData[23] = 0x00; //绑定信息
 
-    bt_content.ble_content.respData[0] = bt_content.ble_content.respData[1] + 1;  //长度
+    bt_content.ble_content.respData[0] = bt_content.ble_content.respData[1] +
+                                         1;  //长度
     bt_content.ble_content.respDataLen = bt_content.ble_content.respData[0] + 1;
 
     bt_content.ble_content.cb_ble_recv_fun = bt_ble_recv_data_callback;

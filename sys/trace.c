@@ -30,7 +30,8 @@ static int trace_init_once(void)
 {
     if (init_ok == 0)
     {
-        atrace_marker_fd = open("/sys/kernel/debug/tracing/trace_marker", O_WRONLY | O_CLOEXEC);
+        atrace_marker_fd = open("/sys/kernel/debug/tracing/trace_marker",
+                                O_WRONLY | O_CLOEXEC);
         if (atrace_marker_fd == -1)
         {
             printf("Error opening trace file: %s (%d)", strerror(errno), errno);
@@ -102,19 +103,23 @@ void atrace_end_body()
 {
 }
 
-void atrace_async_begin_body(__attribute__((unused)) const char *name, __attribute__((unused)) int32_t cookie)
+void atrace_async_begin_body(__attribute__((unused)) const char *name,
+                             __attribute__((unused)) int32_t cookie)
 {
 }
 
-void atrace_async_end_body(__attribute__((unused)) const char *name, __attribute__((unused)) int32_t cookie)
+void atrace_async_end_body(__attribute__((unused)) const char *name,
+                           __attribute__((unused)) int32_t cookie)
 {
 }
 
-void atrace_int_body(__attribute__((unused)) const char *name, __attribute__((unused)) int32_t value)
+void atrace_int_body(__attribute__((unused)) const char *name,
+                     __attribute__((unused)) int32_t value)
 {
 }
 
-void atrace_int64_body(__attribute__((unused)) const char *name, __attribute__((unused)) int64_t value)
+void atrace_int64_body(__attribute__((unused)) const char *name,
+                       __attribute__((unused)) int64_t value)
 {
 }
 

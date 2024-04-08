@@ -36,7 +36,8 @@ lv_obj_t *menu_display_init(lv_obj_t *parent)
     lv_obj_add_style(bright_label, &style_txt_m, LV_PART_MAIN);
 
     bright_slider = lv_slider_create(bg);
-    lv_obj_add_event_cb(bright_slider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(bright_slider, slider_event_cb, LV_EVENT_VALUE_CHANGED,
+                        NULL);
     lv_obj_set_width(bright_slider, lv_pct(100));
     lv_slider_set_range(bright_slider, 10, 100);
     lv_slider_set_value(bright_slider, 100, LV_ANIM_OFF);

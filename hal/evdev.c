@@ -128,7 +128,7 @@ int evdev_get_tp_event(void)
 /**
  * Initialize the evdev interface
  */
-void evdev_init(lv_disp_drv_t * drv, int rot)
+void evdev_init(lv_disp_drv_t *drv, int rot)
 {
     int rc = 1;
     evdev_rot = rot;
@@ -145,7 +145,7 @@ void evdev_init(lv_disp_drv_t * drv, int rot)
  * @return true: the device file set complete
  *         false: the device file doesn't exist current system
  */
-bool evdev_set_file(lv_disp_drv_t * drv, char *dev_name)
+bool evdev_set_file(lv_disp_drv_t *drv, char *dev_name)
 {
     int rc = 1;
 
@@ -211,9 +211,9 @@ bool evdev_set_file(lv_disp_drv_t * drv, char *dev_name)
     evdev_button = LV_INDEV_STATE_REL;
 
     if ((evdev_min_x != 0) ||
-        (evdev_max_x != drv->hor_res) ||
-        (evdev_min_y != 0) ||
-        (evdev_max_y != drv->ver_res))
+            (evdev_max_x != drv->hor_res) ||
+            (evdev_min_y != 0) ||
+            (evdev_max_y != drv->ver_res))
     {
         evdev_calibrate = 1;
     }

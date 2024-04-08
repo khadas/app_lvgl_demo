@@ -105,7 +105,8 @@ void coffee_machine_ui_init(void)
     lv_obj_align(coffee_machine_png_box, LV_ALIGN_TOP_LEFT, 0, 250);
     if (coffee_machine_png_box != NULL)
     {
-        lv_obj_add_event_cb(coffee_machine_png_box, coffee_machine_png_box_scroll_callback, LV_EVENT_SCROLL, NULL);
+        lv_obj_add_event_cb(coffee_machine_png_box,
+                            coffee_machine_png_box_scroll_callback, LV_EVENT_SCROLL, NULL);
     }
     //lv_obj_set_style_radius(coffee_machine_png_box, LV_RADIUS_CIRCLE, 0);
     //lv_obj_set_style_clip_corner(coffee_machine_png_box, true, 0);
@@ -162,7 +163,8 @@ void coffee_machine_ui_init(void)
     coffee_machine_name = lv_label_create(coffee_machine_box_name);
     lv_obj_add_style(coffee_machine_name, &style_txt_m, LV_PART_MAIN);
     lv_label_set_text(coffee_machine_name, "美式咖啡");
-    lv_obj_set_style_text_color(coffee_machine_name, lv_color_white(), LV_PART_MAIN);
+    lv_obj_set_style_text_color(coffee_machine_name, lv_color_white(),
+                                LV_PART_MAIN);
     lv_obj_align(coffee_machine_name, LV_ALIGN_CENTER, 0, 0);
 
     coffee_machine_button_box = lv_obj_create(coffee_machine_box);
@@ -174,7 +176,8 @@ void coffee_machine_ui_init(void)
     coffee_machine_button = lv_btn_create(coffee_machine_button_box);
     lv_obj_set_width(coffee_machine_button, lv_pct(40));
     lv_obj_set_height(coffee_machine_button, lv_pct(100));
-    lv_obj_set_style_bg_color(coffee_machine_button, lv_color_hex(0xDED6D6), LV_PART_MAIN);
+    lv_obj_set_style_bg_color(coffee_machine_button, lv_color_hex(0xDED6D6),
+                              LV_PART_MAIN);
     lv_obj_align(coffee_machine_button, LV_ALIGN_CENTER, 0, 0);
     lv_obj_set_style_radius(coffee_machine_button, LV_RADIUS_CIRCLE, 0);
 

@@ -82,18 +82,18 @@ void key_read(lv_indev_drv_t *drv, lv_indev_data_t *data)
             case 139:
                 data->key = LV_KEY_ENTER;
                 break;
-            //case KEY_UP:
-            //    data->key = LV_KEY_UP;
-            //    break;
+                //case KEY_UP:
+                //    data->key = LV_KEY_UP;
+                //    break;
             case 105:
                 data->key = LV_KEY_PREV;
                 break;
             case 106:
                 data->key = LV_KEY_NEXT;
                 break;
-            //case KEY_DOWN:
-            //    data->key = LV_KEY_DOWN;
-            //    break;
+                //case KEY_DOWN:
+                //    data->key = LV_KEY_DOWN;
+                //    break;
             default:
                 data->key = 0;
                 break;

@@ -32,10 +32,10 @@
 
 static float max_angle = 360.0;
 
-static void needle_cb(lv_event_t * e)
+static void needle_cb(lv_event_t *e)
 {
     struct meter *meter;
-    lv_indev_t * indev;
+    lv_indev_t *indev;
     lv_area_t a;
     lv_point_t p;
     lv_point_t c;
@@ -46,7 +46,7 @@ static void needle_cb(lv_event_t * e)
 
     meter = lv_event_get_user_data(e);
     if ((e->code == LV_EVENT_PRESSING) ||
-        (e->code == LV_EVENT_RELEASED))
+            (e->code == LV_EVENT_RELEASED))
     {
         indev = lv_indev_get_act();
         lv_indev_get_point(indev, &p);
@@ -62,7 +62,7 @@ static void needle_cb(lv_event_t * e)
         if (final_angle < 0)
             final_angle += 360;
         lv_label_set_text_fmt(meter->label_val,
-            "%d°", final_angle);
+                              "%d°", final_angle);
         lv_img_set_angle(meter->needle, angle * 10);
         if (e->code == LV_EVENT_RELEASED)
             motor_set_position(meter->slave, final_angle);
@@ -79,13 +79,13 @@ static void meter_create(struct meter *meter)
     lv_arc_set_rotation(meter->main, START_ANGLE);
     lv_arc_set_bg_angles(meter->main, 0, max_angle);
     lv_obj_set_style_arc_width(meter->main, 20,
-        LV_PART_MAIN);
+                               LV_PART_MAIN);
     lv_obj_set_style_arc_width(meter->main, 20,
-        LV_PART_INDICATOR);
+                               LV_PART_INDICATOR);
     lv_obj_set_style_bg_opa(meter->main, LV_OPA_0,
-        LV_PART_MAIN);
+                            LV_PART_MAIN);
     lv_obj_set_style_bg_opa(meter->main, LV_OPA_0,
-        LV_PART_KNOB);
+                            LV_PART_KNOB);
     lv_arc_set_value(meter->main, 0);
     lv_arc_set_range(meter->main, 0, MAX_SPEED);
     lv_obj_center(meter->main);
@@ -96,13 +96,13 @@ static void meter_create(struct meter *meter)
     lv_arc_set_rotation(meter->adorn, START_ANGLE);
     lv_arc_set_bg_angles(meter->adorn, 0, max_angle);
     lv_obj_set_style_arc_width(meter->adorn, 2,
-        LV_PART_MAIN);
+                               LV_PART_MAIN);
     lv_obj_set_style_arc_width(meter->adorn, 2,
-        LV_PART_INDICATOR);
+                               LV_PART_INDICATOR);
     lv_obj_set_style_bg_opa(meter->adorn, LV_OPA_0,
-        LV_PART_INDICATOR);
+                            LV_PART_INDICATOR);
     lv_obj_set_style_bg_opa(meter->adorn, LV_OPA_0,
-        LV_PART_KNOB);
+                            LV_PART_KNOB);
     lv_arc_set_value(meter->adorn, 0);
     lv_arc_set_range(meter->adorn, 0, MAX_SPEED);
     lv_obj_center(meter->adorn);
@@ -113,7 +113,7 @@ static void meter_create(struct meter *meter)
     lv_obj_center(meter->needle);
     lv_obj_add_flag(meter->needle, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(meter->needle, needle_cb,
-        LV_EVENT_ALL, meter);
+                        LV_EVENT_ALL, meter);
 
     max_ticks = METER_TICKS;
     if (max_angle >= 360.0)
@@ -123,47 +123,47 @@ static void meter_create(struct meter *meter)
         int w, h;
         meter->ticks[i].obj = lv_line_create(meter->cont);
         update_tick_points(meter->ticks[i].p,
-            START_ANGLE + SPEED_TO_ANGLE(i * 1000));
+                           START_ANGLE + SPEED_TO_ANGLE(i * 1000));
         lv_obj_set_style_line_color(meter->ticks[i].obj,
-            lv_color_white(), LV_PART_MAIN);
+                                    lv_color_white(), LV_PART_MAIN);
         lv_obj_set_style_line_width(meter->ticks[i].obj,
-            4, LV_PART_MAIN);
+                                    4, LV_PART_MAIN);
         lv_line_set_points(meter->ticks[i].obj,
-            meter->ticks[i].p, 2);
+                           meter->ticks[i].p, 2);
 
         meter->ticks[i].label = lv_label_create(meter->cont);
         lv_label_set_text_fmt(meter->ticks[i].label,
-            "%d°", i * 30);
+                              "%d°", i * 30);
         lv_obj_refr_size(meter->ticks[i].label);
         w = lv_obj_get_width(meter->ticks[i].label);
         h = lv_obj_get_height(meter->ticks[i].label);
         lv_obj_set_pos(meter->ticks[i].label,
-            meter->ticks[i].p[2].x - w / 2,
-            meter->ticks[i].p[2].y - h / 2);
+                       meter->ticks[i].p[2].x - w / 2,
+                       meter->ticks[i].p[2].y - h / 2);
         lv_obj_set_style_text_color(meter->ticks[i].label,
-            lv_color_white(), LV_PART_MAIN);
+                                    lv_color_white(), LV_PART_MAIN);
     }
 
     meter->label_val = lv_label_create(meter->cont);
     lv_label_set_text(meter->label_val, "0°");
     lv_obj_center(meter->label_val);
     lv_obj_set_style_text_font(meter->label_val,
-        &lv_font_montserrat_48, LV_PART_MAIN);
+                               &lv_font_montserrat_48, LV_PART_MAIN);
     lv_obj_set_style_text_color(meter->label_val,
-        lv_color_white(), LV_PART_MAIN);
+                                lv_color_white(), LV_PART_MAIN);
 }
 
-void position_control_ui(lv_obj_t * cont_main, struct meter *meters, int mode)
+void position_control_ui(lv_obj_t *cont_main, struct meter *meters, int mode)
 {
     meters[0].cont = lv_obj_create(cont_main);
     lv_obj_remove_style_all(meters[0].cont);
     lv_obj_set_size(meters[0].cont, 580, 580);
     if (mode == 0)
         lv_obj_align(meters[0].cont, LV_ALIGN_TOP_LEFT,
-            86, 200);
+                     86, 200);
     else
         lv_obj_align(meters[0].cont, LV_ALIGN_TOP_MID,
-            0, 200);
+                     0, 200);
     meter_create(&meters[0]);
 
     meters[1].cont = lv_obj_create(cont_main);
@@ -171,10 +171,10 @@ void position_control_ui(lv_obj_t * cont_main, struct meter *meters, int mode)
     lv_obj_set_size(meters[1].cont, 580, 580);
     if (mode == 0)
         lv_obj_align(meters[1].cont, LV_ALIGN_TOP_RIGHT,
-            -86, 200);
+                     -86, 200);
     else
         lv_obj_align(meters[1].cont, LV_ALIGN_BOTTOM_MID,
-            0, -200);
+                     0, -200);
     meter_create(&meters[1]);
 }
 

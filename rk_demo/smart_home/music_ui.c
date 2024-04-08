@@ -193,7 +193,7 @@ static void bt_timer_cb(struct _lv_timer_t *tmr)
     }
 }
 
-void menu_music_scroll_cb(lv_event_t * event)
+void menu_music_scroll_cb(lv_event_t *event)
 {
     lv_area_t area;
 

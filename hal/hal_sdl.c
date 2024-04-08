@@ -35,7 +35,8 @@ void hal_sdl_init(lv_coord_t hor_res, lv_coord_t ver_res, int rotated)
         LV_LOG_WARN("Register indev failed");
 
 #if 0
-    lv_theme_t *th = lv_theme_default_init(disp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), LV_THEME_DEFAULT_DARK, LV_FONT_DEFAULT);
+    lv_theme_t *th = lv_theme_default_init(disp, lv_palette_main(LV_PALETTE_BLUE),
+                                           lv_palette_main(LV_PALETTE_RED), LV_THEME_DEFAULT_DARK, LV_FONT_DEFAULT);
     lv_disp_set_theme(disp, th);
 
     lv_group_t *g = lv_group_create();

@@ -93,7 +93,8 @@ static struct btn_desc vm_btn[] =
 static lv_coord_t col_dsc[] = {80, 10, 80, 10, 80, LV_GRID_TEMPLATE_LAST};
 static lv_coord_t row_dsc[] = {80, 10, 80, 10, 80, LV_GRID_TEMPLATE_LAST};
 
-static struct btn_matrix_desc btn_desc = {
+static struct btn_matrix_desc btn_desc =
+{
     .col_dsc = col_dsc,
     .row_dsc = row_dsc,
     .pad = 5,
@@ -213,52 +214,54 @@ static void param_init(RKADK_PLAYER_FRAME_INFO_S *pstFrmInfo)
 
 static RKADK_VOID PlayerEventFnTest(RKADK_MW_PTR pPlayer,
                                     RKADK_PLAYER_EVENT_E enEvent,
-                                    RKADK_VOID *pData) {
-  switch (enEvent) {
-  case RKADK_PLAYER_EVENT_STATE_CHANGED:
-    printf("+++++ RKADK_PLAYER_EVENT_STATE_CHANGED +++++\n");
-    break;
-  case RKADK_PLAYER_EVENT_EOF:
-    printf("+++++ RKADK_PLAYER_EVENT_EOF +++++\n");
-    lv_obj_add_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_continue, LV_OBJ_FLAG_HIDDEN);
-    video_stop = 1;
-    break;
-  case RKADK_PLAYER_EVENT_SOF:
-    printf("+++++ RKADK_PLAYER_EVENT_SOF +++++\n");
-    break;
-  case RKADK_PLAYER_EVENT_SEEK_END:
-    printf("+++++ RKADK_PLAYER_EVENT_SEEK_END +++++\n");
-    break;
-  case RKADK_PLAYER_EVENT_ERROR:
-    printf("+++++ RKADK_PLAYER_EVENT_ERROR +++++\n");
-    lv_obj_add_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_continue, LV_OBJ_FLAG_HIDDEN);
-    video_stop = 1;
-    break;
-  case RKADK_PLAYER_EVENT_PREPARED:
-    printf("+++++ RKADK_PLAYER_EVENT_PREPARED +++++\n");
-    break;
-  case RKADK_PLAYER_EVENT_PLAY:
-    printf("+++++ RKADK_PLAYER_EVENT_PLAY +++++\n");
-    lv_obj_add_flag(ui_continue, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
-    break;
-  case RKADK_PLAYER_EVENT_PAUSED:
-    printf("+++++ RKADK_PLAYER_EVENT_PAUSED +++++\n");
-    lv_obj_add_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_continue, LV_OBJ_FLAG_HIDDEN);
-    break;
-  case RKADK_PLAYER_EVENT_STOPPED:
-    printf("+++++ RKADK_PLAYER_EVENT_STOPPED +++++\n");
-    lv_obj_add_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(ui_continue, LV_OBJ_FLAG_HIDDEN);
-    video_stop = 1;
-    break;
-  default:
-    printf("+++++ Unknown event(%d) +++++\n", enEvent);
-    break;
-  }
+                                    RKADK_VOID *pData)
+{
+    switch (enEvent)
+    {
+    case RKADK_PLAYER_EVENT_STATE_CHANGED:
+        printf("+++++ RKADK_PLAYER_EVENT_STATE_CHANGED +++++\n");
+        break;
+    case RKADK_PLAYER_EVENT_EOF:
+        printf("+++++ RKADK_PLAYER_EVENT_EOF +++++\n");
+        lv_obj_add_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_continue, LV_OBJ_FLAG_HIDDEN);
+        video_stop = 1;
+        break;
+    case RKADK_PLAYER_EVENT_SOF:
+        printf("+++++ RKADK_PLAYER_EVENT_SOF +++++\n");
+        break;
+    case RKADK_PLAYER_EVENT_SEEK_END:
+        printf("+++++ RKADK_PLAYER_EVENT_SEEK_END +++++\n");
+        break;
+    case RKADK_PLAYER_EVENT_ERROR:
+        printf("+++++ RKADK_PLAYER_EVENT_ERROR +++++\n");
+        lv_obj_add_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_continue, LV_OBJ_FLAG_HIDDEN);
+        video_stop = 1;
+        break;
+    case RKADK_PLAYER_EVENT_PREPARED:
+        printf("+++++ RKADK_PLAYER_EVENT_PREPARED +++++\n");
+        break;
+    case RKADK_PLAYER_EVENT_PLAY:
+        printf("+++++ RKADK_PLAYER_EVENT_PLAY +++++\n");
+        lv_obj_add_flag(ui_continue, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
+        break;
+    case RKADK_PLAYER_EVENT_PAUSED:
+        printf("+++++ RKADK_PLAYER_EVENT_PAUSED +++++\n");
+        lv_obj_add_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_continue, LV_OBJ_FLAG_HIDDEN);
+        break;
+    case RKADK_PLAYER_EVENT_STOPPED:
+        printf("+++++ RKADK_PLAYER_EVENT_STOPPED +++++\n");
+        lv_obj_add_flag(ui_pause, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_continue, LV_OBJ_FLAG_HIDDEN);
+        video_stop = 1;
+        break;
+    default:
+        printf("+++++ Unknown event(%d) +++++\n", enEvent);
+        break;
+    }
 }
 
 static void rkadk_init(void)
@@ -289,7 +292,7 @@ static void rkadk_init(void)
     }
 }
 
-static void* rtsp_play()
+static void *rtsp_play()
 {
     if (pPlayer != NULL)
     {
@@ -318,7 +321,8 @@ static void* rtsp_play()
     }
     printf("RKADK_PLAYER_Prepare\n");
     ret = RKADK_PLAYER_Play(pPlayer);
-    while (!video_stop){
+    while (!video_stop)
+    {
         usleep(1000 * 100);
     }
 
@@ -327,11 +331,13 @@ static void* rtsp_play()
     return NULL;
 }
 
-static void rtsp_play_start_callback(lv_event_t *event){
+static void rtsp_play_start_callback(lv_event_t *event)
+{
     printf("rtsp_play_start_callback into\n");
 
     network_enable = is_network_enable();
-    if (network_enable){
+    if (network_enable)
+    {
         if (thread_start)
         {
             RKADK_PLAYER_Stop(pPlayer);
@@ -340,7 +346,9 @@ static void rtsp_play_start_callback(lv_event_t *event){
         video_stop = 0;
         thread_start = 1;
         pthread_create(&video_thread, NULL, rtsp_play, NULL);
-    } else {
+    }
+    else
+    {
         printf("network disable\n");
     }
 }
@@ -354,9 +362,12 @@ static void rtsp_play_pause_callback(lv_event_t *event)
         return;
     }
 
-    if (!video_pause){
+    if (!video_pause)
+    {
         RKADK_PLAYER_Pause(pPlayer);
-    } else {
+    }
+    else
+    {
         RKADK_PLAYER_Play(pPlayer);
     }
     video_pause = !video_pause;
@@ -400,17 +411,21 @@ static void obj_event_handler(lv_event_t *e)
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *obj = lv_event_get_target(e);
     char tmp_buf[32];
-    if (code == LV_EVENT_VALUE_CHANGED){
+    if (code == LV_EVENT_VALUE_CHANGED)
+    {
         lv_dropdown_get_selected_str(obj, tmp_buf, sizeof(tmp_buf));
-        if (strcmp(tmp_buf, "视频")==0){
+        if (strcmp(tmp_buf, "视频") == 0)
+        {
             bVideoEnable = true;
             bAudioEnable = false;
         }
-        if (strcmp(tmp_buf, "音视频")==0){
+        if (strcmp(tmp_buf, "音视频") == 0)
+        {
             bVideoEnable = true;
             bAudioEnable = true;
         }
-        if (strcmp(tmp_buf, "音频")==0){
+        if (strcmp(tmp_buf, "音频") == 0)
+        {
             bVideoEnable = false;
             bAudioEnable = true;
         }
@@ -473,14 +488,16 @@ void monitor_ui_init()
     lv_obj_add_style(ui_checkbox_video, &style_txt_m, LV_PART_MAIN);
     if (bVideoEnable)
         lv_obj_add_state(ui_checkbox_video, LV_STATE_CHECKED);
-    lv_obj_add_event_cb(ui_checkbox_video, ui_checkbox_cb, LV_EVENT_VALUE_CHANGED, &bVideoEnable);
+    lv_obj_add_event_cb(ui_checkbox_video, ui_checkbox_cb, LV_EVENT_VALUE_CHANGED,
+                        &bVideoEnable);
 
     ui_checkbox_audio = lv_checkbox_create(player_box);
     lv_checkbox_set_text(ui_checkbox_audio, "音频");
     lv_obj_add_style(ui_checkbox_audio, &style_txt_m, LV_PART_MAIN);
     if (bAudioEnable)
         lv_obj_add_state(ui_checkbox_audio, LV_STATE_CHECKED);
-    lv_obj_add_event_cb(ui_checkbox_audio, ui_checkbox_cb, LV_EVENT_VALUE_CHANGED, &bAudioEnable);
+    lv_obj_add_event_cb(ui_checkbox_audio, ui_checkbox_cb, LV_EVENT_VALUE_CHANGED,
+                        &bAudioEnable);
 
     ui_control_box = ui_btnmatrix_create(player_box, &btn_desc);
     lv_obj_add_flag(ui_control_box, LV_OBJ_FLAG_IGNORE_LAYOUT);

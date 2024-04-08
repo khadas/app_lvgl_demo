@@ -33,10 +33,12 @@
 int app_disp_rotation(void);
 
 void socket_reset(void);
-int socket_read(int32_t *y, int32_t *min, int32_t *max, int32_t *avg, int32_t *cur);
+int socket_read(int32_t *y, int32_t *min, int32_t *max, int32_t *avg,
+                int32_t *cur);
 void *socket_thread(void *argv);
 
-int rpmsg_read(int32_t *y, int32_t *min, int32_t *max, int32_t *avg, int32_t *cur);
+int rpmsg_read(int32_t *y, int32_t *min, int32_t *max, int32_t *avg,
+               int32_t *cur);
 void rpmsg_reset(void);
 void *rpmsg_thread(void *argv);
 

@@ -149,9 +149,11 @@ static void connect_wifi(lv_event_t *e)
     waiting_scanning = 0;
     lv_obj_t *btn = lv_event_get_user_data(e);
     printf("try connect %s\n", lv_list_get_btn_text(item_list_scaned, btn));
-    snprintf(title, sizeof(title), "连接到%s", lv_list_get_btn_text(item_list_scaned, btn));
+    snprintf(title, sizeof(title), "连接到%s",
+             lv_list_get_btn_text(item_list_scaned, btn));
 
-    lv_obj_t *ibox = lv_inputbox_create(NULL, title, "请输入密码", btns, false);
+    lv_obj_t *ibox = lv_inputbox_create(NULL, title, "请输入密码", btns,
+                                        false);
     lv_obj_add_event_cb(ibox, event_cb, LV_EVENT_VALUE_CHANGED, btn);
     lv_obj_add_style(ibox, &style_txt, LV_PART_MAIN);
     lv_obj_set_size(ibox, lv_pct(80), lv_pct(50));
@@ -243,7 +245,7 @@ static void wifi_update(lv_timer_t *timer)
             read_saved_wifi(init_done);
     }
     if (waiting_scanning == 1
-         && wifi_scanning_done())
+            && wifi_scanning_done())
     {
         waiting_scanning = 0;
         lv_anim_del(&icon_anim, NULL);

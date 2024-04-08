@@ -62,7 +62,8 @@ int ao_init(void)
     aoAttr.u32EXFlag = 0;
     aoAttr.u32ChnCnt = 2;
 
-    RK_LOGI("rate %d bit %d ch %d", aoAttr.enSamplerate, aoAttr.enBitwidth, aoAttr.enSoundmode);
+    RK_LOGI("rate %d bit %d ch %d", aoAttr.enSamplerate, aoAttr.enBitwidth,
+            aoAttr.enSoundmode);
     result = RK_MPI_AO_SetPubAttr(aoDevId, &aoAttr);
     if (result != 0)
     {

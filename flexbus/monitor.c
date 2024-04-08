@@ -66,7 +66,7 @@ static void update_sample_rate(int rate)
     flexbus_set_rate(rate);
 
     lv_chart_set_range(chart_fd,
-        LV_CHART_AXIS_PRIMARY_X, 0, (int)(flexbus_get_rate() / 1000.0 / 2.0));
+                       LV_CHART_AXIS_PRIMARY_X, 0, (int)(flexbus_get_rate() / 1000.0 / 2.0));
     //printf("%d %d\n", (int32_t)(flexbus_get_rate() / 1000.0 / 2.0), spf);
     for (int i = 0; i < spf; i++)
     {
@@ -75,9 +75,11 @@ static void update_sample_rate(int rate)
     }
 
     if (flexbus_get_rate() > 1000000)
-        lv_label_set_text_fmt(label_sr, "Sample Rate = %dMHz", flexbus_get_rate() / 1000000);
+        lv_label_set_text_fmt(label_sr, "Sample Rate = %dMHz",
+                              flexbus_get_rate() / 1000000);
     else if (flexbus_get_rate() > 1000)
-        lv_label_set_text_fmt(label_sr, "Sample Rate = %dKHz", flexbus_get_rate() / 1000);
+        lv_label_set_text_fmt(label_sr, "Sample Rate = %dKHz",
+                              flexbus_get_rate() / 1000);
 }
 
 static void update_sample_per_frame(int new)
@@ -158,15 +160,15 @@ static void chart_y_tick_update(int new_ticks)
         tick_label_y[i] = lv_label_create(scr);
         lv_label_set_text_fmt(tick_label_y[i], "%.1f", i * 0.5 + (-1.5));
         lv_obj_set_style_text_font(tick_label_y[i], ttf_main_s.font,
-            LV_PART_MAIN);
+                                   LV_PART_MAIN);
         lv_obj_refr_size(tick_label_y[i]);
         lv_obj_align_to(tick_label_y[i], chart_td, LV_ALIGN_OUT_LEFT_BOTTOM,
-            -10, -(y - lv_obj_get_height(tick_label_y[i]) / 2));
+                        -10, -(y - lv_obj_get_height(tick_label_y[i]) / 2));
         y += gap_y;
     }
 }
 
-static void event_cb(lv_event_t * e)
+static void event_cb(lv_event_t *e)
 {
     lv_point_t p;
     lv_chart_get_point_pos_by_id(chart_fd, ser_fd, peak_id, &p);
@@ -191,7 +193,7 @@ static void event_cb(lv_event_t * e)
 
     lv_obj_clear_flag(label_pr, LV_OBJ_FLAG_HIDDEN);
     lv_obj_set_pos(label_pr, chart_fd->coords.x1 + p.x + 2,
-        chart_fd->coords.y1 + p.y + 2);
+                   chart_fd->coords.y1 + p.y + 2);
 }
 
 static void chart_range_update(void)
@@ -218,14 +220,14 @@ static void chart_range_update(void)
     {
         y_range_fft = max;
         lv_chart_set_range(chart_fd,
-            LV_CHART_AXIS_PRIMARY_Y, 0, y_range_fft);
+                           LV_CHART_AXIS_PRIMARY_Y, 0, y_range_fft);
     }
 
     printf("Peak freq = %d kHz\n", peak_freq);
     printf("Max  freq = %d kHz(%d)\n", sample_x_fd[max_freq], max_freq);
 
     if (auto_sr && /*(max_freq > 0) &&*/
-        ((sample_x_fd[max_freq] * 1000) < (flexbus_get_rate() / 100)))
+            ((sample_x_fd[max_freq] * 1000) < (flexbus_get_rate() / 100)))
     {
         if (flexbus_get_rate() >= 10000000)
         {
@@ -243,18 +245,18 @@ static void chart_range_update(void)
 //    }
 }
 
-static void chart_update(lv_timer_t * e)
+static void chart_update(lv_timer_t *e)
 {
     struct timeval tv;
     time_t dur;
     int32_t min, max, avg, cur;
 
-    gettimeofday(&tv,NULL);
+    gettimeofday(&tv, NULL);
     dur = tv.tv_sec - tstart.tv_sec;
     lv_label_set_text_fmt(time_label, "%02u:%02u:%02u",
-        dur / 60 / 60,
-        dur / 60 % 60,
-        dur % 60);
+                          dur / 60 / 60,
+                          dur / 60 % 60,
+                          dur % 60);
 
     if (flexbus_read(sample_x_td, samples, spf))
     {
@@ -274,12 +276,14 @@ static void font_init(void)
     lv_freetype_init(64, 1, 0);
 
     ttf_main.weight = 50;
-    ttf_main.name = "/usr/share/fonts/source-han-sans-cn/SourceHanSansCN-Regular.otf";
+    ttf_main.name =
+        "/usr/share/fonts/source-han-sans-cn/SourceHanSansCN-Regular.otf";
     ttf_main.style = FT_FONT_STYLE_NORMAL;
     lv_ft_font_init(&ttf_main);
 
     ttf_main_s.weight = 30;
-    ttf_main_s.name = "/usr/share/fonts/source-han-sans-cn/SourceHanSansCN-Regular.otf";
+    ttf_main_s.name =
+        "/usr/share/fonts/source-han-sans-cn/SourceHanSansCN-Regular.otf";
     ttf_main_s.style = FT_FONT_STYLE_NORMAL;
     lv_ft_font_init(&ttf_main_s);
 }
@@ -323,13 +327,13 @@ void monitor(void)
     lv_chart_set_div_line_count(chart_td, y_ticks, 4);
     lv_chart_set_type(chart_td, LV_CHART_TYPE_SCATTER);
     lv_chart_set_range(chart_td,
-        LV_CHART_AXIS_PRIMARY_X, 0, 512);
+                       LV_CHART_AXIS_PRIMARY_X, 0, 512);
     lv_chart_set_range(chart_td,
-        LV_CHART_AXIS_PRIMARY_Y, 0, y_range);
+                       LV_CHART_AXIS_PRIMARY_Y, 0, y_range);
     lv_chart_set_axis_tick(chart_td,
-        LV_CHART_AXIS_PRIMARY_X, 10, 5, 64, 1, false, 0);
+                           LV_CHART_AXIS_PRIMARY_X, 10, 5, 64, 1, false, 0);
     lv_chart_set_axis_tick(chart_td,
-        LV_CHART_AXIS_PRIMARY_Y, 10, 5, 3, 2, false, 100);
+                           LV_CHART_AXIS_PRIMARY_Y, 10, 5, 3, 2, false, 100);
 
     title_x_fd = lv_label_create(scr);
     lv_label_set_text(title_x_fd, "freq (kHz)");
@@ -344,13 +348,13 @@ void monitor(void)
     lv_chart_set_div_line_count(chart_fd, y_ticks, 4);
     lv_chart_set_type(chart_fd, LV_CHART_TYPE_SCATTER);
     lv_chart_set_range(chart_fd,
-        LV_CHART_AXIS_PRIMARY_X, 0, flexbus_get_rate() / 1000 / 2);
+                       LV_CHART_AXIS_PRIMARY_X, 0, flexbus_get_rate() / 1000 / 2);
     lv_chart_set_range(chart_fd,
-        LV_CHART_AXIS_PRIMARY_Y, 0, y_range_fft);
+                       LV_CHART_AXIS_PRIMARY_Y, 0, y_range_fft);
     lv_chart_set_axis_tick(chart_fd,
-        LV_CHART_AXIS_PRIMARY_X, 10, 5, 11, 5, true, 50);
+                           LV_CHART_AXIS_PRIMARY_X, 10, 5, 11, 5, true, 50);
     lv_chart_set_axis_tick(chart_fd,
-        LV_CHART_AXIS_PRIMARY_Y, 10, 5, 3, 2, true, 100);
+                           LV_CHART_AXIS_PRIMARY_Y, 10, 5, 3, 2, true, 100);
     lv_obj_add_event_cb(chart_fd, event_cb, LV_EVENT_DRAW_POST_END, NULL);
 
     sample_x_td = calloc(spf, sizeof(lv_coord_t));
@@ -366,13 +370,13 @@ void monitor(void)
 
     lv_chart_set_point_count(chart_td, spf);
     ser_td = lv_chart_add_series(chart_td,
-        lv_palette_lighten(LV_PALETTE_PINK, 1), LV_CHART_AXIS_PRIMARY_Y);
+                                 lv_palette_lighten(LV_PALETTE_PINK, 1), LV_CHART_AXIS_PRIMARY_Y);
     lv_chart_set_ext_x_array(chart_td, ser_td, sample_x_td);
     lv_chart_set_ext_y_array(chart_td, ser_td, sample_y_td);
 
     lv_chart_set_point_count(chart_fd, spf / 2);
     ser_fd = lv_chart_add_series(chart_fd,
-        lv_palette_lighten(LV_PALETTE_BLUE, 1), LV_CHART_AXIS_PRIMARY_Y);
+                                 lv_palette_lighten(LV_PALETTE_BLUE, 1), LV_CHART_AXIS_PRIMARY_Y);
     lv_chart_set_ext_x_array(chart_fd, ser_fd, sample_x_fd);
     lv_chart_set_ext_y_array(chart_fd, ser_fd, sample_y_fd);
 
@@ -422,6 +426,6 @@ void monitor(void)
 
     timer = lv_timer_create(chart_update, 1000, NULL);
 
-    gettimeofday(&tstart,NULL);
+    gettimeofday(&tstart, NULL);
 }
 

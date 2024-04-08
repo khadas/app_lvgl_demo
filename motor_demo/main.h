@@ -41,28 +41,28 @@
 
 struct tick
 {
-    lv_obj_t * obj;
-    lv_obj_t * label;
+    lv_obj_t *obj;
+    lv_obj_t *label;
     lv_point_t p[3];
 };
 
 struct meter
 {
-    lv_obj_t * cont;
-    lv_obj_t * main;
-    lv_obj_t * adorn;
-    lv_obj_t * needle;
-    lv_obj_t * label_val;
-    lv_obj_t * label_uint;
-    lv_obj_t * label_status;
-    lv_obj_t * label_reverse;
-    lv_timer_t * timer;
+    lv_obj_t *cont;
+    lv_obj_t *main;
+    lv_obj_t *adorn;
+    lv_obj_t *needle;
+    lv_obj_t *label_val;
+    lv_obj_t *label_uint;
+    lv_obj_t *label_status;
+    lv_obj_t *label_reverse;
+    lv_timer_t *timer;
     int tar_speed;
     struct tick ticks[METER_TICKS];
     void *slave;
 };
 
-extern lv_obj_t * label_jitter;
+extern lv_obj_t *label_jitter;
 extern lv_ft_info_t ttf_main;
 extern lv_ft_info_t ttf_main_s;
 
@@ -73,10 +73,10 @@ int motor_check(void *s);
 void motor_set_position(void *s, int angle);
 void update_tick_points(lv_point_t *p, int angle);
 void update_needle_points(lv_point_t *p, int angle);
-void speed_control_ui(lv_obj_t * cont_main,
-    struct meter *meters, int mode);
-void position_control_ui(lv_obj_t * cont_main,
-    struct meter *meters, int mode);
+void speed_control_ui(lv_obj_t *cont_main,
+                      struct meter *meters, int mode);
+void position_control_ui(lv_obj_t *cont_main,
+                         struct meter *meters, int mode);
 
 #endif
 

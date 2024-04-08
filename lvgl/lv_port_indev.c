@@ -103,7 +103,7 @@ void lv_port_indev_init(int rot)
 
     static lv_indev_drv_t indev_drv;
     static lv_indev_drv_t key_drv;
-    lv_disp_t * disp;
+    lv_disp_t *disp;
 
     rot_indev = rot;
 

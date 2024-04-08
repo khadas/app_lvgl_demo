@@ -37,8 +37,10 @@ typedef enum
 
 typedef int (*RK_BT_SINK_CALLBACK)(RK_BT_SINK_STATE state);
 typedef void (*RK_BT_SINK_VOLUME_CALLBACK)(int volume);
-typedef void (*RK_BT_AVRCP_TRACK_CHANGE_CB)(const char *bd_addr, BtTrackInfo track_info);
-typedef void (*RK_BT_AVRCP_PLAY_POSITION_CB)(const char *bd_addr, int song_len, int song_pos);
+typedef void (*RK_BT_AVRCP_TRACK_CHANGE_CB)(const char *bd_addr,
+        BtTrackInfo track_info);
+typedef void (*RK_BT_AVRCP_PLAY_POSITION_CB)(const char *bd_addr, int song_len,
+        int song_pos);
 typedef void (*RK_BT_SINK_UNDERRUN_CB)(void);
 
 int rk_bt_sink_register_callback(RK_BT_SINK_CALLBACK cb);

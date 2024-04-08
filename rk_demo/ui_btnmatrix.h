@@ -11,7 +11,7 @@ struct btn_desc
     lv_area_t area;
     lv_coord_t w;
     lv_coord_t h;
-    void (*draw)(lv_obj_t * parent, struct btn_desc *desc);
+    void (*draw)(lv_obj_t *parent, struct btn_desc *desc);
     lv_event_cb_t cb;
     void *user_data;
 };
@@ -27,7 +27,7 @@ struct btn_matrix_desc
 };
 
 void common_draw(lv_obj_t *parent, struct btn_desc *desc);
-lv_obj_t *ui_btnmatrix_create(lv_obj_t * parent, struct btn_matrix_desc * desc);
+lv_obj_t *ui_btnmatrix_create(lv_obj_t *parent, struct btn_matrix_desc *desc);
 
 #endif
 

@@ -12,7 +12,8 @@ void common_draw(lv_obj_t *parent, struct btn_desc *desc)
     lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_obj_set_flex_flow(obj, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(obj, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_flex_align(obj, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER,
+                          LV_FLEX_ALIGN_CENTER);
     lv_obj_center(obj);
 
     if (desc->img)
@@ -32,7 +33,8 @@ void common_draw(lv_obj_t *parent, struct btn_desc *desc)
     }
 }
 
-static int area_empty(lv_coord_t * map, lv_coord_t w, lv_coord_t h, lv_coord_t stride)
+static int area_empty(lv_coord_t *map, lv_coord_t w, lv_coord_t h,
+                      lv_coord_t stride)
 {
     for (int i = 0; i < h; i++)
     {
@@ -46,7 +48,8 @@ static int area_empty(lv_coord_t * map, lv_coord_t w, lv_coord_t h, lv_coord_t s
     return 1;
 }
 
-static void area_fill(lv_coord_t * map, lv_coord_t w, lv_coord_t h, lv_coord_t stride)
+static void area_fill(lv_coord_t *map, lv_coord_t w, lv_coord_t h,
+                      lv_coord_t stride)
 {
     for (int i = 0; i < h; i++)
     {
@@ -57,14 +60,14 @@ static void area_fill(lv_coord_t * map, lv_coord_t w, lv_coord_t h, lv_coord_t s
     }
 }
 
-lv_obj_t *ui_btnmatrix_create(lv_obj_t * parent, struct btn_matrix_desc * desc)
+lv_obj_t *ui_btnmatrix_create(lv_obj_t *parent, struct btn_matrix_desc *desc)
 {
-    lv_obj_t * main;
-    const lv_coord_t * tmp;
+    lv_obj_t *main;
+    const lv_coord_t *tmp;
     lv_coord_t cols = 0;
     lv_coord_t rows = 0;
     lv_coord_t x, y, w, h;
-    lv_coord_t * map;
+    lv_coord_t *map;
     int found;
 
     tmp = desc->col_dsc;
@@ -155,14 +158,16 @@ lv_obj_t *ui_btnmatrix_create(lv_obj_t * parent, struct btn_matrix_desc * desc)
         lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_set_style_bg_color(obj, MAIN_COLOR, LV_PART_MAIN);
-        lv_obj_set_style_bg_color(obj, MAIN_COLOR_PRESS, LV_PART_MAIN | LV_STATE_PRESSED);
+        lv_obj_set_style_bg_color(obj, MAIN_COLOR_PRESS,
+                                  LV_PART_MAIN | LV_STATE_PRESSED);
         lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, LV_PART_MAIN);
         lv_obj_set_style_shadow_width(obj, 1, LV_PART_MAIN);
         lv_obj_set_style_shadow_spread(obj, 2, LV_PART_MAIN);
         lv_obj_set_style_shadow_color(obj, lv_color_black(), LV_PART_MAIN);
         lv_obj_set_style_shadow_opa(obj, LV_OPA_20, LV_PART_MAIN);
         lv_obj_set_style_radius(obj, 16, LV_PART_MAIN);
-        lv_obj_add_event_cb(obj, desc->desc[i].cb, LV_EVENT_CLICKED, desc->desc[i].user_data);
+        lv_obj_add_event_cb(obj, desc->desc[i].cb, LV_EVENT_CLICKED,
+                            desc->desc[i].user_data);
 
         *desc->desc[i].obj = obj;
 

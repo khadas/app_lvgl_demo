@@ -111,7 +111,8 @@ static void show_time_setting(lv_event_t *e)
     lv_roller_set_visible_row_count(time_roller[2], 3);
     lv_obj_align_to(time_roller[2], time_roller[1], LV_ALIGN_OUT_RIGHT_MID, 10, 0);
 
-    lv_obj_add_event_cb(time_roller[1], roller_drawed, LV_EVENT_DRAW_POST_END, NULL);
+    lv_obj_add_event_cb(time_roller[1], roller_drawed, LV_EVENT_DRAW_POST_END,
+                        NULL);
 
     // TODO real time
     lv_roller_set_selected(time_roller[0], 15, LV_ANIM_OFF);

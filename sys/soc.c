@@ -25,7 +25,7 @@ char *get_soc_name(char *buf)
     {
         char c = *(ret + i);
         if (((c > '9') || (c < '0')) &&
-            ((c != 'x') || (c != 'X')))
+                ((c != 'x') || (c != 'X')))
         {
             *(ret + i) = '\0';
             break;

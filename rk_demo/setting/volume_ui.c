@@ -36,7 +36,8 @@ lv_obj_t *menu_volume_init(lv_obj_t *parent)
     lv_obj_add_style(volume_label, &style_txt_m, LV_PART_MAIN);
 
     volume_slider = lv_slider_create(bg);
-    lv_obj_add_event_cb(volume_slider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(volume_slider, slider_event_cb, LV_EVENT_VALUE_CHANGED,
+                        NULL);
     lv_obj_set_width(volume_slider, lv_pct(100));
     lv_slider_set_range(volume_slider, 10, 100);
     lv_slider_set_value(volume_slider, 100, LV_ANIM_OFF);

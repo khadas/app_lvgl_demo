@@ -21,12 +21,14 @@ static double cal_cpuoccupy(cpu_occupy_t *o, cpu_occupy_t *n)
     double id, sd;
     double cpu_use;
 
-    od = (double)(o->user + o->nice + o->system + o->idle + o->softirq + o->iowait + o->irq);
-    nd = (double)(n->user + n->nice + n->system + n->idle + n->softirq + n->iowait + n->irq);
+    od = (double)(o->user + o->nice + o->system + o->idle + o->softirq + o->iowait +
+                  o->irq);
+    nd = (double)(n->user + n->nice + n->system + n->idle + n->softirq + n->iowait +
+                  n->irq);
 
     id = (double)(n->idle);
     sd = (double)(o->idle);
-    if((nd - od) != 0)
+    if ((nd - od) != 0)
         cpu_use = 100.0 - ((id - sd)) / (nd - od) * 100.00;
     else
         cpu_use = 0;
@@ -42,7 +44,7 @@ static void get_cpuoccupy(cpu_occupy_t *cpust)
     cpu_occupy = cpust;
 
     fd = fopen("/proc/stat", "r");
-    if(fd == NULL)
+    if (fd == NULL)
     {
         printf("open /proc/stat failed\n");
         return;
@@ -51,9 +53,9 @@ static void get_cpuoccupy(cpu_occupy_t *cpust)
         printf("fgets failed\n");
 
     sscanf(buff, "%s %u %u %u %u %u %u %u", cpu_occupy->name,
-        &cpu_occupy->user, &cpu_occupy->nice, &cpu_occupy->system,
-        &cpu_occupy->idle, &cpu_occupy->iowait, &cpu_occupy->irq,
-        &cpu_occupy->softirq);
+           &cpu_occupy->user, &cpu_occupy->nice, &cpu_occupy->system,
+           &cpu_occupy->idle, &cpu_occupy->iowait, &cpu_occupy->irq,
+           &cpu_occupy->softirq);
 
     fclose(fd);
 }

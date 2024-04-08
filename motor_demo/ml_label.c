@@ -90,7 +90,8 @@ void ml_label_set_text(lv_obj_t *obj, int txt_idx)
                 break;
             }
             p = p->next;
-        } while (p);
+        }
+        while (p);
     }
 
     if (!label)
@@ -128,7 +129,8 @@ void ml_label_destroy(lv_obj_t *obj)
         }
         prev = p;
         p = prev->next;
-    } while (p);
+    }
+    while (p);
 }
 
 void ml_label_set_language(int language)
@@ -148,6 +150,7 @@ void ml_label_set_language(int language)
         if (p->lv_obj)
             lv_label_set_text(p->lv_obj, txt[p->txt_idx][lan]);
         p = p->next;
-    } while (p);
+    }
+    while (p);
 }
 

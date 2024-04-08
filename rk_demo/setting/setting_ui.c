@@ -49,7 +49,7 @@ static lv_obj_t *sub_menu[SUBMENU_MAX];
 static int cur_menu = SUBMENU_MAX;
 static struct submenu_s submenu_desc[SUBMENU_MAX];
 
-static void sliders_draw(lv_obj_t * parent, struct btn_desc *desc);
+static void sliders_draw(lv_obj_t *parent, struct btn_desc *desc);
 static void menu_switch_cb(lv_event_t *e);
 static void switch_toggled(lv_event_t *e);
 
@@ -152,7 +152,8 @@ static lv_coord_t col_dsc[] = {200, 200, LV_GRID_TEMPLATE_LAST};
 static lv_coord_t row_dsc[] = {140, 140, 140, 140, LV_GRID_TEMPLATE_LAST};
 #endif
 
-struct btn_matrix_desc setting_desc = {
+struct btn_matrix_desc setting_desc =
+{
     .col_dsc = col_dsc,
     .row_dsc = row_dsc,
     .pad = 5,
@@ -345,7 +346,8 @@ void setting_ui_init(void)
     lv_obj_set_size(submenu_mask, lv_pct(100), lv_pct(100));
     lv_obj_set_style_bg_color(submenu_mask, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_bg_opa(submenu_mask, LV_OPA_80, LV_PART_MAIN);
-    lv_obj_add_event_cb(submenu_mask, submenu_mask_cb, LV_EVENT_CLICKED, submenu_mask);
+    lv_obj_add_event_cb(submenu_mask, submenu_mask_cb, LV_EVENT_CLICKED,
+                        submenu_mask);
 
     submenu_area = lv_obj_create(submenu_mask);
 #ifdef LARGE

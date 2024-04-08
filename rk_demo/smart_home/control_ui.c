@@ -221,7 +221,7 @@ static lv_obj_t *aircond_menu(lv_obj_t *parent,
     return area_aircond_bg;
 }
 
-void menu_control_scroll_cb(lv_event_t * event)
+void menu_control_scroll_cb(lv_event_t *event)
 {
     lv_area_t area;
 

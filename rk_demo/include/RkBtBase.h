@@ -128,10 +128,13 @@ typedef struct scaned_dev
 } RkBtScanedDevice;
 
 typedef void (*RK_BT_STATE_CALLBACK)(RK_BT_STATE state);
-typedef void (*RK_BT_BOND_CALLBACK)(const char *bd_addr, const char *name, RK_BT_BOND_STATE state);
+typedef void (*RK_BT_BOND_CALLBACK)(const char *bd_addr, const char *name,
+                                    RK_BT_BOND_STATE state);
 typedef void (*RK_BT_DISCOVERY_CALLBACK)(RK_BT_DISCOVERY_STATE state);
-typedef void (*RK_BT_DEV_FOUND_CALLBACK)(const char *address, const char *name, unsigned int bt_class, int rssi, int change);
-typedef void (*RK_BT_NAME_CHANGE_CALLBACK)(const char *bd_addr, const char *name);
+typedef void (*RK_BT_DEV_FOUND_CALLBACK)(const char *address, const char *name,
+        unsigned int bt_class, int rssi, int change);
+typedef void (*RK_BT_NAME_CHANGE_CALLBACK)(const char *bd_addr,
+        const char *name);
 typedef void (*RK_BT_MTU_CALLBACK)(const char *bd_addr, unsigned int mtu);
 
 void rk_bt_register_state_callback(RK_BT_STATE_CALLBACK cb);

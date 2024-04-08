@@ -20,7 +20,7 @@ static lv_obj_t *area_date;
 static lv_obj_t *area_weather;
 static lv_obj_t *area_scene;
 
-void menu_info_scroll_cb(lv_event_t * event)
+void menu_info_scroll_cb(lv_event_t *event)
 {
     lv_area_t area;
 

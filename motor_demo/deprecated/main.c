@@ -33,12 +33,12 @@ MADHT1505BA1_object slave[2];
 lv_ft_info_t ttf_main;
 lv_ft_info_t ttf_main_s;
 static struct meter meters[4];
-static lv_obj_t * scr;
-static lv_obj_t * bg_img;
-static lv_obj_t * cont_speed;
-static lv_obj_t * cont_position;
-static lv_obj_t * mode_label;
-static lv_obj_t * mode_switch;
+static lv_obj_t *scr;
+static lv_obj_t *bg_img;
+static lv_obj_t *cont_speed;
+static lv_obj_t *cont_position;
+static lv_obj_t *mode_label;
+static lv_obj_t *mode_switch;
 static lv_anim_t slide_in;
 static lv_anim_t slide_out;
 
@@ -52,7 +52,8 @@ int set_speed1 = 0;
 int last_speed0 = 0;
 int last_speed1 = 0;
 
-static int thread_bind_cpu(int target_cpu) {
+static int thread_bind_cpu(int target_cpu)
+{
     cpu_set_t mask;
     int cpu_num = sysconf(_SC_NPROCESSORS_CONF);
     int i;
@@ -70,8 +71,10 @@ static int thread_bind_cpu(int target_cpu) {
         perror("pthread_getaffinity_np");
 
     printf("Thread(%ld) bound to cpu:", gettid());
-    for (i = 0; i < CPU_SETSIZE; i++) {
-        if (CPU_ISSET(i, &mask)) {
+    for (i = 0; i < CPU_SETSIZE; i++)
+    {
+        if (CPU_ISSET(i, &mask))
+        {
             printf(" %d", i);
             break;
         }
@@ -97,12 +100,12 @@ static void font_init(void)
     lv_freetype_init(64, 1, 0);
 
     ttf_main.weight = 68;
-    ttf_main.name = SYS_FONT(SourceHanSansCN-Regular);
+    ttf_main.name = SYS_FONT(SourceHanSansCN - Regular);
     ttf_main.style = FT_FONT_STYLE_NORMAL;
     lv_ft_font_init(&ttf_main);
 
     ttf_main_s.weight = 48;
-    ttf_main_s.name = SYS_FONT(SourceHanSansCN-Regular);
+    ttf_main_s.name = SYS_FONT(SourceHanSansCN - Regular);
     ttf_main_s.style = FT_FONT_STYLE_NORMAL;
     lv_ft_font_init(&ttf_main_s);
 }
@@ -126,7 +129,8 @@ static int motor_init(void)
 #if ENABLE_MOTOR_CONTROL
     int ret;
     ret = MADHT1505BA1_master_init(3); //bind cpu core 3
-    if(ret == -1) {
+    if (ret == -1)
+    {
         printf("MADHT1505BA1_master_init is err\n");
         MADHT1505BA1_master_deinit();
     }
@@ -136,38 +140,44 @@ static int motor_init(void)
     slave[1].position = 0;
 
     ret = MADHT1505BA1_slaves_init(&slave[0]);
-    if(ret == -1) {
+    if (ret == -1)
+    {
         printf("MADHT1505BA1_slaves_init0 is err\n");
         MADHT1505BA1_master_deinit();
         return -1;
     }
     ret = MADHT1505BA1_slaves_init(&slave[1]);
-    if(ret == -1) {
+    if (ret == -1)
+    {
         printf("MADHT1505BA1_slaves_init1 is err\n");
         MADHT1505BA1_master_deinit();
         return -1;
     }
     ret = MADHT1505BA1_master_activate();
-    if(ret == -1) {
+    if (ret == -1)
+    {
         printf("MADHT1505BA1_master_activate is err\n");
         MADHT1505BA1_master_deinit();
         return -1;
     }
     ret = MADHT1505BA1_slaves_activate(&slave[0]);
-    if(ret == -1) {
+    if (ret == -1)
+    {
         printf("MADHT1505BA1_slaves_activate0 is err\n");
         MADHT1505BA1_master_deinit();
         return -1;
     }
     ret = MADHT1505BA1_slaves_activate(&slave[1]);
-    if(ret == -1) {
+    if (ret == -1)
+    {
         printf("MADHT1505BA1_slaves_activate1 is err\n");
         MADHT1505BA1_master_deinit();
         return -1;
     }
 
     ret = MADHT1505BA1_slave_start(2, &slave[0], &slave[1]);
-    if(ret == -1) {
+    if (ret == -1)
+    {
         printf("MADHT1505BA1_slaves_activate1 is err\n");
         MADHT1505BA1_master_deinit();
         return -1;
@@ -175,7 +185,9 @@ static int motor_init(void)
 
 
     printf("Please wait while checking whether the motor is operational...\n");
-    while((MADHT1505BA1_check_motor(&slave[0]) == -1) || (MADHT1505BA1_check_motor(&slave[1]) == -1)) {
+    while ((MADHT1505BA1_check_motor(&slave[0]) == -1)
+            || (MADHT1505BA1_check_motor(&slave[1]) == -1))
+    {
         sleep(1);
     }
     printf("motor is ok\n");
@@ -236,23 +248,23 @@ void update_needle_points(lv_point_t *p, int angle)
     p[1].y = 280 * sin(degree) + 290;
 }
 
-static void anim_x_cb(void * var, int32_t v)
+static void anim_x_cb(void *var, int32_t v)
 {
     lv_obj_set_x(cont_speed, lv_pct(-v));
     lv_obj_set_x(cont_position, lv_pct(100 - v));
 }
 
-static void anim_end_cb(lv_anim_t * anim)
+static void anim_end_cb(lv_anim_t *anim)
 {
     lv_obj_add_flag(mode_switch, LV_OBJ_FLAG_CLICKABLE);
 }
 
-static void switch_cb(lv_event_t * e)
+static void switch_cb(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t * obj = lv_event_get_target(e);
+    lv_obj_t *obj = lv_event_get_target(e);
 
-    if(code == LV_EVENT_VALUE_CHANGED)
+    if (code == LV_EVENT_VALUE_CHANGED)
     {
         if (lv_obj_has_state(obj, LV_STATE_CHECKED))
             lv_anim_start(&slide_in);
@@ -270,7 +282,7 @@ static void ui_init(void)
     lv_obj_clear_flag(scr, LV_OBJ_FLAG_SCROLLABLE);
 
     if (lv_obj_get_width(scr) >
-        lv_obj_get_height(scr))
+            lv_obj_get_height(scr))
     {
         mode = 0;
     }
@@ -312,16 +324,16 @@ static void ui_init(void)
     lv_obj_align(mode_label, LV_ALIGN_TOP_LEFT, 20, 20);
     lv_label_set_text(mode_label, "位置控制");
     lv_obj_set_style_text_color(mode_label,
-        lv_color_white(), LV_PART_MAIN);
+                                lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_text_font(mode_label,
-        ttf_main.font, LV_PART_MAIN);
+                               ttf_main.font, LV_PART_MAIN);
 
     mode_switch = lv_switch_create(scr);
     lv_obj_set_size(mode_switch, 100, 50);
     lv_obj_align_to(mode_switch, mode_label,
-        LV_ALIGN_OUT_RIGHT_MID, 0, 0);
+                    LV_ALIGN_OUT_RIGHT_MID, 0, 0);
     lv_obj_add_event_cb(mode_switch, switch_cb,
-        LV_EVENT_VALUE_CHANGED, NULL);
+                        LV_EVENT_VALUE_CHANGED, NULL);
 
     lv_anim_init(&slide_in);
     lv_anim_set_values(&slide_in, 0, 100);
@@ -345,23 +357,27 @@ static void display_motor_information(void)
 
 #if ENABLE_MOTOR_CONTROL
     cur_speed = MADHT1505BA1_check_motor(&slave[0]);
-    if (cur_speed != -1) {
-        if(last_speed0 != set_speed0) {
+    if (cur_speed != -1)
+    {
+        if (last_speed0 != set_speed0)
+        {
             MADHT1505BA1_motor_start(&slave[0], set_speed0);
             last_speed0 = set_speed0;
         }
     }
 
     cur_speed = MADHT1505BA1_check_motor(&slave[1]);
-    if (cur_speed != -1) {
-        if(last_speed1 != set_speed1) {
+    if (cur_speed != -1)
+    {
+        if (last_speed1 != set_speed1)
+        {
             MADHT1505BA1_motor_start(&slave[1], set_speed1);
             last_speed1 = set_speed1;
         }
     }
 #endif
     lv_label_set_text_fmt(label_jitter,
-        "Jitter:\nMax: %10u\nMin: %10u", max, min);
+                          "Jitter:\nMax: %10u\nMin: %10u", max, min);
 }
 
 int main(int argc, char **argv)
@@ -370,25 +386,29 @@ int main(int argc, char **argv)
     struct sched_param param;
     int ret = 0;
     int fre = 500;
-    if(thread_bind_cpu(1) == -1) {
+    if (thread_bind_cpu(1) == -1)
+    {
         printf("bind cpu core fail\n");
     }
 
     // The scheduling priority is the highest
     maxpri = sched_get_priority_max(SCHED_FIFO);
-    if(maxpri == -1) {
+    if (maxpri == -1)
+    {
         printf("sched_get_priority_max() failed");
     }
 
     param.sched_priority = maxpri;
-    if (sched_setscheduler(getpid(), SCHED_FIFO, &param) == -1) {
+    if (sched_setscheduler(getpid(), SCHED_FIFO, &param) == -1)
+    {
         perror("sched_setscheduler() failed");
     }
 
     signal(SIGINT, sigterm_handler);
     lvgl_init();
 
-    while(motor_init() == -1) {
+    while (motor_init() == -1)
+    {
         printf("motor init is err \n");
         sleep(1);
     }
@@ -397,9 +417,10 @@ int main(int argc, char **argv)
 
     while (!quit)
     {
-        if(fre == 0){
-           display_motor_information();
-           fre = 500;
+        if (fre == 0)
+        {
+            display_motor_information();
+            fre = 500;
         }
         fre--;
         lv_task_handler();

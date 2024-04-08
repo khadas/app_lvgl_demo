@@ -53,7 +53,8 @@ static lv_fs_res_t fs_close(lv_fs_drv_t *drv, void *file_p)
  * @return LV_FS_RES_OK: no error, the file is read
  *         any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_read(lv_fs_drv_t *drv, void *file_p, void *buf, uint32_t btr, uint32_t *br)
+static lv_fs_res_t fs_read(lv_fs_drv_t *drv, void *file_p, void *buf,
+                           uint32_t btr, uint32_t *br)
 {
     lv_fs_res_t res = LV_FS_RES_OK;
 
@@ -65,7 +66,8 @@ static lv_fs_res_t fs_read(lv_fs_drv_t *drv, void *file_p, void *buf, uint32_t b
     return res;
 }
 
-static lv_fs_res_t fs_write(lv_fs_drv_t *drv, void *file_p, const void *buf, uint32_t btw, uint32_t *bw)
+static lv_fs_res_t fs_write(lv_fs_drv_t *drv, void *file_p, const void *buf,
+                            uint32_t btw, uint32_t *bw)
 {
     lv_fs_res_t res = LV_FS_RES_OK;
 
@@ -83,7 +85,8 @@ static lv_fs_res_t fs_write(lv_fs_drv_t *drv, void *file_p, const void *buf, uin
  * @return LV_FS_RES_OK: no error, the file is read
  *         any error from lv_fs_res_t enum
  */
-static lv_fs_res_t fs_seek(lv_fs_drv_t *drv, void *file_p, uint32_t pos, lv_fs_whence_t whence)
+static lv_fs_res_t fs_seek(lv_fs_drv_t *drv, void *file_p, uint32_t pos,
+                           lv_fs_whence_t whence)
 {
     lv_fs_res_t res = LV_FS_RES_OK;
 
@@ -93,7 +96,8 @@ static lv_fs_res_t fs_seek(lv_fs_drv_t *drv, void *file_p, uint32_t pos, lv_fs_w
     return res;
 }
 
-static lv_fs_res_t fs_tell(struct _lv_fs_drv_t *drv, void *file_p, uint32_t *pos_p)
+static lv_fs_res_t fs_tell(struct _lv_fs_drv_t *drv, void *file_p,
+                           uint32_t *pos_p)
 {
     lv_fs_res_t res = LV_FS_RES_OK;
 

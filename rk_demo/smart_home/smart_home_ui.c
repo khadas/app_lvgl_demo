@@ -88,7 +88,7 @@ static void btn_return_cb(lv_event_t *e)
     }
 }
 
-static void scroll_cb(lv_event_t * event)
+static void scroll_cb(lv_event_t *event)
 {
     for (int i = SUBMENU_MIN; i < SUBMENU_MAX; i++)
     {

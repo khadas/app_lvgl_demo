@@ -85,7 +85,8 @@ int audio_client_del(void *arg)
     }
 
     client->state = STATE_EXIT;
-    if (client->tid) {
+    if (client->tid)
+    {
         pthread_join(client->tid, RK_NULL);
         client->tid = 0;
     }

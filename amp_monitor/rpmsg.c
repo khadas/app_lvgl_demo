@@ -22,7 +22,8 @@ void rpmsg_reset(void)
     reset = 1;
 }
 
-int rpmsg_read(int32_t *y, int32_t *min, int32_t *max, int32_t *avg, int32_t *cur)
+int rpmsg_read(int32_t *y, int32_t *min, int32_t *max, int32_t *avg,
+               int32_t *cur)
 {
     if (!update)
         return 0;
@@ -60,30 +61,32 @@ void *rpmsg_thread(void *argv)
             data_str = strstr(buf, "0.5 =");
             if (avg_str)
             {
-                sscanf(avg_str, "avg = %f us, max = %f us, min = %f us, cur = %f us", &avg, &max, &min, &cur);
+                sscanf(avg_str, "avg = %f us, max = %f us, min = %f us, cur = %f us", &avg,
+                       &max, &min, &cur);
                 data_min = min * 1000;
                 data_max = max * 1000;
                 data_avg = avg * 1000;
                 data_cur = cur * 1000;
-                printf("<avg = %f us, max = %f us, min = %f us, cur = %f us>\n", avg, max, min, cur);
+                printf("<avg = %f us, max = %f us, min = %f us, cur = %f us>\n", avg, max, min,
+                       cur);
                 update = 1;
             }
             if (data_str)
             {
                 sscanf(data_str,
-                    "0.5 = %d times, 1 = %d times, 1.5 = %d times, "
-                    "2 = %d times, 2.5 = %d times, 3 = %d times, "
-                    "3.5 = %d times, 4 = %d times, 4.5 = %d times, "
-                    "5 = %d times, 5.5 = %d times, 6 = %d times",
-                    &d[1], &d[2], &d[3], &d[4], &d[5], &d[6],
-                    &d[7], &d[8], &d[9], &d[10], &d[11], &d[12]);
+                       "0.5 = %d times, 1 = %d times, 1.5 = %d times, "
+                       "2 = %d times, 2.5 = %d times, 3 = %d times, "
+                       "3.5 = %d times, 4 = %d times, 4.5 = %d times, "
+                       "5 = %d times, 5.5 = %d times, 6 = %d times",
+                       &d[1], &d[2], &d[3], &d[4], &d[5], &d[6],
+                       &d[7], &d[8], &d[9], &d[10], &d[11], &d[12]);
                 printf(data_str,
-                    "<0.5 = %d times, 1 = %d times, 1.5 = %d times, "
-                    "2 = %d times, 2.5 = %d times, 3 = %d times, "
-                    "3.5 = %d times, 4 = %d times, 4.5 = %d times, "
-                    "5 = %d times, 5.5 = %d times, 6 = %d times>\n",
-                    d[1], d[2], d[3], d[4], d[5], d[6],
-                    d[7], d[8], d[9], d[10], d[11], d[12]);
+                       "<0.5 = %d times, 1 = %d times, 1.5 = %d times, "
+                       "2 = %d times, 2.5 = %d times, 3 = %d times, "
+                       "3.5 = %d times, 4 = %d times, 4.5 = %d times, "
+                       "5 = %d times, 5.5 = %d times, 6 = %d times>\n",
+                       d[1], d[2], d[3], d[4], d[5], d[6],
+                       d[7], d[8], d[9], d[10], d[11], d[12]);
                 if (reset)
                 {
                     reset = 0;

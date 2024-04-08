@@ -46,16 +46,20 @@ pthread_t ntid;
 
 ///////////////////// FUNCTIONS ////////////////////
 
-static void *GetFramerate(void) {
+static void *GetFramerate(void)
+{
     start_clock = 1;
-    while(start_clock) {
+    while (start_clock)
+    {
         sleep(1);
         play_time++;
-        printf("Software decodes the frame rate: %d\n", RKADK_PLAYER_GetSendFrameNum(pPlayer)/play_time);
+        printf("Software decodes the frame rate: %d\n",
+               RKADK_PLAYER_GetSendFrameNum(pPlayer) / play_time);
     }
 }
 
-static void close_framerate_detection(void) {
+static void close_framerate_detection(void)
+{
     start_clock = 0;
     play_time = 0;
     ntid = NULL;
@@ -159,7 +163,7 @@ static void rkadk_init(void)
     stPlayCfg.stFrmInfo.u32FrmInfoY = 128;
     stPlayCfg.bEnableBlackBackground = true;
     stPlayCfg.pfnPlayerCallback = PlayerEventFnTest;
-	stPlayCfg.stVdecCfg.u32FrameBufCnt = 15;
+    stPlayCfg.stVdecCfg.u32FrameBufCnt = 15;
     if (RKADK_PLAYER_Create(&pPlayer, &stPlayCfg))
     {
         printf("rkadk: RKADK_PLAYER_Create failed\n");
@@ -238,11 +242,12 @@ void video_name_callback(lv_event_t *event)
 
 static char *strlwr(char *s)
 {
-  char *p = s;
-  for(;*s;s++) {
-    *s = tolower(*s);
-  }
-  return p;
+    char *p = s;
+    for (; *s; s++)
+    {
+        *s = tolower(*s);
+    }
+    return p;
 }
 
 static char *strrstr(const char *str, const char *token)
@@ -269,8 +274,10 @@ int file_is_supported(char *filepath)
         "mp4", "mp3"
     };
 
-    for (int i = 0; i < sizeof(formats) / sizeof(formats[0]); i++) {
-        if (strcmp(suffix, formats[i]) == 0) {
+    for (int i = 0; i < sizeof(formats) / sizeof(formats[0]); i++)
+    {
+        if (strcmp(suffix, formats[i]) == 0)
+        {
             ret = 1;
             break;
         }
@@ -322,7 +329,8 @@ void player_list_button_callback(lv_event_t *event)
                     //add_file_to_list(entry->d_name);
                     lv_obj_t *obj_text = lv_list_add_btn(video_list, NULL, entry->d_name);
                     lv_obj_add_flag(obj_text, LV_OBJ_FLAG_CLICKABLE);
-                    lv_obj_add_event_cb(obj_text, video_name_callback, LV_EVENT_CLICKED, entry->d_name);
+                    lv_obj_add_event_cb(obj_text, video_name_callback, LV_EVENT_CLICKED,
+                                        entry->d_name);
                     file_count++;
                     if (file_count >= MAX_FILE_COUNT)
                     {
@@ -437,7 +445,8 @@ static struct btn_desc player_btn[] =
 static lv_coord_t col_dsc[] = {200, 200, 200, LV_GRID_TEMPLATE_LAST};
 static lv_coord_t row_dsc[] = {200, LV_GRID_TEMPLATE_LAST};
 
-static struct btn_matrix_desc btn_desc = {
+static struct btn_matrix_desc btn_desc =
+{
     .col_dsc = col_dsc,
     .row_dsc = row_dsc,
     .pad = 5,

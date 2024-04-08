@@ -77,10 +77,10 @@ static void chart_y_tick_update(int new_ticks)
         else
             lv_label_set_text(tick_label_y[i], "0");
         lv_obj_set_style_text_font(tick_label_y[i], ttf_main_s.font,
-            LV_PART_MAIN);
+                                   LV_PART_MAIN);
         lv_obj_refr_size(tick_label_y[i]);
         lv_obj_align_to(tick_label_y[i], chart, LV_ALIGN_OUT_LEFT_BOTTOM,
-            -10, -(y - lv_obj_get_height(tick_label_y[i]) / 2));
+                        -10, -(y - lv_obj_get_height(tick_label_y[i]) / 2));
         y += gap_y;
     }
 }
@@ -103,12 +103,12 @@ static void chart_range_update(void)
     {
         y_range = max_log10 * 100;
         lv_chart_set_range(chart,
-            LV_CHART_AXIS_PRIMARY_Y, 0, y_range);
+                           LV_CHART_AXIS_PRIMARY_Y, 0, y_range);
         chart_y_tick_update(max_log10 + 1);
     }
 }
 
-static void chart_update(lv_timer_t * e)
+static void chart_update(lv_timer_t *e)
 {
     struct timeval tv;
     time_t dur;
@@ -118,12 +118,12 @@ static void chart_update(lv_timer_t * e)
     usage = (float)get_cpu_usage();
     lv_label_set_text_fmt(cpu_usage, "%.1f%% CPU", usage);
 
-    gettimeofday(&tv,NULL);
+    gettimeofday(&tv, NULL);
     dur = tv.tv_sec - tstart.tv_sec;
     lv_label_set_text_fmt(time_label, "%02u:%02u:%02u",
-        dur / 60 / 60,
-        dur / 60 % 60,
-        dur % 60);
+                          dur / 60 / 60,
+                          dur / 60 % 60,
+                          dur % 60);
 
     if (socket_read(samples, &min, &max, &avg, &cur))
     {
@@ -157,12 +157,14 @@ static void font_init(void)
     lv_freetype_init(64, 1, 0);
 
     ttf_main.weight = 50;
-    ttf_main.name = "/usr/share/fonts/source-han-sans-cn/SourceHanSansCN-Regular.otf";
+    ttf_main.name =
+        "/usr/share/fonts/source-han-sans-cn/SourceHanSansCN-Regular.otf";
     ttf_main.style = FT_FONT_STYLE_NORMAL;
     lv_ft_font_init(&ttf_main);
 
     ttf_main_s.weight = 30;
-    ttf_main_s.name = "/usr/share/fonts/source-han-sans-cn/SourceHanSansCN-Regular.otf";
+    ttf_main_s.name =
+        "/usr/share/fonts/source-han-sans-cn/SourceHanSansCN-Regular.otf";
     ttf_main_s.style = FT_FONT_STYLE_NORMAL;
     lv_ft_font_init(&ttf_main_s);
 }
@@ -174,7 +176,7 @@ static void reset_cb(lv_event_t *e)
     memset(sample2_y, 0, sizeof(sample2_y));
     y_range = 200;
     lv_chart_set_range(chart,
-        LV_CHART_AXIS_PRIMARY_Y, 0, y_range);
+                       LV_CHART_AXIS_PRIMARY_Y, 0, y_range);
     chart_y_tick_update(y_range / 100 + 1);
     lv_label_set_text(tag_min[0], "min: 0us");
     lv_label_set_text(tag_max[0], "max: 0us");
@@ -187,7 +189,7 @@ static void reset_cb(lv_event_t *e)
     lv_obj_invalidate(chart);
     socket_reset();
     rpmsg_reset();
-    gettimeofday(&tstart,NULL);
+    gettimeofday(&tstart, NULL);
 }
 
 void monitor(void)
@@ -242,8 +244,8 @@ void monitor(void)
     }
 
     lv_obj_set_style_bg_color(tag[0],
-        lv_palette_lighten(LV_PALETTE_PINK, 1),
-        LV_PART_MAIN);
+                              lv_palette_lighten(LV_PALETTE_PINK, 1),
+                              LV_PART_MAIN);
     lv_label_set_text(tag_title[0], kernel_version);
     lv_label_set_text(tag_min[0], "min: 0us");
     lv_label_set_text(tag_max[0], "max: 0us");
@@ -251,8 +253,8 @@ void monitor(void)
     lv_label_set_text(tag_now[0], "now: 0us");
 
     lv_obj_set_style_bg_color(tag[1],
-        lv_palette_lighten(LV_PALETTE_BLUE, 1),
-        LV_PART_MAIN);
+                              lv_palette_lighten(LV_PALETTE_BLUE, 1),
+                              LV_PART_MAIN);
     lv_label_set_text(tag_title[1], "Bare-metal");
     lv_label_set_text(tag_min[1], "min: 0us");
     lv_label_set_text(tag_max[1], "max: 0us");
@@ -268,24 +270,24 @@ void monitor(void)
     lv_chart_set_div_line_count(chart, y_ticks, 4);
     lv_chart_set_type(chart, LV_CHART_TYPE_SCATTER);
     lv_chart_set_range(chart,
-        LV_CHART_AXIS_PRIMARY_X, 0, 300);
+                       LV_CHART_AXIS_PRIMARY_X, 0, 300);
     lv_chart_set_range(chart,
-        LV_CHART_AXIS_PRIMARY_Y, 0, y_range);
+                       LV_CHART_AXIS_PRIMARY_Y, 0, y_range);
     lv_chart_set_axis_tick(chart,
-        LV_CHART_AXIS_PRIMARY_X, 10, 5, 31, 1, false, 0);
+                           LV_CHART_AXIS_PRIMARY_X, 10, 5, 31, 1, false, 0);
     lv_chart_set_axis_tick(chart,
-        LV_CHART_AXIS_PRIMARY_Y, 10, 5, 3, 2, false, 100);
+                           LV_CHART_AXIS_PRIMARY_Y, 10, 5, 3, 2, false, 100);
 
     for (int i = 0; i < ARRAY_SIZE(sample_x); i++)
         sample_x[i] = i;
 
     lv_chart_set_point_count(chart, ARRAY_SIZE(sample_x));
     ser[0] = lv_chart_add_series(chart,
-        lv_palette_lighten(LV_PALETTE_PINK, 1), LV_CHART_AXIS_PRIMARY_Y);
+                                 lv_palette_lighten(LV_PALETTE_PINK, 1), LV_CHART_AXIS_PRIMARY_Y);
     lv_chart_set_ext_x_array(chart, ser[0], sample_x);
     lv_chart_set_ext_y_array(chart, ser[0], sample_y);
     ser[1] = lv_chart_add_series(chart,
-        lv_palette_lighten(LV_PALETTE_BLUE, 1), LV_CHART_AXIS_PRIMARY_Y);
+                                 lv_palette_lighten(LV_PALETTE_BLUE, 1), LV_CHART_AXIS_PRIMARY_Y);
     lv_chart_set_ext_x_array(chart, ser[1], sample2_x);
     lv_chart_set_ext_y_array(chart, ser[1], sample2_y);
 
@@ -301,17 +303,18 @@ void monitor(void)
     int pad_left = lv_obj_get_style_pad_left(chart, LV_PART_MAIN);
     int pad_right = lv_obj_get_style_pad_left(chart, LV_PART_MAIN);
     float x = pad_left;
-    float gap_x = (float)(lv_obj_get_width(chart) - pad_left - pad_right) / (ARRAY_SIZE(tick_label_x) - 1);
+    float gap_x = (float)(lv_obj_get_width(chart) - pad_left - pad_right) /
+                  (ARRAY_SIZE(tick_label_x) - 1);
 
     for (int i = 0; i < ARRAY_SIZE(tick_label_x); i++)
     {
         tick_label_x[i] = lv_label_create(scr);
         lv_label_set_text_fmt(tick_label_x[i], "%d", i);
         lv_obj_set_style_text_font(tick_label_x[i], ttf_main_s.font,
-            LV_PART_MAIN);
+                                   LV_PART_MAIN);
         lv_obj_refr_size(tick_label_x[i]);
         lv_obj_align_to(tick_label_x[i], chart, LV_ALIGN_OUT_BOTTOM_LEFT,
-            (int)x - lv_obj_get_width(tick_label_x[i]) / 2, 10);
+                        (int)x - lv_obj_get_width(tick_label_x[i]) / 2, 10);
         x += gap_x;
     }
 
@@ -348,6 +351,6 @@ void monitor(void)
 
     get_cpu_usage();
 
-    gettimeofday(&tstart,NULL);
+    gettimeofday(&tstart, NULL);
 }
 

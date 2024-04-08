@@ -24,7 +24,8 @@ typedef enum
     RK_WIFI_State_OFF,
     RK_WIFI_State_SCAN_RESULTS,
     RK_WIFI_State_DHCP_OK,
-} RK_WIFI_RUNNING_State_e;
+}
+RK_WIFI_RUNNING_State_e;
 
 typedef enum
 {
@@ -61,7 +62,8 @@ typedef struct
     RK_WIFI_SAVED_INFO_s save_info[RK_WIFI_SAVED_INFO_MAX];
 } RK_WIFI_SAVED_INFO;
 
-typedef int(*RK_wifi_state_callback)(RK_WIFI_RUNNING_State_e state, RK_WIFI_INFO_Connection_s *info);
+typedef int(*RK_wifi_state_callback)(RK_WIFI_RUNNING_State_e state,
+                                     RK_WIFI_INFO_Connection_s *info);
 
 int RK_wifi_register_callback(RK_wifi_state_callback cb);
 int RK_wifi_running_getState(RK_WIFI_RUNNING_State_e *pState);
@@ -73,7 +75,8 @@ char *RK_wifi_scan_r_sec(const unsigned int cols);
 int RK_wifi_connect(char *ssid, const char *psk);
 int RK_wifi_connect_wep(char *ssid, const char *psk);
 int RK_wifi_connect_wpa3(char *ssid, const char *psk);
-int RK_wifi_connect1(char *ssid, const char *psk, const RK_WIFI_CONNECTION_Encryp_e encryp, const int hide);
+int RK_wifi_connect1(char *ssid, const char *psk,
+                     const RK_WIFI_CONNECTION_Encryp_e encryp, const int hide);
 int RK_wifi_disconnect_network(void);
 int RK_wifi_restart_network(void);
 int RK_wifi_set_hostname(const char *name);

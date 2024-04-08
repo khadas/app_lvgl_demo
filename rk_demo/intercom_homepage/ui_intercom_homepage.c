@@ -111,7 +111,8 @@ static struct btn_desc button[] =
 static lv_coord_t col_dsc[] = {200, 200, LV_GRID_TEMPLATE_LAST};
 static lv_coord_t row_dsc[] = {200, 200, 200, 200, 200, 200, 200, 200, 200, 200, LV_GRID_TEMPLATE_LAST};
 
-struct btn_matrix_desc btn_desc = {
+struct btn_matrix_desc btn_desc =
+{
     .col_dsc = col_dsc,
     .row_dsc = row_dsc,
     .pad = 5,

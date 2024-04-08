@@ -40,7 +40,8 @@ static void furniture_control_page_jump_icebox_callback(lv_event_t *event)
     main = NULL;
 }
 
-static void furniture_control_page_jump_coffee_machine_callback(lv_event_t *event)
+static void furniture_control_page_jump_coffee_machine_callback(
+    lv_event_t *event)
 {
     printf("furniture_control_page_jump_coffee_machine_callback is into \n");
     coffee_machine_ui_init();
@@ -92,7 +93,8 @@ static struct btn_desc fc_btn[] =
 static lv_coord_t col_dsc[] = {200, 200, 200, LV_GRID_TEMPLATE_LAST};
 static lv_coord_t row_dsc[] = {200, LV_GRID_TEMPLATE_LAST};
 
-static struct btn_matrix_desc btn_desc = {
+static struct btn_matrix_desc btn_desc =
+{
     .col_dsc = col_dsc,
     .row_dsc = row_dsc,
     .pad = 5,
@@ -142,12 +144,18 @@ void furniture_control_ui_init(void)
     ui_box_main = ui_btnmatrix_create(v_bg, &btn_desc);
     lv_obj_center(ui_box_main);
 
-    lv_obj_set_style_bg_opa(furniture_control_ui_icebox_box, LV_OPA_COVER, LV_STATE_PRESSED);
-    lv_obj_set_style_bg_opa(furniture_control_ui_player_box, LV_OPA_COVER, LV_STATE_PRESSED);
-    lv_obj_set_style_bg_opa(furniture_control_ui_coffee_box, LV_OPA_COVER, LV_STATE_PRESSED);
-    lv_obj_set_style_bg_opa(furniture_control_ui_icebox_box, LV_OPA_TRANSP, LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(furniture_control_ui_player_box, LV_OPA_TRANSP, LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(furniture_control_ui_coffee_box, LV_OPA_TRANSP, LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(furniture_control_ui_icebox_box, LV_OPA_COVER,
+                            LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(furniture_control_ui_player_box, LV_OPA_COVER,
+                            LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(furniture_control_ui_coffee_box, LV_OPA_COVER,
+                            LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(furniture_control_ui_icebox_box, LV_OPA_TRANSP,
+                            LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(furniture_control_ui_player_box, LV_OPA_TRANSP,
+                            LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(furniture_control_ui_coffee_box, LV_OPA_TRANSP,
+                            LV_PART_MAIN);
     lv_obj_set_style_shadow_width(furniture_control_ui_icebox_box, 0, LV_PART_MAIN);
     lv_obj_set_style_shadow_width(furniture_control_ui_player_box, 0, LV_PART_MAIN);
     lv_obj_set_style_shadow_width(furniture_control_ui_coffee_box, 0, LV_PART_MAIN);

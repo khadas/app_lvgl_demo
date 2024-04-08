@@ -81,7 +81,8 @@ static struct btn_desc home_btn[] =
 static lv_coord_t col_dsc[] = {200, 200, LV_GRID_TEMPLATE_LAST};
 static lv_coord_t row_dsc[] = {200, 200, LV_GRID_TEMPLATE_LAST};
 
-struct btn_matrix_desc home_desc = {
+struct btn_matrix_desc home_desc =
+{
     .col_dsc = col_dsc,
     .row_dsc = row_dsc,
     .pad = 5,
@@ -93,7 +94,8 @@ struct btn_matrix_desc home_desc = {
 static lv_coord_t col_dsc[] = {120, 120, 120, 120, LV_GRID_TEMPLATE_LAST};
 static lv_coord_t row_dsc[] = {120, LV_GRID_TEMPLATE_LAST};
 
-struct btn_matrix_desc home_desc = {
+struct btn_matrix_desc home_desc =
+{
     .col_dsc = col_dsc,
     .row_dsc = row_dsc,
     .pad = 3,
@@ -263,7 +265,7 @@ void home_ui_init(void)
 
 void rk_demo_init(void)
 {
-    lv_obj_t * mask;
+    lv_obj_t *mask;
 
     scr = lv_obj_create(NULL);
     lv_obj_remove_style_all(scr);

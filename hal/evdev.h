@@ -50,14 +50,14 @@ extern "C" {
 /**
  * Initialize the evdev
  */
-void evdev_init(lv_disp_drv_t * drv, int rot);
+void evdev_init(lv_disp_drv_t *drv, int rot);
 /**
  * reconfigure the device file for evdev
  * @param dev_name set the evdev device filename
  * @return true: the device file set complete
  *         false: the device file doesn't exist current system
  */
-bool evdev_set_file(lv_disp_drv_t * drv, char *dev_name);
+bool evdev_set_file(lv_disp_drv_t *drv, char *dev_name);
 /**
  * Get the current position and state of the evdev
  * @param data store the evdev data here

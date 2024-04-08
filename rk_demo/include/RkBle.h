@@ -12,7 +12,8 @@ typedef enum
     RK_BLE_STATE_IDLE = 0,
     RK_BLE_STATE_CONNECT,
     RK_BLE_STATE_DISCONNECT
-} RK_BLE_STATE;
+}
+RK_BLE_STATE;
 
 typedef struct
 {
@@ -21,7 +22,8 @@ typedef struct
     int len;
 } RkBleConfig;
 
-typedef void (*RK_BLE_STATE_CALLBACK)(const char *bd_addr, const char *name, RK_BLE_STATE state);
+typedef void (*RK_BLE_STATE_CALLBACK)(const char *bd_addr, const char *name,
+                                      RK_BLE_STATE state);
 typedef void (*RK_BLE_RECV_CALLBACK)(const char *uuid, char *data, int len);
 typedef void (*RK_BLE_REQUEST_DATA)(const char *uuid);
 
@@ -39,7 +41,8 @@ void rk_ble_set_local_privacy(bool local_privacy);
 int rk_ble_set_address(char *address);
 
 /*smallest value: 32(32 * 0.625ms = 20ms)*/
-int rk_ble_set_adv_interval(unsigned short adv_int_min, unsigned short adv_int_max);
+int rk_ble_set_adv_interval(unsigned short adv_int_min,
+                            unsigned short adv_int_max);
 
 #ifdef __cplusplus
 }

@@ -67,7 +67,8 @@ static void icon_cb(lv_event_t *e)
     lv_obj_t *obj = lv_event_get_target(e);
     intptr_t type = (intptr_t)lv_event_get_user_data(e);
 
-    if (code == LV_EVENT_CLICKED && type >= 0 && type < sizeof(type_messages) / sizeof(type_messages[0]))
+    if (code == LV_EVENT_CLICKED && type >= 0
+            && type < sizeof(type_messages) / sizeof(type_messages[0]))
     {
         if (type != 3 && type != 7 && type != 12 && type != 15)
         {
@@ -133,10 +134,12 @@ void intercom_call_button(lv_obj_t *parent, lv_obj_t *referent)
         lv_obj_add_flag(button[i].ui_circle, LV_OBJ_FLAG_ADV_HITTEST);
         lv_obj_clear_flag(button[i].ui_circle, LV_OBJ_FLAG_SCROLLABLE);
         lv_img_set_zoom(button[i].ui_circle, 500);
-        lv_obj_align_to(button[i].ui_circle, referent, LV_ALIGN_OUT_BOTTOM_LEFT, button[i].x, button[i].y);  // 将 lv_obj_align_to 替换为 lv_obj_align
+        lv_obj_align_to(button[i].ui_circle, referent, LV_ALIGN_OUT_BOTTOM_LEFT,
+                        button[i].x, button[i].y);  // 将 lv_obj_align_to 替换为 lv_obj_align
         button[i].ui_circle_label = lv_label_create(parent);
         lv_obj_set_size(button[i].ui_circle_label, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-        lv_obj_align_to(button[i].ui_circle_label, button[i].ui_circle, LV_ALIGN_CENTER, button[i].x_po_verify, button[i].y_po_verify);
+        lv_obj_align_to(button[i].ui_circle_label, button[i].ui_circle, LV_ALIGN_CENTER,
+                        button[i].x_po_verify, button[i].y_po_verify);
         lv_label_set_text(button[i].ui_circle_label, button[i].txt);
         lv_obj_add_style(button[i].ui_circle_label, &style_txt_s, LV_PART_MAIN);
         lv_obj_add_flag(button[i].ui_circle, LV_OBJ_FLAG_CLICKABLE);
@@ -196,7 +199,8 @@ void intercom_call_ui_init()
 
     ui_intercom_call_Label_1 = lv_label_create(ui_rectangle);
     lv_obj_set_size(ui_intercom_call_Label_1, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-    lv_obj_align_to(ui_intercom_call_Label_1, ui_rectangle, LV_ALIGN_LEFT_MID, 20, 0);
+    lv_obj_align_to(ui_intercom_call_Label_1, ui_rectangle, LV_ALIGN_LEFT_MID, 20,
+                    0);
     memset(digits, 0, sizeof(digits));
     lv_label_set_text(ui_intercom_call_Label_1, digits);
     lv_obj_refr_size(ui_intercom_call_Label_1);

@@ -49,7 +49,8 @@ static void printf_connect_info(RK_WIFI_INFO_Connection_s *info)
     printf("	mac_address: %s\n", info->mac_address);
 }
 
-static int rk_wifi_state_callback(RK_WIFI_RUNNING_State_e state, RK_WIFI_INFO_Connection_s *info)
+static int rk_wifi_state_callback(RK_WIFI_RUNNING_State_e state,
+                                  RK_WIFI_INFO_Connection_s *info)
 {
     printf("%s state: %d\n", __func__, state);
 
