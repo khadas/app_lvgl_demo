@@ -36,3 +36,12 @@ else()
 #	add_subdirectory(motor_demo)
 endif()
 
+if (EXISTS "${PROJECT_SOURCE_DIR}/tools/pre-commit")
+    set(GIT_HOOK_SRC "${PROJECT_SOURCE_DIR}/tools/pre-commit")
+    if(EXISTS "${PROJECT_SOURCE_DIR}/.git/hooks")
+        set(GIT_HOOK_DST "${PROJECT_SOURCE_DIR}/.git/hooks/")
+        file(COPY ${GIT_HOOK_SRC} DESTINATION ${GIT_HOOK_DST})
+        message(STATUS "Install git hooks done")
+    endif()
+endif()
+

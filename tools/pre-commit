@@ -1,0 +1,21 @@
+#!/bin/sh
+
+r=0
+echo "[git-commit-hook] Checking Style"
+for file in $(find -type f | grep -E "\.c$|\.h$") ; do
+    nf=`git checkout-index --temp ${file} | cut -f 1`
+    newfile=`mktemp /tmp/${nf}.XXXXXX` || exit 1
+    chmod 644 ${nf}
+    ./tools/astyle --options=./tools/astylerc < ${nf} > ${newfile}
+    git diff --exit-code --no-patch ${file} ${newfile}
+    if [ $? != 0 ] ; then
+        echo " Code style error in: $file "
+        r=1
+    fi
+    mv ${newfile} ${file}
+    rm ${nf} -r
+done
+if [ $r != 0 ] ; then
+    exit 1
+fi
+echo "--Checking style pass--"
