@@ -137,7 +137,9 @@ static void *wifibt_server(void *arg)
 
     RK_wifi_register_callback(rk_wifi_state_callback);
 
+#if BT_EN
     bt_ble_init();
+#endif
 
     while (1)
     {
@@ -166,6 +168,7 @@ static void *wifibt_server(void *arg)
             wifibt_log("WIFI_DISCONNECT\n");
             RK_wifi_disconnect_network();
             break;
+#if BT_EN
         case BT_ENABLE:
             wifibt_log("BT_ENABLE\n");
             bt_ble_init();
@@ -226,6 +229,7 @@ static void *wifibt_server(void *arg)
         case BT_SINK_POS_CLEAR:
             bt_sink_pos_clear();
             break;
+#endif
         default:
             wifibt_log("Unknow cmd %d\n", cmdarg->cmd);
             break;

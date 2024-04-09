@@ -4,6 +4,7 @@
 
 #include "wifibt.h"
 
+#if BT_EN
 #define BLE_UUID_SEND       "dfd4416e-1810-47f7-8248-eb8be3dc47f9"
 #define BLE_UUID_RECV       "9884d812-1810-4a24-94d3-b2c11a851fac"
 #define SERVICE_UUID        "00001910-0000-1000-8000-00805f9b34fb"
@@ -308,4 +309,5 @@ int bt_sink_disable(void)
 {
     rk_bt_sink_close();
 }
+#endif
 
