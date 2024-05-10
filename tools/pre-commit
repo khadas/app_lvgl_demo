@@ -3,6 +3,9 @@
 r=0
 echo "[git-commit-hook] Checking Style"
 for file in $(git diff --cached --name-only | grep -E '\.(c|h)$') ; do
+    if [ ! -f ${file} ] ; then
+        continue;
+    fi
     newfile=`mktemp /tmp/${nf}.XXXXXX` || exit 1
     ./tools/astyle --options=./tools/astylerc < ${file} > ${newfile}
     chmod 644 ${newfile}
