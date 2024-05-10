@@ -121,18 +121,21 @@ static void style_init(void)
 
 static void event_cb(lv_event_t *e)
 {
+    static const char *key_mgmts[] = {"NONE", "WPA", "WEP", "WPA3"};
     lv_obj_t *obj = lv_event_get_target(e);
     lv_obj_t *ibox = lv_obj_get_parent(obj);
     const char *ssid;
     const char *psk;
+    intptr_t key_mgmt = NONE;
 
     if (strcmp(lv_inputbox_get_active_btn_text(ibox), "确认") == 0)
     {
         ssid = lv_list_get_btn_text(item_list_scaned, lv_event_get_user_data(e));
         psk = lv_textarea_get_text(lv_inputbox_get_text_area(ibox));
-        printf("connect %s, %s\n", ssid, psk);
+        key_mgmt = (intptr_t)lv_obj_get_user_data(obj);
+        printf("connect %s, %s, %s\n", ssid, psk, key_mgmts[key_mgmt]);
 
-        if (RK_wifi_connect((char *)ssid, (char *)psk) < 0)
+        if (RK_wifi_connect((char *)ssid, (char *)psk, key_mgmt, NULL) < 0)
             printf("RK_wifi_connect1 fail!\n");
 
         read_saved_wifi(init_done);
@@ -196,15 +199,36 @@ static void icon_anim_end(lv_anim_t *anim)
             lv_obj_t *btn;
             char *ssid;
             char *bssid;
+            char *flags;
+            intptr_t key_mgmt = NONE;
+
+            /* For debug */
+            /*
+            char *info = cJSON_Print(sub);
+            printf("#[%s]#\n", info);
+            free(info);
+            */
 
             ssid = cJSON_GetStringValue(
                        cJSON_GetObjectItem(sub, "ssid"));
             bssid = cJSON_GetStringValue(
                         cJSON_GetObjectItem(sub, "bssid"));
+            flags = cJSON_GetStringValue(
+                        cJSON_GetObjectItem(sub, "flags"));
+
+            if (strstr(flags, "WPA3"))
+                key_mgmt = WPA3;
+            else if (strstr(flags, "WPA"))
+                key_mgmt = WPA;
+            else if (strstr(flags, "WEP"))
+                key_mgmt = WEP;
+            else
+                key_mgmt = NONE;
 
             btn = lv_list_add_btn(item_list_scaned, NULL,
                                   (ssid && (strlen(ssid) > 0)) ? ssid : bssid);
             lv_obj_add_event_cb(btn, connect_wifi, LV_EVENT_CLICKED, btn);
+            lv_obj_set_user_data(btn, (void *)key_mgmt);
         }
         cJSON_Delete(aps);
     }

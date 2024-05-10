@@ -255,7 +255,7 @@ static void switch_toggled(lv_event_t *e)
         lv_obj_set_style_bg_color(ui_bt, HL_BLUE, LV_PART_MAIN);
         cmdarg.cmd = BT_DISABLE;
     }
-    wifibt_send(&cmdarg, sizeof(cmdarg));
+    bt_query(&cmdarg, sizeof(cmdarg));
 }
 
 static void menu_switch_cb(lv_event_t *e)
@@ -334,8 +334,8 @@ void setting_ui_init(void)
 
     cmdarg.cmd = BT_INFO;
     cmdarg.val = &new_info;
-    wifibt_send_wait(&cmdarg, sizeof(cmdarg));
-    if (new_info.bt_state == RK_BT_STATE_ON)
+    bt_query_wait(&cmdarg, sizeof(cmdarg));
+    if (new_info.bt_state >= BT_STATE_ON)
         lv_obj_set_style_bg_color(ui_bt, HL_BLUE, LV_PART_MAIN);
     else
         lv_obj_set_style_bg_color(ui_bt, MAIN_COLOR, LV_PART_MAIN);

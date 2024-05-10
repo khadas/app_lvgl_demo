@@ -24,6 +24,7 @@
 #define ROCKIT_EN   MULTIMEDIA_EN
 #define WIFIBT_EN   1
 #define BT_EN       1
+#define BT_NAME     "SCO_AUDIO"
 
 extern lv_ft_info_t ttf_main_s;
 extern lv_ft_info_t ttf_main_m;

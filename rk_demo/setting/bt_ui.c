@@ -28,7 +28,7 @@ static void switch_toggled(lv_event_t *e)
         cmdarg.cmd = BT_ENABLE;
     else
         cmdarg.cmd = BT_DISABLE;
-    wifibt_send(&cmdarg, sizeof(cmdarg));
+    bt_query(&cmdarg, sizeof(cmdarg));
 }
 
 lv_obj_t *menu_bt_init(lv_obj_t *parent)
@@ -53,8 +53,8 @@ lv_obj_t *menu_bt_init(lv_obj_t *parent)
 
     cmdarg.cmd = BT_INFO;
     cmdarg.val = &new_info;
-    wifibt_send_wait(&cmdarg, sizeof(cmdarg));
-    if (new_info.bt_state == RK_BT_STATE_ON)
+    bt_query_wait(&cmdarg, sizeof(cmdarg));
+    if (new_info.bt_state == BT_STATE_ON)
         lv_obj_add_state(bt_switch, LV_STATE_CHECKED);
     else
         lv_obj_clear_state(bt_switch, LV_STATE_CHECKED);

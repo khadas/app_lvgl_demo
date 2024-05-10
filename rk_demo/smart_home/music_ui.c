@@ -6,7 +6,6 @@
 
 #include <lvgl/lvgl.h>
 
-#include "bt.h"
 #include "wifibt.h"
 #include "main.h"
 #include "ui_resource.h"
@@ -57,28 +56,27 @@ static void btn_cb(lv_event_t *e)
 
     cmdarg.cmd = BT_INFO;
     cmdarg.val = &new_info;
-    wifibt_send_wait(&cmdarg, sizeof(cmdarg));
+    bt_query_wait(&cmdarg, sizeof(cmdarg));
 
-    if (new_info.sink_state == RK_BT_SINK_STATE_IDLE ||
-            new_info.sink_state == RK_BT_SINK_STATE_DISCONNECT)
+    if (new_info.bt_state < BT_STATE_CONNECTED)
         return;
 
     switch (idx)
     {
     case 0:
         cmdarg.cmd = BT_SINK_PREV;
-        wifibt_send(&cmdarg, sizeof(cmdarg));
+        bt_query(&cmdarg, sizeof(cmdarg));
         break;
     case 1:
-        if (new_info.sink_started)
+        if (new_info.bt_state == BT_STATE_PLAYING)
             cmdarg.cmd = BT_SINK_PAUSE;
         else
             cmdarg.cmd = BT_SINK_PLAY;
-        wifibt_send(&cmdarg, sizeof(cmdarg));
+        bt_query(&cmdarg, sizeof(cmdarg));
         break;
     case 2:
         cmdarg.cmd = BT_SINK_NEXT;
-        wifibt_send(&cmdarg, sizeof(cmdarg));
+        bt_query(&cmdarg, sizeof(cmdarg));
         break;
     case 3:
         if (volume >= 10)
@@ -87,7 +85,7 @@ static void btn_cb(lv_event_t *e)
             volume = 0;
         cmdarg.cmd = BT_SINK_VOL;
         cmdarg.val = (void *)volume;
-        wifibt_send(&cmdarg, sizeof(cmdarg));
+        bt_query(&cmdarg, sizeof(cmdarg));
         break;
     case 4:
         if (volume <= 90)
@@ -96,7 +94,7 @@ static void btn_cb(lv_event_t *e)
             volume = 100;
         cmdarg.cmd = BT_SINK_VOL;
         cmdarg.val = (void *)volume;
-        wifibt_send(&cmdarg, sizeof(cmdarg));
+        bt_query(&cmdarg, sizeof(cmdarg));
         break;
     case 5:
         if (mute)
@@ -104,79 +102,70 @@ static void btn_cb(lv_event_t *e)
         else
             cmdarg.val = (void *)0;
         cmdarg.cmd = BT_SINK_VOL;
-        wifibt_send(&cmdarg, sizeof(cmdarg));
+        bt_query(&cmdarg, sizeof(cmdarg));
         mute = !mute;
+        break;
+    }
+}
+
+static void update_state_label(lv_obj_t *label, int state)
+{
+    switch (new_info.bt_state)
+    {
+    case BT_STATE_OFF:
+        lv_label_set_text(label_bt_state,
+                          "蓝牙：未开启");
+        break;
+    case BT_STATE_ON:
+        lv_label_set_text(label_bt_state,
+                          "蓝牙：等待连接");
+        break;
+    default:
+        lv_label_set_text(label_bt_state,
+                          "蓝牙：已连接");
         break;
     }
 }
 
 static void pos_timer_cb(struct _lv_timer_t *tmr)
 {
-    static int sink_started = -1;
+    static int bt_state = -1;
+    char *title, *artist;
     int pos;
 
     cmdarg.cmd = BT_INFO;
     cmdarg.val = &new_info;
-    wifibt_send_wait(&cmdarg, sizeof(cmdarg));
+    bt_query_wait(&cmdarg, sizeof(cmdarg));
 
-    if (new_info.sink_started != sink_started)
+    if (new_info.bt_state != bt_state)
     {
-        if (new_info.sink_started)
+        if (new_info.bt_state != BT_STATE_PLAYING)
             lv_label_set_text(btn_play, LV_SYMBOL_PAUSE);
         else
             lv_label_set_text(btn_play, LV_SYMBOL_PLAY);
-        sink_started = new_info.sink_started;
+        bt_state = new_info.bt_state;
     }
 
     if (new_info.pos_changed)
     {
         g_pos = new_info.pos;
-        lv_slider_set_range(slider, 0, new_info.time);
+        lv_slider_set_range(slider, 0, new_info.dur);
         lv_slider_set_value(slider, new_info.pos, LV_ANIM_ON);
-        new_info.time /= 1000;
+        new_info.dur /= 1000;
         lv_label_set_text_fmt(label_time, "%02d:%02d",
-                              new_info.time / 60, new_info.time % 60);
+                              new_info.dur / 60, new_info.dur % 60);
         cmdarg.cmd = BT_SINK_POS_CLEAR;
-        wifibt_send(&cmdarg, sizeof(cmdarg));
+        bt_query(&cmdarg, sizeof(cmdarg));
     }
     else
     {
-        if (!new_info.sink_started)
+        if (new_info.bt_state != BT_STATE_PLAYING)
             return;
         g_pos += 100;
         lv_slider_set_value(slider, g_pos, LV_ANIM_ON);
     }
     pos = g_pos / 1000;
     lv_label_set_text_fmt(label_pos, "%02d:%02d", pos / 60, pos % 60);
-}
-
-static void bt_timer_cb(struct _lv_timer_t *tmr)
-{
-    char *title, *artist;
-    int vol;
-
-    cmdarg.cmd = BT_INFO;
-    cmdarg.val = &new_info;
-    wifibt_send_wait(&cmdarg, sizeof(cmdarg));
-
-    if ((bt_sink_enabled == 0)
-            && (new_info.bt_state == RK_BT_STATE_ON))
-    {
-        bt_sink_enabled = 1;
-        cmdarg.cmd = BT_SINK_ENABLE;
-        wifibt_send(&cmdarg, sizeof(cmdarg));
-        lv_label_set_text(label_bt_state,
-                          "蓝牙：已开启 A2DP：等待连接");
-        return;
-    }
-
-    if (bt_sink_enabled)
-    {
-        if (new_info.sink_state != RK_BT_SINK_STATE_IDLE &&
-                new_info.sink_state != RK_BT_SINK_STATE_DISCONNECT)
-            lv_label_set_text(label_bt_state,
-                              "蓝牙：已开启 A2DP：已连接");
-    }
 
     if (new_info.track_changed)
     {
@@ -189,8 +178,24 @@ static void bt_timer_cb(struct _lv_timer_t *tmr)
         if (artist)
             free(artist);
         cmdarg.cmd = BT_SINK_TRACK_CLEAR;
-        wifibt_send(&cmdarg, sizeof(cmdarg));
+        bt_query(&cmdarg, sizeof(cmdarg));
     }
+}
+
+static void bt_timer_cb(struct _lv_timer_t *tmr)
+{
+    cmdarg.cmd = BT_INFO;
+    cmdarg.val = &new_info;
+    bt_query_wait(&cmdarg, sizeof(cmdarg));
+
+    update_state_label(label_bt_state, new_info.bt_state);
+    if (new_info.bt_state == BT_STATE_OFF)
+    {
+        cmdarg.cmd = BT_ENABLE;
+        bt_query(&cmdarg, sizeof(cmdarg));
+        return;
+    }
+    bt_sink_enabled = 1;
 }
 
 void menu_music_scroll_cb(lv_event_t *event)
@@ -209,16 +214,16 @@ lv_obj_t *menu_music_init(lv_obj_t *parent)
 
     cmdarg.cmd = BT_INFO;
     cmdarg.val = &new_info;
-    wifibt_send_wait(&cmdarg, sizeof(cmdarg));
-    if (new_info.bt_state == RK_BT_STATE_ON)
+    bt_query_wait(&cmdarg, sizeof(cmdarg));
+    if (new_info.bt_state == BT_STATE_OFF)
     {
+        bt_sink_enabled = 0;
         cmdarg.cmd = BT_SINK_ENABLE;
-        wifibt_send(&cmdarg, sizeof(cmdarg));
-        bt_sink_enabled = 1;
+        bt_query(&cmdarg, sizeof(cmdarg));
     }
     else
     {
-        bt_sink_enabled = 0;
+        bt_sink_enabled = 1;
     }
     bg = lv_img_create(parent);
     lv_obj_remove_style_all(bg);
@@ -257,12 +262,7 @@ lv_obj_t *menu_music_init(lv_obj_t *parent)
     lv_obj_align(obj, LV_ALIGN_TOP_LEFT, 0, 0);
 
     label_bt_state = lv_label_create(area_status);
-    if (bt_sink_enabled)
-        lv_label_set_text(label_bt_state,
-                          "蓝牙：已开启 A2DP：等待连接");
-    else
-        lv_label_set_text(label_bt_state,
-                          "蓝牙：未开启");
+    update_state_label(label_bt_state, new_info.bt_state);
     lv_obj_add_style(label_bt_state, &style_txt_s, LV_PART_MAIN);
     lv_obj_set_style_text_color(label_bt_state, lv_color_white(), LV_PART_MAIN);
     lv_obj_align(label_bt_state, LV_ALIGN_TOP_RIGHT, 0, 0);
@@ -324,7 +324,7 @@ lv_obj_t *menu_music_init(lv_obj_t *parent)
             btn_play = obj;
     }
 
-    timer = lv_timer_create(bt_timer_cb, 100, NULL);
+    timer = lv_timer_create(bt_timer_cb, 3000, NULL);
     pos_timer = lv_timer_create(pos_timer_cb, 100, NULL);
 
     return bg;
@@ -341,7 +341,7 @@ void menu_music_deinit(void)
     if (bt_sink_enabled)
     {
         cmdarg.cmd = BT_SINK_DISABLE;
-        wifibt_send(&cmdarg, sizeof(cmdarg));
+        bt_query(&cmdarg, sizeof(cmdarg));
         bt_sink_enabled = 0;
     }
 }
