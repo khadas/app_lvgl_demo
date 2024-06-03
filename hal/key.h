@@ -35,7 +35,7 @@ extern "C" {
 /**
  * Initialize the evdev
  */
-void key_init(void);
+int key_init(void);
 
 /**
  * Get the current position and state of the evdev

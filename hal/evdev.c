@@ -128,16 +128,16 @@ int evdev_get_tp_event(void)
 /**
  * Initialize the evdev interface
  */
-void evdev_init(lv_disp_drv_t *drv, int rot)
+int evdev_init(lv_disp_drv_t *drv, int rot)
 {
     int rc = 1;
     evdev_rot = rot;
     if (evdev_get_tp_event() < 0)
     {
         printf("%s get tp event failed\n", __func__);
-        return;
+        return -1;
     }
-    evdev_set_file(drv, tp_event);
+    return evdev_set_file(drv, tp_event);
 }
 /**
  * reconfigure the device file for evdev
@@ -145,7 +145,7 @@ void evdev_init(lv_disp_drv_t *drv, int rot)
  * @return true: the device file set complete
  *         false: the device file doesn't exist current system
  */
-bool evdev_set_file(lv_disp_drv_t *drv, char *dev_name)
+int evdev_set_file(lv_disp_drv_t *drv, char *dev_name)
 {
     int rc = 1;
 
@@ -165,7 +165,7 @@ bool evdev_set_file(lv_disp_drv_t *drv, char *dev_name)
     if (evdev_fd == -1)
     {
         perror("unable open evdev interface:");
-        return false;
+        return -1;
     }
 
     rc = libevdev_new_from_fd(evdev_fd, &evdev);
@@ -219,7 +219,7 @@ bool evdev_set_file(lv_disp_drv_t *drv, char *dev_name)
     }
     printf("evdev_calibrate = %d\n", evdev_calibrate);
 
-    return true;
+    return 0;
 }
 /**
  * Get the current position and state of the evdev

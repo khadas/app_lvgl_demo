@@ -44,20 +44,22 @@ static int key_val;
 /**
  * Initialize the evdev interface
  */
-void key_init(void)
+int key_init(void)
 {
     key_fd = open(KEY_NAME, O_RDWR | O_NOCTTY | O_NDELAY);
 
     if (key_fd == -1)
     {
         perror("unable open evdev interface:");
-        return;
+        return -1;
     }
 
     fcntl(key_fd, F_SETFL, O_ASYNC | O_NONBLOCK);
 
     key_val = 0;
     key_button = LV_INDEV_STATE_REL;
+
+    return 0;
 }
 
 /**

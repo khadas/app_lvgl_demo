@@ -50,7 +50,7 @@ extern "C" {
 /**
  * Initialize the evdev
  */
-void evdev_init(lv_disp_drv_t *drv, int rot);
+int evdev_init(lv_disp_drv_t *drv, int rot);
 /**
  * reconfigure the device file for evdev
  * @param dev_name set the evdev device filename
