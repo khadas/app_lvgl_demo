@@ -13,7 +13,7 @@ for file in $(git diff --cached --name-only | grep -E '\.(c|h)$') ; do
     if [ $? != 0 ] ; then
         echo " Code style error in: $file "
         r=1
-        cp ${newfile} ${file}
+        cp ${newfile} ${file} -p
     fi
     rm ${newfile}
 done
