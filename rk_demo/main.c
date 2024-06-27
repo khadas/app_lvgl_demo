@@ -23,6 +23,8 @@
 #include "home_ui.h"
 #include "ui_resource.h"
 
+#include "hal_rkadk.h"
+
 #if ROCKIT_EN
 #include "rk_defines.h"
 #include "rk_mpi_sys.h"
@@ -79,8 +81,17 @@ static void lvgl_init(void)
 
 #if USE_SDL_GPU
     hal_sdl_init(0, 0, g_disp_rotation);
-#else
+#endif
+
+#if USE_DRM
     hal_drm_init(0, 0, g_disp_rotation);
+#endif
+
+#if USE_RKADK
+    hal_rkadk_init(0, 0, g_disp_rotation);
+#endif
+
+#if USE_EVDEV
     lv_port_indev_init(g_indev_rotation);
 #endif
 

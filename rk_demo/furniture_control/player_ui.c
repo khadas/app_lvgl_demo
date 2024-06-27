@@ -46,7 +46,7 @@ pthread_t ntid;
 
 ///////////////////// FUNCTIONS ////////////////////
 
-static void *GetFramerate(void)
+static void *GetFramerate(void *arg)
 {
     start_clock = 1;
     while (start_clock)
@@ -62,7 +62,7 @@ static void close_framerate_detection(void)
 {
     start_clock = 0;
     play_time = 0;
-    ntid = NULL;
+    ntid = (pthread_t)0;
 }
 
 static RKADK_VOID PlayerEventFnTest(RKADK_MW_PTR pPlayer,
@@ -121,15 +121,27 @@ static void param_init(RKADK_PLAYER_FRAME_INFO_S *pstFrmInfo)
     pstFrmInfo->u32DispHeight = 512; //1280*0.4=512
     pstFrmInfo->u32ImgWidth = pstFrmInfo->u32DispWidth;
     pstFrmInfo->u32ImgHeight = pstFrmInfo->u32DispHeight;
+
+#if USE_RK3506
+    pstFrmInfo->u32VoFormat = VO_FORMAT_RGB888;
+    pstFrmInfo->u32EnIntfType = DISPLAY_TYPE_MIPI;
+    pstFrmInfo->u32VoLay = -1; // rkadk select the default first device
+    pstFrmInfo->u32VoChn = 2; // ui is 1 . play is 2
+    pstFrmInfo->u32VoDev = -1; // rkadk select the default first device
+    pstFrmInfo->enIntfSync = RKADK_VO_OUTPUT_DEFAULT;
+    pstFrmInfo->enVoSpliceMode = SPLICE_MODE_RGA; // rkadk depend chips
+#else
     pstFrmInfo->u32VoFormat = VO_FORMAT_NV12;
     pstFrmInfo->u32EnIntfType = DISPLAY_TYPE_LCD;
     pstFrmInfo->u32VoLay = 1;
     pstFrmInfo->enIntfSync = RKADK_VO_OUTPUT_DEFAULT;
     pstFrmInfo->enVoSpliceMode = SPLICE_MODE_BYPASS;
+#endif
+
     pstFrmInfo->u32BorderColor = 0x0000FA;
     pstFrmInfo->bMirror = RKADK_FALSE;
     pstFrmInfo->bFlip = RKADK_FALSE;
-    pstFrmInfo->u32Rotation = 1;
+    pstFrmInfo->u32Rotation = 0;
     pstFrmInfo->stSyncInfo.bIdv = RKADK_TRUE;
     pstFrmInfo->stSyncInfo.bIhs = RKADK_TRUE;
     pstFrmInfo->stSyncInfo.bIvs = RKADK_TRUE;
@@ -157,13 +169,17 @@ static void rkadk_init(void)
     RKADK_PARAM_Init(NULL, NULL);
     memset(&stPlayCfg, 0, sizeof(RKADK_PLAYER_CFG_S));
     param_init(&stPlayCfg.stFrmInfo);
+
+    stPlayCfg.stAudioCfg.pSoundCard = "default";
+    stPlayCfg.stAudioCfg.u32SpeakerVolume = 70;
     stPlayCfg.bEnableVideo = 1;
     stPlayCfg.bEnableAudio = 1;
     stPlayCfg.stFrmInfo.u32FrmInfoX = 0;
     stPlayCfg.stFrmInfo.u32FrmInfoY = 128;
     stPlayCfg.bEnableBlackBackground = true;
     stPlayCfg.pfnPlayerCallback = PlayerEventFnTest;
-    stPlayCfg.stVdecCfg.u32FrameBufCnt = 15;
+    stPlayCfg.stVdecCfg.u32FrameBufCnt = 4;
+
     if (RKADK_PLAYER_Create(&pPlayer, &stPlayCfg))
     {
         printf("rkadk: RKADK_PLAYER_Create failed\n");
@@ -173,10 +189,8 @@ static void rkadk_init(void)
 
 static void rkadk_deinit(void)
 {
-    RKADK_PLAYER_Stop(pPlayer);
     RKADK_PLAYER_Destroy(pPlayer);
     pPlayer = NULL;
-    RKADK_MPI_SYS_Exit();
     play_flag = 0;
 }
 
@@ -207,7 +221,9 @@ void video_name_callback(lv_event_t *event)
 {
     char *file_name = lv_event_get_user_data(event);
     char path[50] = "/oem/";
+    printf("lvgl get play filename: %s\n", file_name);
     strcat(path, file_name);
+    free(file_name);
     printf("video_name select file %s\n", path);
     lv_label_set_text(video_label, path);
     lv_obj_del(video_list_box);
@@ -330,7 +346,7 @@ void player_list_button_callback(lv_event_t *event)
                     lv_obj_t *obj_text = lv_list_add_btn(video_list, NULL, entry->d_name);
                     lv_obj_add_flag(obj_text, LV_OBJ_FLAG_CLICKABLE);
                     lv_obj_add_event_cb(obj_text, video_name_callback, LV_EVENT_CLICKED,
-                                        entry->d_name);
+                                        strdup(entry->d_name));
                     file_count++;
                     if (file_count >= MAX_FILE_COUNT)
                     {

@@ -10,6 +10,7 @@ include_directories(
 	${PROJECT_SOURCE_DIR}/sys/
 	${PROJECT_SOURCE_DIR}/cJSON/
 	${CMAKE_SYSROOT}/usr/include/libdrm/
+	${CMAKE_SYSROOT}/usr/include/rkadk/
 	${CMAKE_SYSROOT}/usr/include/lvgl/
 	${CMAKE_SYSROOT}/usr/include/lvgl/lv_drivers/
 	${CMAKE_SYSROOT}/usr/include/rockchip/
@@ -18,8 +19,17 @@ include_directories(
 if (LV_DRV_USE_SDL_GPU)
 	add_definitions(-DUSE_SDL_GPU=1)
 endif()
+
+if (LV_DRV_USE_RKADK)
+	add_definitions(-DUSE_RKADK=1 -DUSE_EVDEV=1)
+endif()
+
 if (LV_DRV_USE_DRM)
 	add_definitions(-DUSE_DRM=1 -DUSE_EVDEV=1)
+endif()
+
+if (LVGL_DEMO_RK3506)
+	add_definitions(-DUSE_RK3506=1)
 endif()
 
 aux_source_directory(${PROJECT_SOURCE_DIR}/hal SRCS)

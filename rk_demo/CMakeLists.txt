@@ -16,6 +16,7 @@ include_directories(
 	${PROJECT_SOURCE_DIR}/intercom_homepage/intercom_call
 	${PROJECT_SOURCE_DIR}/rockit
 	${PROJECT_SOURCE_DIR}/wifibt
+	${CMAKE_SYSROOT}/usr/include/rga/
 	${CMAKE_SYSROOT}/usr/include/rkadk/
 	)
 
@@ -48,6 +49,9 @@ if (LV_DRV_USE_SDL_GPU)
 endif()
 if (LV_DRV_USE_DRM)
 	target_link_libraries(${PROJECT_NAME} drm evdev)
+endif()
+if (LV_DRV_USE_RKADK)
+	target_link_libraries(${PROJECT_NAME} rkadk rga rockit evdev)
 endif()
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
