@@ -57,9 +57,9 @@ static void lvgl_init(void)
     hal_sdl_init(0, 0, g_disp_rotation);
 #else
     hal_drm_init(0, 0, g_disp_rotation);
+    lv_port_indev_init(g_indev_rotation);
 #endif
     lv_port_fs_init();
-    lv_port_indev_init(g_indev_rotation);
 }
 
 int main(int argc, char **argv)
