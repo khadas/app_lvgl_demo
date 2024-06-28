@@ -24,7 +24,6 @@
 
 #include <lvgl/lvgl.h>
 
-#include "lv_port_file.h"
 #include "lv_port_indev.h"
 #include "timestamp.h"
 

@@ -15,7 +15,6 @@
 #include <lvgl/lvgl.h>
 
 #include "home_ui.h"
-#include "lv_port_file.h"
 #include "lv_port_indev.h"
 #include "ui_btnmatrix.h"
 #include "ui_common.h"

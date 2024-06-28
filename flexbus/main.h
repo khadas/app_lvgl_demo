@@ -23,7 +23,6 @@
 
 #include <lvgl/lvgl.h>
 
-#include "lv_port_file.h"
 #include "lv_port_indev.h"
 
 #define ARRAY_SIZE(x)   (sizeof(x) / sizeof(x[0]))
