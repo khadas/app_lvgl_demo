@@ -127,10 +127,8 @@ static void ui_control_draw(lv_obj_t *parent, struct btn_desc *desc)
 
 static void rkadk_deinit(void)
 {
-    RKADK_PLAYER_Stop(pPlayer);
     RKADK_PLAYER_Destroy(pPlayer);
     pPlayer = NULL;
-    RKADK_MPI_SYS_Exit();
 }
 
 static void btn_return_cb(lv_event_t *e)
@@ -183,15 +181,27 @@ static void param_init(RKADK_PLAYER_FRAME_INFO_S *pstFrmInfo)
     pstFrmInfo->u32DispHeight = 512; //1280*0.4=512
     pstFrmInfo->u32ImgWidth = pstFrmInfo->u32DispWidth;
     pstFrmInfo->u32ImgHeight = pstFrmInfo->u32DispHeight;
+
+#if USE_RK3506
+    pstFrmInfo->u32VoFormat = VO_FORMAT_RGB888;
+    pstFrmInfo->u32EnIntfType = DISPLAY_TYPE_MIPI;
+    pstFrmInfo->u32VoLay = -1; // rkadk select the default first device
+    pstFrmInfo->u32VoChn = 2; // ui is 1 . play is 2
+    pstFrmInfo->u32VoDev = -1; // rkadk select the default first device
+    pstFrmInfo->enIntfSync = RKADK_VO_OUTPUT_DEFAULT;
+    pstFrmInfo->enVoSpliceMode = SPLICE_MODE_RGA; // rkadk depend chips
+#else
     pstFrmInfo->u32VoFormat = VO_FORMAT_NV12;
     pstFrmInfo->u32EnIntfType = DISPLAY_TYPE_LCD;
     pstFrmInfo->u32VoLay = 1;
     pstFrmInfo->enIntfSync = RKADK_VO_OUTPUT_DEFAULT;
     pstFrmInfo->enVoSpliceMode = SPLICE_MODE_BYPASS;
+#endif
+
     pstFrmInfo->u32BorderColor = 0x0000FA;
     pstFrmInfo->bMirror = RKADK_FALSE;
     pstFrmInfo->bFlip = RKADK_FALSE;
-    pstFrmInfo->u32Rotation = 1;
+    pstFrmInfo->u32Rotation = 0;
     pstFrmInfo->stSyncInfo.bIdv = RKADK_TRUE;
     pstFrmInfo->stSyncInfo.bIhs = RKADK_TRUE;
     pstFrmInfo->stSyncInfo.bIvs = RKADK_TRUE;
@@ -284,6 +294,7 @@ static void rkadk_init(void)
     stPlayCfg.pfnPlayerCallback = PlayerEventFnTest;
 
     stPlayCfg.stRtspCfg.transport = "udp";
+    stPlayCfg.stVdecCfg.u32FrameBufCnt = 4;
 
     if (RKADK_PLAYER_Create(&pPlayer, &stPlayCfg))
     {
