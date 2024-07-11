@@ -312,6 +312,7 @@ static void bt_test_state_cb(RkBtRemoteDev *rdev, RK_BT_STATE state)
         bt_content.init = true;
         bt_info.bt_state = BT_STATE_ON;
         log("bt_state >> %d\n", bt_info.bt_state);
+        rk_bt_set_discoverable(1);
         break;
     case RK_BT_STATE_INIT_OFF:
         log("++ RK_BT_STATE_INIT_OFF\n");
@@ -604,6 +605,7 @@ static void bt_test_state_cb(RkBtRemoteDev *rdev, RK_BT_STATE state)
     case RK_BT_STATE_ADAPTER_NO_DISCOVERYABLED:
         bt_content.discoverable = false;
         log("RK_BT_STATE_ADAPTER_NO_DISCOVERYABLED successful\n");
+        rk_bt_set_discoverable(1);
         break;
     case RK_BT_STATE_ADAPTER_DISCOVERYABLED:
         bt_content.discoverable = true;
@@ -852,7 +854,6 @@ static void *bt_server(void *arg)
             log("BT_ENABLE\n");
             bt_ble_init();
             rk_bt_set_profile(PROFILE_A2DP_SINK_HF);
-            rk_bt_set_discoverable(1);
             break;
         case BT_DISABLE:
             log("BT_DISABLE\n");
