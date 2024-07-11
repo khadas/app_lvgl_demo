@@ -183,7 +183,13 @@ static void param_init(RKADK_PLAYER_FRAME_INFO_S *pstFrmInfo)
     pstFrmInfo->u32ImgHeight = pstFrmInfo->u32DispHeight;
 
 #if USE_RK3506
+#if (LV_COLOR_DEPTH == 16)
+    pstFrmInfo->u32VoFormat = VO_FORMAT_RGB565;
+#elif (LV_COLOR_DEPTH == 32)
     pstFrmInfo->u32VoFormat = VO_FORMAT_RGB888;
+#else
+#error "Only support DEPTH 16 or 32"
+#endif
     pstFrmInfo->u32EnIntfType = DISPLAY_TYPE_MIPI;
     pstFrmInfo->u32VoLay = -1; // rkadk select the default first device
     pstFrmInfo->u32VoChn = 2; // ui is 1 . play is 2
