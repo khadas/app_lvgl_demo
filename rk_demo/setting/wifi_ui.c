@@ -172,6 +172,9 @@ static void connect_wifi(lv_event_t *e)
 
 static void icon_anim_deled(lv_anim_t *anim)
 {
+    if (!init_done)
+        return;
+
     lv_obj_clear_flag(item_scan, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(item_scan_icon, LV_OBJ_FLAG_HIDDEN);
 }
