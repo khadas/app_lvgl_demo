@@ -49,7 +49,7 @@ static struct btn_desc home_btn[] =
     {
         .obj  = &ui_furniture_control,
         .img  = IMG_FURNITURE,
-        .text = "家居显控",
+        .text = "家电显控",
         .w    = 1,
         .h    = 1,
         .draw = common_draw,
