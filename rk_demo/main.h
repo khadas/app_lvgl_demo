@@ -24,8 +24,8 @@
 #define FURNITURE_CTRL  1
 #define PHONE_PAGE      1
 #define ROCKIT_EN   MULTIMEDIA_EN
-#define WIFIBT_EN   0
-#define BT_EN       0
+#define WIFIBT_EN   1
+#define BT_EN       1
 #define BT_NAME     "SCO_AUDIO"
 
 #define ARRAY_SIZE(x)   (sizeof(x) / sizeof(x[0]))

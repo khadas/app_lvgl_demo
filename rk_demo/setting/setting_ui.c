@@ -35,8 +35,12 @@ static lv_obj_t *btn_return;
 static lv_obj_t *ui_cont;
 static lv_obj_t *ui_box_main;
 static lv_obj_t *ui_sliders;
+#if WIFIBT_EN
 static lv_obj_t *ui_wifi;
+#if BT_EN
 static lv_obj_t *ui_bt;
+#endif
+#endif
 static lv_obj_t *ui_wallpaper;
 static lv_obj_t *ui_data;
 static lv_obj_t *ui_about;
@@ -342,7 +346,9 @@ void setting_ui_init(void)
     ui_box_main = ui_btnmatrix_create(main, &setting_desc);
     lv_obj_align(ui_box_main, LV_ALIGN_TOP_MID, 0, lv_pct(10));
 
+#if WIFIBT_EN
     lv_obj_set_style_bg_color(ui_wifi, HL_BLUE, LV_PART_MAIN);
+#endif
 
 #if BT_EN
     cmdarg.cmd = BT_INFO;
@@ -352,8 +358,6 @@ void setting_ui_init(void)
         lv_obj_set_style_bg_color(ui_bt, HL_BLUE, LV_PART_MAIN);
     else
         lv_obj_set_style_bg_color(ui_bt, MAIN_COLOR, LV_PART_MAIN);
-#else
-    lv_obj_set_style_bg_color(ui_bt, MAIN_COLOR, LV_PART_MAIN);
 #endif
 
     submenu_mask = lv_obj_create(lv_scr_act());
