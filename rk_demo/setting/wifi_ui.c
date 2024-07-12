@@ -124,15 +124,16 @@ static void event_cb(lv_event_t *e)
     static const char *key_mgmts[] = {"NONE", "WPA", "WEP", "WPA3"};
     lv_obj_t *obj = lv_event_get_target(e);
     lv_obj_t *ibox = lv_obj_get_parent(obj);
+    lv_obj_t *list_btn = lv_event_get_user_data(e);
     const char *ssid;
     const char *psk;
     intptr_t key_mgmt = NONE;
 
     if (strcmp(lv_inputbox_get_active_btn_text(ibox), "确认") == 0)
     {
-        ssid = lv_list_get_btn_text(item_list_scaned, lv_event_get_user_data(e));
+        ssid = lv_list_get_btn_text(item_list_scaned, list_btn);
         psk = lv_textarea_get_text(lv_inputbox_get_text_area(ibox));
-        key_mgmt = (intptr_t)lv_obj_get_user_data(obj);
+        key_mgmt = (intptr_t)lv_obj_get_user_data(list_btn);
         printf("connect %s, %s, %s\n", ssid, psk, key_mgmts[key_mgmt]);
 
         if (RK_wifi_connect((char *)ssid, (char *)psk, key_mgmt, NULL) < 0)
