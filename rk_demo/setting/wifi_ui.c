@@ -12,6 +12,7 @@
 #include "ui_resource.h"
 #include "wifibt.h"
 
+#if WIFIBT_EN
 static int init_done = 0;
 static int waiting_scanning = 0;
 
@@ -377,4 +378,5 @@ void menu_wifi_deinit(void)
     lv_obj_del(bg);
     bg = NULL;
 }
+#endif
 

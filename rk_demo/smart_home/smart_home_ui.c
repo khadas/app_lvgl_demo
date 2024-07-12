@@ -35,7 +35,9 @@ static struct app_desc apps_desc[] =
     APP_SWITCH(NULL),
     APP_SWITCH(NULL),
     APP_SCENE,
+#if BT_EN
     APP_MUSIC,
+#endif
     APP_AIRCOND("客厅空调"),
     APP_AIRCOND("卧室空调"),
 };

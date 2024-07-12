@@ -14,12 +14,16 @@ int run_wifibt_server(void)
 {
     int ret;
 
+#if WIFIBT_EN
     ret = run_wifi_server();
     if (ret != 0)
         log("run_wifi_server failed\n");
+#if BT_EN
     ret = run_bt_server();
     if (ret != 0)
         log("run_bt_server failed\n");
+#endif
+#endif
 
     return ret;
 }

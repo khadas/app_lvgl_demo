@@ -50,11 +50,9 @@ static int cur_menu = SUBMENU_MAX;
 static struct submenu_s submenu_desc[SUBMENU_MAX];
 
 static void sliders_draw(lv_obj_t *parent, struct btn_desc *desc);
-#if WIFIBT_EN
 static void menu_switch_cb(lv_event_t *e);
 #if BT_EN
 static void switch_toggled(lv_event_t *e);
-#endif
 #endif
 
 #define SUBMENU_COMMON_DEFINE(enum_t, name) \

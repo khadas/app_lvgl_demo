@@ -11,6 +11,7 @@
 #include "ui_resource.h"
 #include "wifibt.h"
 
+#if BT_EN
 static lv_obj_t *bg;
 
 static lv_obj_t *part_switch;
@@ -69,4 +70,5 @@ void menu_bt_deinit(void)
     lv_obj_del(bg);
     bg = NULL;
 }
+#endif
 

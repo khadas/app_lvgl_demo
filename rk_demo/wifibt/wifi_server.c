@@ -9,6 +9,8 @@
 #include "Rk_wifi.h"
 #include "wifibt.h"
 
+#if WIFIBT_EN
+
 #define log(fmt, ...)    printf("[WiFi] (%s %d) "fmt "\n", __func__, __LINE__, ##__VA_ARGS__)
 
 static int fd[2];
@@ -209,5 +211,5 @@ int run_wifi_server(void)
 
     return ret;
 }
-
+#endif
 
