@@ -142,8 +142,10 @@ static void *wifi_server(void *arg)
         sleep(1);
     }
 
+    system("mkdir -p /oem/cfg && cp /etc/wpa_supplicant.conf /oem/cfg/");
+
     RK_wifi_register_callback(rk_wifi_state_callback);
-    if (RK_wifi_enable(1, "/data/cfg/wpa_supplicant.conf") < 0)
+    if (RK_wifi_enable(1, "/oem/cfg/wpa_supplicant.conf") < 0)
         log("RK_wifi_enable 1 fail!\n");
 
     listening = 1;
@@ -156,7 +158,7 @@ static void *wifi_server(void *arg)
         case WIFI_ENABLE:
             log("WIFI_ENABLE\n");
             RK_wifi_register_callback(rk_wifi_state_callback);
-            if (RK_wifi_enable(1, "/data/cfg/wpa_supplicant.conf") < 0)
+            if (RK_wifi_enable(1, "/oem/cfg/wpa_supplicant.conf") < 0)
                 log("RK_wifi_enable 1 fail!\n");
             break;
         case WIFI_DISABLE:

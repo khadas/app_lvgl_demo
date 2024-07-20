@@ -663,6 +663,13 @@ static bool bt_test_vendor_cb(bool enable)
 
     if (enable)
     {
+        /*
+        if (access("/sys/class/bluetooth/hci0", F_OK) == 0)
+            goto start_bluez;
+        else
+            return false;
+        */
+
         //vendor
         //broadcom
         if (get_ps_pid("brcm_patchram_plus1"))
@@ -690,6 +697,7 @@ static bool bt_test_vendor_cb(bool enable)
             return false;
         }
 
+start_bluez:
         /* ensure bluetoothd running */
         /*
          * DEBUG: vim /etc/init.d/S40bluetooth, modify BLUETOOTHD_ARGS="-n -d"
@@ -853,7 +861,7 @@ static void *bt_server(void *arg)
         case BT_ENABLE:
             log("BT_ENABLE\n");
             bt_ble_init();
-            rk_bt_set_profile(PROFILE_A2DP_SINK_HF);
+            //rk_bt_set_profile(PROFILE_A2DP_SINK_HF);
             break;
         case BT_DISABLE:
             log("BT_DISABLE\n");
