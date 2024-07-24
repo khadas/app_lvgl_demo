@@ -91,7 +91,7 @@ static void icon_cb(lv_event_t *e)
             else
             {
                 int length = strlen(digits);
-                if (length > 1)
+                if (length > 0)
                 {
                     digits[length - 1] = '\0';
                     lv_label_set_text(ui_intercom_call_Label_1, digits);
