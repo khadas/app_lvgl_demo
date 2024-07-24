@@ -193,7 +193,7 @@ int run_wifi_server(void)
     pthread_t tid;
     int ret;
 
-    sem_init(&sem, 0, 1);
+    sem_init(&sem, 0, 0);
 
     ret = pipe(fd);
     if (ret != 0)

@@ -256,21 +256,23 @@ static struct wifibt_cmdarg cmdarg;
 static struct bt_info new_info;
 static void switch_toggled(lv_event_t *e)
 {
-    lv_obj_t *sw = lv_event_get_target(e);
     lv_color_t color = lv_obj_get_style_bg_color(ui_bt, LV_PART_MAIN);
     lv_color_t hl = HL_BLUE;
 
-    if (color.full == hl.full)
+    if (e->code == LV_EVENT_CLICKED)
     {
-        lv_obj_set_style_bg_color(ui_bt, MAIN_COLOR, LV_PART_MAIN);
-        cmdarg.cmd = BT_ENABLE;
+        if (color.full == hl.full)
+        {
+            lv_obj_set_style_bg_color(ui_bt, MAIN_COLOR, LV_PART_MAIN);
+            cmdarg.cmd = BT_DISABLE;
+        }
+        else
+        {
+            lv_obj_set_style_bg_color(ui_bt, HL_BLUE, LV_PART_MAIN);
+            cmdarg.cmd = BT_ENABLE;
+        }
+        bt_query(&cmdarg, sizeof(cmdarg));
     }
-    else
-    {
-        lv_obj_set_style_bg_color(ui_bt, HL_BLUE, LV_PART_MAIN);
-        cmdarg.cmd = BT_DISABLE;
-    }
-    bt_query(&cmdarg, sizeof(cmdarg));
 }
 #endif
 
