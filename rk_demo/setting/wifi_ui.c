@@ -149,7 +149,7 @@ static void event_cb(lv_event_t *e)
 static void connect_wifi(lv_event_t *e)
 {
     char title[128];
-    static const char *btns[] = {"确认", "取消", ""};
+    static const char *btns_txt[] = {"确认", "取消", ""};
 
     waiting_scanning = 0;
     lv_obj_t *btn = lv_event_get_user_data(e);
@@ -157,8 +157,10 @@ static void connect_wifi(lv_event_t *e)
     snprintf(title, sizeof(title), "连接到%s",
              lv_list_get_btn_text(item_list_scaned, btn));
 
-    lv_obj_t *ibox = lv_inputbox_create(NULL, title, "请输入密码", btns,
+    lv_obj_t *ibox = lv_inputbox_create(NULL, title, "请输入密码", btns_txt,
                                         false);
+    lv_obj_t *btns = lv_inputbox_get_btns(ibox);
+    lv_obj_set_size(btns, lv_pct(50), lv_pct(15));
     lv_obj_add_event_cb(ibox, event_cb, LV_EVENT_VALUE_CHANGED, btn);
     lv_obj_add_style(ibox, &style_txt, LV_PART_MAIN);
     lv_obj_set_size(ibox, lv_pct(80), lv_pct(50));
