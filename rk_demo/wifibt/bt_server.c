@@ -840,16 +840,11 @@ static void *bt_server(void *arg)
     intptr_t intval;
     char buf[1024];
     char **key;
+    int timeout;
     int len;
 
     while (access("/tmp/.lv_warmup", F_OK) == 0)
         sleep(1);
-
-    bt_ble_init();
-    while (!bt_content.init)
-        sleep(1);
-    rk_bt_set_profile(PROFILE_A2DP_SINK_HF);
-    rk_bt_set_discoverable(1);
 
     listening = 1;
     while (1)
@@ -860,8 +855,16 @@ static void *bt_server(void *arg)
         {
         case BT_ENABLE:
             log("BT_ENABLE\n");
+            system("/usr/bin/wifibt-init.sh start_bt && sleep 3");
             bt_ble_init();
-            //rk_bt_set_profile(PROFILE_A2DP_SINK_HF);
+            timeout = 3;
+            while (!bt_content.init && (timeout--))
+                sleep(1);
+            if (timeout != 0)
+            {
+                rk_bt_set_profile(PROFILE_A2DP_SINK_HF);
+                rk_bt_set_discoverable(1);
+            }
             break;
         case BT_DISABLE:
             log("BT_DISABLE\n");
@@ -869,7 +872,10 @@ static void *bt_server(void *arg)
             break;
         case BT_SINK_ENABLE:
             log("BT_SINK_ENABLE\n");
+            if (!bt_content.init)
+                break;
             rk_bt_set_profile(PROFILE_A2DP_SINK_HF);
+            rk_bt_set_discoverable(1);
             break;
         case BT_SINK_DISABLE:
             log("BT_SINK_DISABLE\n");

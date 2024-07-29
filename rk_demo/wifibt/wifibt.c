@@ -15,16 +15,14 @@ int run_wifibt_server(void)
     int ret;
 
 #if WIFIBT_EN
-    system("/usr/bin/wifibt-init.sh && sleep 3");
-
     ret = run_wifi_server();
     if (ret != 0)
         log("run_wifi_server failed\n");
+#endif
 #if BT_EN
     ret = run_bt_server();
     if (ret != 0)
         log("run_bt_server failed\n");
-#endif
 #endif
 
     return ret;
