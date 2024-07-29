@@ -37,9 +37,9 @@ static lv_obj_t *ui_box_main;
 static lv_obj_t *ui_sliders;
 #if WIFIBT_EN
 static lv_obj_t *ui_wifi;
+#endif
 #if BT_EN
 static lv_obj_t *ui_bt;
-#endif
 #endif
 static lv_obj_t *ui_wallpaper;
 static lv_obj_t *ui_data;
@@ -48,6 +48,8 @@ static lv_obj_t *ui_about;
 static lv_obj_t *submenu_mask;
 static lv_obj_t *submenu_area;
 static lv_obj_t *cancel_btn;
+
+static lv_timer_t *timer;
 
 static lv_obj_t *sub_menu[SUBMENU_MAX];
 static int cur_menu = SUBMENU_MAX;
@@ -85,9 +87,9 @@ static struct submenu_s submenu_desc[SUBMENU_MAX] =
 {
 #if WIFIBT_EN
     {"WIFI",        submenu_wifi,    submenu_wifi_destroy, NULL},
+#endif
 #if BT_EN
     {"蓝牙",        submenu_bt,      submenu_bt_destroy,   NULL},
-#endif
 #endif
     {"锁屏和壁纸",  submenu_wallpaper,  submenu_wallpaper_destroy, NULL},
     {"语言和日期",  submenu_language,  submenu_language_destroy, NULL},
@@ -113,6 +115,7 @@ static struct btn_desc setting_btn[] =
         .cb   = menu_switch_cb,
         .user_data = (void *)SUBMENU_WIFI
     },
+#endif
 #if BT_EN
     {
         .obj  = &ui_bt,
@@ -124,7 +127,6 @@ static struct btn_desc setting_btn[] =
         .cb   = switch_toggled,
         .user_data = (void *)SUBMENU_BT
     },
-#endif
 #endif
     {
         .obj  = &ui_wallpaper,
@@ -309,6 +311,7 @@ static void btn_return_cb(lv_event_t *e)
     {
     case LV_EVENT_CLICKED:
         home_ui_init();
+        lv_timer_del(timer);
         for (int i = SUBMENU_MIN; i < SUBMENU_MAX; i++)
         {
             if (submenu_desc[i].deinit)
@@ -327,6 +330,26 @@ static void btn_return_cb(lv_event_t *e)
 static void submenu_mask_cb(lv_event_t *e)
 {
     lv_obj_add_flag(submenu_mask, LV_OBJ_FLAG_HIDDEN);
+}
+
+static void state_update(lv_timer_t *timer)
+{
+#if WIFIBT_EN
+    if (wifi_enabled())
+        lv_obj_set_style_bg_color(ui_wifi, HL_BLUE, LV_PART_MAIN);
+    else
+        lv_obj_set_style_bg_color(ui_wifi, MAIN_COLOR, LV_PART_MAIN);
+#endif
+
+#if BT_EN
+    cmdarg.cmd = BT_INFO;
+    cmdarg.val = &new_info;
+    bt_query_wait(&cmdarg, sizeof(cmdarg));
+    if (new_info.bt_state >= BT_STATE_ON)
+        lv_obj_set_style_bg_color(ui_bt, HL_BLUE, LV_PART_MAIN);
+    else
+        lv_obj_set_style_bg_color(ui_bt, MAIN_COLOR, LV_PART_MAIN);
+#endif
 }
 
 void setting_ui_init(void)
@@ -349,7 +372,10 @@ void setting_ui_init(void)
     lv_obj_align(ui_box_main, LV_ALIGN_TOP_MID, 0, lv_pct(10));
 
 #if WIFIBT_EN
-    lv_obj_set_style_bg_color(ui_wifi, HL_BLUE, LV_PART_MAIN);
+    if (wifi_enabled())
+        lv_obj_set_style_bg_color(ui_wifi, HL_BLUE, LV_PART_MAIN);
+    else
+        lv_obj_set_style_bg_color(ui_wifi, MAIN_COLOR, LV_PART_MAIN);
 #endif
 
 #if BT_EN
@@ -382,5 +408,8 @@ void setting_ui_init(void)
     lv_obj_add_flag(cancel_btn, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_EVENT_BUBBLE);
     lv_img_set_src(cancel_btn, IMG_CANCEL);
     lv_obj_align_to(cancel_btn, submenu_area, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
+
+    timer = lv_timer_create(state_update, 1000, NULL);
+    lv_timer_enable(timer);
 }
 

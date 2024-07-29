@@ -78,6 +78,7 @@ int run_wifi_server(void);
 int wifi_query(void *buf, int len);
 int wifi_query_wait(void *buf, int len);
 int wifi_scanning_done(void);
+int wifi_enabled(void);
 int wifi_connected(void);
 
 int run_bt_server(void);

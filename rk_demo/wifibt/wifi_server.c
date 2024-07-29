@@ -31,6 +31,11 @@ int wifi_scanning_done(void)
     return 0;
 }
 
+int wifi_enabled(void)
+{
+    return (rkwifi_gonff == false) ? 0 : 1;
+}
+
 int wifi_connected(void)
 {
     return wifi_state == RK_WIFI_State_CONNECTED ||

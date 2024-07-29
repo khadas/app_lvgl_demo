@@ -32,6 +32,7 @@ static lv_obj_t *item_label_scaned;
 
 static lv_obj_t *item_list_saved;
 static lv_obj_t *item_list_scaned;
+static lv_obj_t *item_label_current;
 
 static lv_obj_t *kb;
 
@@ -42,9 +43,37 @@ static lv_anim_t icon_anim;
 static lv_style_t style_txt;
 static lv_style_t style_list;
 
+LV_IMG_DECLARE(wifi_none);
+LV_IMG_DECLARE(wifi_wpa);
+LV_IMG_DECLARE(wifi_wep);
+LV_IMG_DECLARE(wifi_wpa3);
+
+static const char *key_mgmts[] = {"NONE", "WPA", "WEP", "WPA3"};
+static const lv_img_dsc_t *key_mgmt_icons[] =
+{
+    &wifi_none, &wifi_wpa, &wifi_wep, &wifi_wpa3
+};
+
+static int last_state = -1;
 
 static void lv_saved_wifi_list(lv_obj_t *parent);
+static void connect_saved_wifi(lv_event_t *e);
 static void connect_wifi(lv_event_t *e);
+
+static lv_obj_t *btn_add_tag(lv_obj_t *btn, const char *txt)
+{
+    lv_obj_t *label;
+
+    label = lv_label_create(btn);
+    lv_obj_remove_style_all(label);
+    lv_label_set_text(label, txt);
+    lv_obj_add_style(label, &style_txt, LV_PART_MAIN);
+    lv_obj_set_size(label, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_obj_add_flag(label, LV_OBJ_FLAG_IGNORE_LAYOUT);
+    lv_obj_align(label, LV_ALIGN_RIGHT_MID, 0, 0);
+
+    return label;
+}
 
 static void read_saved_wifi(int check)
 {
@@ -73,10 +102,12 @@ static void read_saved_wifi(int check)
         return;
 
     lv_obj_clean(item_list_saved);
+    item_label_current = NULL;
     for (int i = start; i < ap_cnt; i++)
     {
         lv_obj_t *btn;
         char *ssid, *bssid;
+        intptr_t key_mgmt = NONE;
         ssid = wsi[i].ssid;
         bssid = wsi[i].bssid;
         printf("id: %d, name: %s, bssid: %s, state: %s\n",
@@ -86,19 +117,20 @@ static void read_saved_wifi(int check)
                wsi[i].state);
         if ((strncmp(wsi[i].ssid, "SSID", 4) == 0))
             continue;
-        btn = lv_list_add_btn(item_list_saved, NULL,
+        if (strstr(wsi[i].key_mgmt, "WPA3"))
+            key_mgmt = WPA3;
+        else if (strstr(wsi[i].key_mgmt, "WPA"))
+            key_mgmt = WPA;
+        else if (strstr(wsi[i].key_mgmt, "WEP"))
+            key_mgmt = WEP;
+        else
+            key_mgmt = NONE;
+        btn = lv_list_add_btn(item_list_saved, key_mgmt_icons[key_mgmt],
                               (ssid && (strlen(ssid) > 0)) ? ssid : bssid);
-        lv_obj_add_event_cb(btn, connect_wifi, LV_EVENT_CLICKED, btn);
+        lv_obj_add_event_cb(btn, connect_saved_wifi, LV_EVENT_CLICKED, btn);
+        lv_obj_set_user_data(btn, (void *)key_mgmt);
         if (strcmp(wsi[i].state, "[CURRENT]") == 0)
-        {
-            lv_obj_t *label;
-            label = lv_list_add_text(item_list_saved, "已连接");
-            lv_obj_remove_style_all(label);
-            lv_obj_add_style(label, &style_txt, LV_PART_MAIN);
-            lv_obj_set_size(label, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-            lv_obj_add_flag(label, LV_OBJ_FLAG_IGNORE_LAYOUT);
-            lv_obj_align_to(label, btn, LV_ALIGN_RIGHT_MID, 0, 0);
-        }
+            item_label_current = btn_add_tag(btn, "已连接");
     }
     lv_obj_refr_size(part_scaned);
     lv_obj_refr_pos(part_scaned);
@@ -122,7 +154,6 @@ static void style_init(void)
 
 static void event_cb(lv_event_t *e)
 {
-    static const char *key_mgmts[] = {"NONE", "WPA", "WEP", "WPA3"};
     lv_obj_t *obj = lv_event_get_target(e);
     lv_obj_t *ibox = lv_obj_get_parent(obj);
     lv_obj_t *list_btn = lv_event_get_user_data(e);
@@ -139,11 +170,30 @@ static void event_cb(lv_event_t *e)
 
         if (RK_wifi_connect((char *)ssid, (char *)psk, key_mgmt, NULL) < 0)
             printf("RK_wifi_connect1 fail!\n");
+        last_state = -1;
 
         read_saved_wifi(init_done);
     }
     lv_msgbox_close(ibox);
     lv_obj_del(kb);
+}
+
+static void connect_saved_wifi(lv_event_t *e)
+{
+    lv_obj_t *btn = lv_event_get_user_data(e);
+    const char *ssid;
+    const char *psk;
+    intptr_t key_mgmt = NONE;
+
+    ssid = lv_list_get_btn_text(item_list_saved, btn);
+    key_mgmt = (intptr_t)lv_obj_get_user_data(btn);
+    printf("try to connect saved wifi [%s, %s]\n", ssid, key_mgmts[key_mgmt]);
+    if (item_label_current)
+        lv_obj_del(item_label_current);
+    item_label_current = btn_add_tag(btn, "正在连接");
+    int ret = RK_wifi_connect_with_ssid(ssid, key_mgmt);
+    printf("RK_wifi_connect_with_ssid ret = %d\n", ret);
+    last_state = -1;
 }
 
 static void connect_wifi(lv_event_t *e)
@@ -216,12 +266,9 @@ static void icon_anim_end(lv_anim_t *anim)
             free(info);
             */
 
-            ssid = cJSON_GetStringValue(
-                       cJSON_GetObjectItem(sub, "ssid"));
-            bssid = cJSON_GetStringValue(
-                        cJSON_GetObjectItem(sub, "bssid"));
-            flags = cJSON_GetStringValue(
-                        cJSON_GetObjectItem(sub, "flags"));
+            ssid = cJSON_GetStringValue(cJSON_GetObjectItem(sub, "ssid"));
+            bssid = cJSON_GetStringValue(cJSON_GetObjectItem(sub, "bssid"));
+            flags = cJSON_GetStringValue(cJSON_GetObjectItem(sub, "flags"));
 
             if (strstr(flags, "WPA3"))
                 key_mgmt = WPA3;
@@ -232,7 +279,7 @@ static void icon_anim_end(lv_anim_t *anim)
             else
                 key_mgmt = NONE;
 
-            btn = lv_list_add_btn(item_list_scaned, NULL,
+            btn = lv_list_add_btn(item_list_scaned, key_mgmt_icons[key_mgmt],
                                   (ssid && (strlen(ssid) > 0)) ? ssid : bssid);
             lv_obj_add_event_cb(btn, connect_wifi, LV_EVENT_CLICKED, btn);
             lv_obj_set_user_data(btn, (void *)key_mgmt);
@@ -267,8 +314,6 @@ static void label_drawed_cb(lv_event_t *e)
 
 static void wifi_update(lv_timer_t *timer)
 {
-    static int last_state = -1;
-
     if (last_state != wifi_connected())
     {
         last_state = wifi_connected();
@@ -281,6 +326,23 @@ static void wifi_update(lv_timer_t *timer)
         waiting_scanning = 0;
         lv_anim_del(&icon_anim, NULL);
         icon_anim_end(NULL);
+    }
+}
+
+static struct wifibt_cmdarg cmdarg;
+static void switch_toggled(lv_event_t *e)
+{
+    int en;
+    if (e->code == LV_EVENT_VALUE_CHANGED)
+    {
+        en = lv_obj_has_state(wifi_switch, LV_STATE_CHECKED);
+        if (en)
+            cmdarg.cmd = WIFI_ENABLE;
+        else
+            cmdarg.cmd = WIFI_DISABLE;
+        wifi_query(&cmdarg, sizeof(cmdarg));
+        if (en)
+            scan_btn_cb(NULL);
     }
 }
 
@@ -306,7 +368,9 @@ lv_obj_t *menu_wifi_init(lv_obj_t *parent)
     lv_obj_add_style(wifi_label, &style_txt, LV_PART_MAIN);
     wifi_switch = lv_switch_create(part_switch);
     lv_obj_align(wifi_switch, LV_ALIGN_RIGHT_MID, 0, 0);
-    lv_obj_add_state(wifi_switch, LV_STATE_CHECKED | LV_STATE_DISABLED);
+    lv_obj_add_event_cb(wifi_switch, switch_toggled, LV_EVENT_VALUE_CHANGED, NULL);
+    if (wifi_enabled())
+        lv_obj_add_state(wifi_switch, LV_STATE_CHECKED);
 
     item_label_saved = lv_label_create(bg);
     lv_label_set_text(item_label_saved, "已保存网络");
@@ -334,6 +398,7 @@ lv_obj_t *menu_wifi_init(lv_obj_t *parent)
     lv_obj_set_size(item_list_saved, lv_pct(100), LV_SIZE_CONTENT);
     lv_obj_add_style(item_list_saved, &style_list, LV_PART_MAIN);
     lv_list_add_btn(item_list_saved, NULL, "无");
+    item_label_current = NULL;
 
     item_list_scaned = lv_list_create(part_scaned);
     lv_obj_set_size(item_list_scaned, lv_pct(100), LV_SIZE_CONTENT);
@@ -353,7 +418,8 @@ lv_obj_t *menu_wifi_init(lv_obj_t *parent)
     lv_obj_align_to(item_scan_icon, item_scan, LV_ALIGN_CENTER, 0, 0);
     lv_obj_add_flag(item_scan_icon, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_IGNORE_LAYOUT);
 
-    read_saved_wifi(1);
+    if (wifi_enabled())
+        read_saved_wifi(1);
 
     lv_anim_init(&icon_anim);
     lv_anim_set_var(&icon_anim, item_scan_icon);
@@ -363,7 +429,8 @@ lv_obj_t *menu_wifi_init(lv_obj_t *parent)
     lv_anim_set_deleted_cb(&icon_anim, icon_anim_deled);
     lv_anim_set_path_cb(&icon_anim, lv_anim_path_linear);
     lv_anim_set_repeat_count(&icon_anim, 3/*LV_ANIM_REPEAT_INFINITE*/);
-    scan_btn_cb(NULL);
+    if (wifi_enabled())
+        scan_btn_cb(NULL);
 
     timer = lv_timer_create(wifi_update, 1000, NULL);
     lv_timer_enable(timer);
