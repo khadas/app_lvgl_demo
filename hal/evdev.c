@@ -114,7 +114,7 @@ int evdev_get_tp_event(void)
 
         tp_name[len] = '\0';
 
-        if (strstr(tp_name, "ts"))
+        if (strstr(tp_name, "ts") || strstr(tp_name, "gsl"))
         {
             sprintf(tp_event, "/dev/input/event%d", i);
             printf("%s: %s = %s%s\n", __func__, file_name, tp_name, tp_event);
@@ -275,10 +275,12 @@ void evdev_read(lv_indev_drv_t *drv, lv_indev_data_t *data)
                 evdev_root_y = in.value;
 #endif
             else if (in.code == ABS_MT_TRACKING_ID)
+            {
                 if (in.value == -1)
                     evdev_button = LV_INDEV_STATE_REL;
-                else if (in.value == 0)
+                else if ((in.value == 0) || (in.value == 1))
                     evdev_button = LV_INDEV_STATE_PR;
+            }
         }
         else if (in.type == EV_KEY)
         {
