@@ -114,6 +114,13 @@ int evdev_get_tp_event(void)
 
         tp_name[len] = '\0';
 
+        /*
+         * There is a 'ts' in the 'lightsensor', skip it to avoid being
+         * treated as a touch device
+         */
+        if (strstr(tp_name, "lightsensor"))
+            continue;
+
         if (strstr(tp_name, "ts") || strstr(tp_name, "gsl"))
         {
             sprintf(tp_event, "/dev/input/event%d", i);
