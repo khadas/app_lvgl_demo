@@ -14,6 +14,7 @@
  *  limitations under the License.
  */
 
+#include <fcntl.h>
 #include <lvgl/lvgl.h>
 #include <lvgl/lv_conf.h>
 
@@ -49,6 +50,18 @@ static int g_disp_rotation = LV_DISP_ROT_NONE;
 
 static int quit = 0;
 
+#if USE_SENSOR
+#define SYS_NODE    "/sys/devices/platform/backlight/backlight/backlight/brightness"
+static lv_timer_t *lsensor_timer;
+static lv_timer_t *psensor_timer;
+static lv_timer_t *backlight_timer;
+/* light sensor level from 0 to 7 */
+static int brightness[8] = {45, 75, 105, 135, 165, 195, 225, 255};
+static int backlight_en = 1;
+static int backlight_level = ARRAY_SIZE(brightness) - 1;
+static int backlight_fd = -1;
+#endif
+
 extern void rk_demo_init(void);
 
 static void sigterm_handler(int sig)
@@ -75,6 +88,123 @@ static void check_scr(void)
     printf("%s %dx%d\n", __func__, scr_w, scr_h);
 }
 
+#if USE_SENSOR
+static int level_to_brightness(int level)
+{
+    if (level < 0)
+        level = 0;
+    if (level >= ARRAY_SIZE(brightness))
+        level > ARRAY_SIZE(brightness) - 1;
+
+    return brightness[level];
+}
+
+static void update_backlight(int en, int value)
+{
+    static uint8_t last_value = 0;
+    uint8_t final_value;
+    char val[8];
+
+    if (backlight_fd <= 0)
+        return;
+
+    if (en)
+    {
+        final_value = value;
+    }
+    else
+    {
+        final_value = 0;
+    }
+    if (last_value == final_value)
+        return;
+    last_value = final_value;
+    snprintf(val, sizeof(val), "%d", final_value);
+    if (write(backlight_fd, &val, strlen(val)) <= 0)
+        LV_LOG_ERROR("update backlight failed");
+}
+
+static void backlight_cb(lv_timer_t *timer)
+{
+    static int cur_en = 1;
+    static int cur_value = 255;
+    static int start_tick = 0;
+    int value_step;
+    int target_value;
+
+    target_value = level_to_brightness(backlight_level);
+    if (cur_value != target_value)
+    {
+        if (cur_value > target_value)
+        {
+            value_step = (int)((cur_value - target_value) / 2.0);
+            if (value_step == 0)
+                value_step = 2;
+            if ((cur_value - value_step) < target_value)
+                cur_value = target_value;
+            else
+                cur_value -= value_step;
+        }
+        else
+        {
+            value_step = (int)((target_value - cur_value) / 2.0);
+            if (value_step == 0)
+                value_step = 2;
+            if ((cur_value + value_step) > target_value)
+                cur_value = target_value;
+            else
+                cur_value += value_step;
+        }
+    }
+
+    if (cur_en != backlight_en)
+    {
+        if (cur_en == 0)
+        {
+            cur_en = backlight_en;
+        }
+        else
+        {
+            if (start_tick == 0)
+                start_tick = lv_tick_get();
+            else if (lv_tick_elaps(start_tick) > 3000)
+                cur_en = backlight_en;
+        }
+    }
+    else
+    {
+        start_tick = 0;
+    }
+
+    update_backlight(cur_en, cur_value);
+}
+
+static void lsensor_cb(lv_timer_t *timer)
+{
+    lv_indev_drv_t *drv = (lv_indev_drv_t *)timer->user_data;
+    lv_indev_data_t data;
+
+    drv->read_cb(drv, &data);
+    if (data.continue_reading)
+        return;
+    LV_LOG_TRACE("%d %u", data.state, data.key);
+    backlight_level = data.key;
+}
+
+static void psensor_cb(lv_timer_t *timer)
+{
+    lv_indev_drv_t *drv = (lv_indev_drv_t *)timer->user_data;
+    lv_indev_data_t data;
+
+    memset(&data, 0, sizeof(data));
+    drv->read_cb(drv, &data);
+    if (data.continue_reading)
+        return;
+    LV_LOG_TRACE("%d", data.state);
+    backlight_en = data.state;
+}
+#endif
+
 static void lvgl_init(void)
 {
     lv_init();
@@ -91,8 +221,26 @@ static void lvgl_init(void)
     hal_rkadk_init(0, 0, g_disp_rotation);
 #endif
 
-#if USE_EVDEV
+#if USE_EVDEV || USE_SENSOR
     lv_port_indev_init(g_indev_rotation);
+#endif
+
+#if USE_SENSOR
+    lv_indev_drv_t *lsensor, *psensor;
+    lsensor = lv_port_indev_get_lsensor_drv();
+    psensor = lv_port_indev_get_psensor_drv();
+    if ((lsensor && lsensor->read_cb) &&
+            (psensor && psensor->read_cb))
+    {
+        lsensor_timer = lv_timer_create(lsensor_cb, 100, lsensor);
+        psensor_timer = lv_timer_create(psensor_cb, 100, psensor);
+        backlight_timer = lv_timer_create(backlight_cb, 50, NULL);
+        backlight_fd = open(SYS_NODE, O_RDWR);
+        if (backlight_fd <= 0)
+            LV_LOG_ERROR("open backlight node failed");
+        update_backlight(backlight_en, brightness[backlight_level]);
+        backlight_en = 0;
+    }
 #endif
 
     check_scr();

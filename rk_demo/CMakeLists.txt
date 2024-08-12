@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.8)
 project(rk_demo)
 
 add_definitions(-DMULTIMEDIA_EN=${RK_DEMO_MULTIMEDIA_EN})
+add_definitions(-DUSE_SENSOR=${RK_DEMO_SENSOR_EN})
 
 include_directories(
 	${PROJECT_SOURCE_DIR}/
