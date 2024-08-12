@@ -21,6 +21,14 @@ extern "C" {
 #  define USE_BSD_EVDEV       0
 #endif
 
+#ifndef USE_SENSOR
+#  define USE_SENSOR         0
+#endif
+
+#ifndef USE_PSENSOR
+#  define USE_PSENSOR         0
+#endif
+
 #if USE_EVDEV || USE_BSD_EVDEV
 #  define EVDEV_NAME   "/dev/input/event2"        /*You can use the "evtest" Linux tool to get the list of devices and test them*/
 #  define EVDEV_SWAP_AXES         0               /*Swap the x and y axes of the touchscreen*/
@@ -65,6 +73,17 @@ int evdev_set_file(lv_disp_drv_t *drv, char *dev_name);
  */
 void evdev_read(lv_indev_drv_t *drv, lv_indev_data_t *data);
 
+#if USE_SENSOR
+int evdev_init_psensor(void);
+
+void *evdev_get_psensor(void);
+
+int evdev_init_lsensor(void);
+
+void *evdev_get_lsensor(void);
+
+void evdev_sensor_read(lv_indev_drv_t *drv, lv_indev_data_t *data);
+#endif
 
 /**********************
  *      MACROS

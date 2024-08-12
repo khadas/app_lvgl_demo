@@ -14,9 +14,17 @@
 extern "C" {
 #endif
 
+#include "evdev.h"
+
 void lv_port_indev_init(int rot);
 lv_group_t *lv_port_indev_group_create(void);
 void lv_port_indev_group_destroy(lv_group_t *group);
+
+#if USE_SENSOR
+lv_indev_drv_t *lv_port_indev_get_lsensor_drv(void);
+
+lv_indev_drv_t *lv_port_indev_get_psensor_drv(void);
+#endif
 
 #ifdef __cplusplus
 } /*extern "C"*/

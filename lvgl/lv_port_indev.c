@@ -9,7 +9,6 @@
 #include "lvgl.h"
 #include "lv_port_indev.h"
 
-#include "evdev.h"
 #include "key.h"
 
 typedef struct _GROUP_NODE
@@ -23,6 +22,21 @@ lv_indev_t *indev_touchpad;
 lv_indev_t *indev_key;
 
 GROUP_NODE *group_list = NULL;
+
+#ifdef USE_SENSOR
+static lv_indev_drv_t lsensor_drv;
+static lv_indev_drv_t psensor_drv;
+
+lv_indev_drv_t *lv_port_indev_get_lsensor_drv(void)
+{
+    return &lsensor_drv;
+}
+
+lv_indev_drv_t *lv_port_indev_get_psensor_drv(void)
+{
+    return &psensor_drv;
+}
+#endif
 
 lv_group_t *lv_port_indev_group_create(void)
 {
@@ -130,6 +144,26 @@ void lv_port_indev_init(int rot)
         key_drv.read_cb = key_read;
         indev_key = lv_indev_drv_register(&key_drv);
         lv_port_indev_group_create();
+    }
+#endif
+
+#if USE_SENSOR
+    lv_indev_drv_init(&lsensor_drv);
+    if (evdev_init_lsensor() >= 0)
+    {
+        lsensor_drv.type = LV_INDEV_TYPE_NONE;
+        lsensor_drv.user_data = evdev_get_lsensor();
+        lsensor_drv.read_cb = evdev_sensor_read;
+        /* DO NOT register the drv to lvgl, just handled by applications */
+    }
+
+    lv_indev_drv_init(&psensor_drv);
+    if (evdev_init_psensor() >= 0)
+    {
+        psensor_drv.type = LV_INDEV_TYPE_NONE;
+        psensor_drv.user_data = evdev_get_psensor();
+        psensor_drv.read_cb = evdev_sensor_read;
+        /* DO NOT register the drv to lvgl, just handled by applications */
     }
 #endif
 }

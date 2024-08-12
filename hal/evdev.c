@@ -25,6 +25,16 @@
  *      DEFINES
  *********************/
 
+#define PSENSOR_IOCTL_MAGIC             'p'
+#define PSENSOR_IOCTL_GET_ENABLED       _IOR(PSENSOR_IOCTL_MAGIC, 1, int *)
+#define PSENSOR_IOCTL_ENABLE            _IOW(PSENSOR_IOCTL_MAGIC, 2, int *)
+#define PSENSOR_IOCTL_DISABLE           _IOW(PSENSOR_IOCTL_MAGIC, 3, int *)
+
+#define LIGHTSENSOR_IOCTL_MAGIC         'l'
+#define LIGHTSENSOR_IOCTL_GET_ENABLED   _IOR(LIGHTSENSOR_IOCTL_MAGIC, 1, int *)
+#define LIGHTSENSOR_IOCTL_ENABLE        _IOW(LIGHTSENSOR_IOCTL_MAGIC, 2, int *)
+#define LIGHTSENSOR_IOCTL_SET_RATE      _IOW(LIGHTSENSOR_IOCTL_MAGIC, 3, short)
+
 /**********************
  *      TYPEDEFS
  **********************/
@@ -51,6 +61,13 @@ int evdev_calibrate = 0;
 int evdev_key_val;
 
 int evdev_rot;
+
+#if USE_SENSOR
+static int psensor_event_id = -1;
+static int lsensor_event_id = -1;
+static int psensor_fd = -1;
+static int lsensor_fd = -1;
+#endif
 /**********************
  *      MACROS
  **********************/
@@ -114,12 +131,26 @@ int evdev_get_tp_event(void)
 
         tp_name[len] = '\0';
 
+#if USE_SENSOR
+        if (strstr(tp_name, "lightsensor"))
+        {
+            lsensor_event_id = i;
+            continue;
+        }
+
+        if (strstr(tp_name, "proximity"))
+        {
+            psensor_event_id = i;
+            continue;
+        }
+#else
         /*
          * There is a 'ts' in the 'lightsensor', skip it to avoid being
          * treated as a touch device
          */
         if (strstr(tp_name, "lightsensor"))
             continue;
+#endif
 
         if (strstr(tp_name, "ts") || strstr(tp_name, "gsl"))
         {
@@ -131,6 +162,163 @@ int evdev_get_tp_event(void)
 
     return -1;
 }
+
+#if USE_SENSOR
+void evdev_sensor_read(lv_indev_drv_t *drv, lv_indev_data_t *data)
+{
+    struct input_event in;
+    struct timeval tv;
+    int drv_fd = *(int *)drv->user_data;
+    fd_set rdfs;
+    int ret;
+
+    FD_ZERO(&rdfs);
+    FD_SET(drv_fd, &rdfs);
+
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+
+    data->continue_reading = 1;
+    if (select(drv_fd + 1, &rdfs, NULL, NULL, &tv) <= 0)
+    {
+        return;
+    }
+
+    if ((ret = read(drv_fd, &in, sizeof(in))) > 0)
+    {
+        if (in.type == EV_ABS)
+        {
+            if (in.code == ABS_DISTANCE)
+            {
+                if (in.value == 0)
+                    data->state = LV_INDEV_STATE_RELEASED;
+                else
+                    data->state = LV_INDEV_STATE_PRESSED;
+                data->continue_reading = 0;
+            }
+            else if (in.code == ABS_MISC)
+            {
+                if (in.value == 0)
+                    data->state = LV_INDEV_STATE_RELEASED;
+                else
+                    data->state = LV_INDEV_STATE_PRESSED;
+                data->key = in.value;
+                data->continue_reading = 0;
+            }
+        }
+    }
+}
+
+void *evdev_get_psensor(void)
+{
+    return &psensor_fd;
+}
+
+int evdev_init_psensor(void)
+{
+    char event_name[64];
+    int fd, ret, enable = 1;
+
+    if (psensor_event_id == -1)
+    {
+        if (evdev_get_tp_event() < 0)
+        {
+            printf("%s get event failed\n", __func__);
+            return -1;
+        }
+        if (psensor_event_id == -1)
+        {
+            printf("%s get psensor event failed\n", __func__);
+            return -1;
+        }
+    }
+
+    fd = open("/dev/psensor", O_RDWR);
+    if (fd < 0)
+    {
+        printf("can't open /dev/psensor!\n");
+        return -1;
+    }
+
+    ret = ioctl(fd, PSENSOR_IOCTL_ENABLE, &enable);
+    if (ret < 0)
+    {
+        printf("eanble /dev/psensor failed %d!\n", ret);
+    }
+    else
+    {
+        printf("enable /dev/psensor successfully!\n");
+    }
+    close(fd);
+
+    snprintf(event_name, sizeof(event_name),
+             "/dev/input/event%d", psensor_event_id);
+    fd = open(event_name, O_RDONLY);
+    if (fd < 0)
+    {
+        printf("can't open %s\n", event_name);
+        return -1;
+    }
+    psensor_fd = fd;
+
+    return ret;
+}
+
+void *evdev_get_lsensor(void)
+{
+    return &lsensor_fd;
+}
+
+int evdev_init_lsensor(void)
+{
+    char event_name[64];
+    int fd, ret, enable = 1;
+
+    if (lsensor_event_id == -1)
+    {
+        if (evdev_get_tp_event() < 0)
+        {
+            printf("%s get event failed\n", __func__);
+            return -1;
+        }
+        if (lsensor_event_id == -1)
+        {
+            printf("%s get lsensor event failed\n", __func__);
+            return -1;
+        }
+    }
+
+    fd = open("/dev/lightsensor", O_RDWR);
+    if (fd < 0)
+    {
+        printf("can't open /dev/lightsensor!\n");
+        return -1;
+    }
+
+    ret = ioctl(fd, LIGHTSENSOR_IOCTL_ENABLE, &enable);
+    if (ret < 0)
+    {
+        printf("eanble /dev/lightsensor failed %d!\n", ret);
+    }
+    else
+    {
+        printf("enable /dev/lightsensor successfully!\n");
+    }
+    close(fd);
+
+    snprintf(event_name, sizeof(event_name),
+             "/dev/input/event%d", lsensor_event_id);
+    fd = open(event_name, O_RDONLY);
+    if (fd < 0)
+    {
+        printf("can't open %s\n", event_name);
+        return -1;
+    }
+    lsensor_fd = fd;
+
+    return ret;
+}
+#endif
 
 /**
  * Initialize the evdev interface
