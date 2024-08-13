@@ -17,7 +17,6 @@ static lv_obj_t *main = NULL;
 static lv_obj_t *btn_return;
 
 static lv_obj_t *ui_checkbox_audio;
-static lv_obj_t *ui_checkbox_video;
 static lv_obj_t *ui_monitor_name;
 static lv_obj_t *ui_rtsp_label;
 static lv_obj_t *ui_rtsp_addr;
@@ -423,35 +422,13 @@ static void ui_checkbox_cb(lv_event_t *e)
     printf("bVideoEnable=%d, bAudioEnable=%d\n", bVideoEnable, bAudioEnable);
 }
 
-static void obj_event_handler(lv_event_t *e)
-{
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
-    char tmp_buf[32];
-    if (code == LV_EVENT_VALUE_CHANGED)
-    {
-        lv_dropdown_get_selected_str(obj, tmp_buf, sizeof(tmp_buf));
-        if (strcmp(tmp_buf, "视频") == 0)
-        {
-            bVideoEnable = true;
-            bAudioEnable = false;
-        }
-        if (strcmp(tmp_buf, "音视频") == 0)
-        {
-            bVideoEnable = true;
-            bAudioEnable = true;
-        }
-        if (strcmp(tmp_buf, "音频") == 0)
-        {
-            bVideoEnable = false;
-            bAudioEnable = true;
-        }
-    }
-}
-
 void monitor_ui_init()
 {
     lv_obj_t *obj;
+    int btn_size;
+    lv_area_t btn_area;
+    lv_area_t addr_area;
+    lv_area_t res_area;
 
     video_pause = 0;
     network_enable = 0;
@@ -500,14 +477,6 @@ void monitor_ui_init()
     lv_obj_add_flag(ui_rtsp_addr, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(ui_rtsp_addr, rtsp_address_get, LV_EVENT_CLICKED, NULL);
 
-    ui_checkbox_video = lv_checkbox_create(player_box);
-    lv_checkbox_set_text(ui_checkbox_video, "视频");
-    lv_obj_add_style(ui_checkbox_video, &style_txt_m, LV_PART_MAIN);
-    if (bVideoEnable)
-        lv_obj_add_state(ui_checkbox_video, LV_STATE_CHECKED);
-    lv_obj_add_event_cb(ui_checkbox_video, ui_checkbox_cb, LV_EVENT_VALUE_CHANGED,
-                        &bVideoEnable);
-
     ui_checkbox_audio = lv_checkbox_create(player_box);
     lv_checkbox_set_text(ui_checkbox_audio, "音频");
     lv_obj_add_style(ui_checkbox_audio, &style_txt_m, LV_PART_MAIN);
@@ -516,9 +485,33 @@ void monitor_ui_init()
     lv_obj_add_event_cb(ui_checkbox_audio, ui_checkbox_cb, LV_EVENT_VALUE_CHANGED,
                         &bAudioEnable);
 
+    if (scr_dir == LV_DIR_HOR)
+        btn_size = RK_PCT_H(7);
+    else
+        btn_size = RK_PCT_W(7);
+    col_dsc[0] = btn_size;
+    col_dsc[2] = btn_size;
+    col_dsc[4] = btn_size;
+    row_dsc[0] = btn_size;
+    row_dsc[2] = btn_size;
+    row_dsc[4] = btn_size;
     ui_control_box = ui_btnmatrix_create(player_box, &btn_desc);
     lv_obj_add_flag(ui_control_box, LV_OBJ_FLAG_IGNORE_LAYOUT);
     lv_obj_center(ui_control_box);
+
+    lv_obj_refr_size(ui_rtsp_addr);
+    lv_obj_refr_pos(ui_rtsp_addr);
+    lv_obj_refr_size(ui_control_box);
+    lv_obj_refr_pos(ui_control_box);
+
+    lv_obj_get_coords(ui_rtsp_addr, &addr_area);
+    lv_obj_get_coords(ui_control_box, &btn_area);
+
+    if (_lv_area_intersect(&res_area, &addr_area, &btn_area))
+    {
+        lv_obj_set_width(ui_rtsp_addr, lv_pct(50));
+        lv_obj_align(ui_control_box, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
+    }
 
     lv_obj_set_style_bg_color(ui_control,  lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_bg_color(ui_name,     lv_color_white(), LV_PART_MAIN);
