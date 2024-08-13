@@ -96,7 +96,7 @@ int audio_client_del(void *arg)
     return 0;
 }
 
-void *audio_client_new(char *ip)
+void *audio_client_new(const char *ip)
 {
     struct audio_client *client;
     struct sockaddr_in serveraddr;

@@ -15,10 +15,10 @@ int audio_server_del(void *arg);
 int audio_server_state(void *arg);
 int audio_server_auto_connect(void *arg, int en);
 int audio_server_connected(void *arg);
-int audio_server_connect(void *arg, char *ip);
+int audio_server_connect(void *arg, const char *ip);
 int audio_server_disconnect(void *arg);
 
-void *audio_client_new(char *ip);
+void *audio_client_new(const char *ip);
 int audio_client_del(void *arg);
 int audio_client_state(void *arg);
 

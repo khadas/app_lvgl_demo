@@ -167,7 +167,7 @@ int audio_server_state(void *arg)
     return audio_client_state(server->client);
 }
 
-int audio_server_connect(void *arg, char *ip)
+int audio_server_connect(void *arg, const char *ip)
 {
     struct audio_server *server = (struct audio_server *)arg;
 
