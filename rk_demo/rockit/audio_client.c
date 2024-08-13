@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 
 #include "audio_in.h"
 #include "audio_out.h"
@@ -96,6 +98,38 @@ int audio_client_del(void *arg)
     return 0;
 }
 
+int connect_timeout(int sockfd, struct sockaddr *serv_addr, int timeout)
+{
+    int flags = fcntl(sockfd, F_GETFL, 0);
+    fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
+
+    int n = connect(sockfd, serv_addr, sizeof(*serv_addr));
+    if (n < 0)
+    {
+        if (errno != EINPROGRESS && errno != EWOULDBLOCK)
+            return -1;
+
+        struct timeval tv;
+        tv.tv_sec = timeout / 1000;
+        tv.tv_usec = (timeout - tv.tv_sec * 1000) * 1000;
+        fd_set wset;
+        FD_ZERO(&wset);
+        FD_SET(sockfd, &wset);
+        n = select(sockfd + 1, NULL, &wset, NULL, &tv);
+        if (n < 0)
+        {
+            return -1;
+        }
+        else if (0 == n)
+        {
+            return 0;
+        }
+    }
+    fcntl(sockfd, F_SETFL, flags);
+
+    return 1;
+}
+
 void *audio_client_new(const char *ip)
 {
     struct audio_client *client;
@@ -123,9 +157,8 @@ void *audio_client_new(const char *ip)
     serveraddr.sin_family = AF_INET;
     inet_pton(AF_INET, ip, &serveraddr.sin_addr.s_addr);
     serveraddr.sin_port = htons(9999);
-    ret = connect(fd, (struct sockaddr *)&serveraddr, sizeof(serveraddr));
-
-    if (ret < 0)
+    ret = connect_timeout(fd, (struct sockaddr *)&serveraddr, 3000);
+    if (ret <= 0)
     {
         printf("connect error\n");
         goto conn_err;
