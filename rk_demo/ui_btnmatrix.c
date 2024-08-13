@@ -173,6 +173,8 @@ lv_obj_t *ui_btnmatrix_create(lv_obj_t *parent, struct btn_matrix_desc *desc)
                              LV_GRID_ALIGN_STRETCH, y, h);
         lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_refr_size(obj);
+        lv_obj_refr_pos(obj);
         if (desc->desc[i].cb)
             lv_obj_add_event_cb(obj, desc->desc[i].cb, LV_EVENT_CLICKED,
                                 desc->desc[i].user_data);
