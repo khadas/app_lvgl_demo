@@ -67,7 +67,7 @@ static void check_scr(void)
     scr_w = LV_HOR_RES;
     scr_h = LV_VER_RES;
 
-    if (scr_w >= scr_h)
+    if (scr_w > scr_h)
         scr_dir = LV_DIR_HOR;
     else
         scr_dir = LV_DIR_VER;
