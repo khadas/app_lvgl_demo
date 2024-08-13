@@ -14,6 +14,7 @@ static lv_obj_t *bg;
 static lv_obj_t *area_screen_timeout;
 static lv_obj_t *area_locked_screen;
 static lv_obj_t *area_wallpaper;
+static int selected_id = 0;
 
 static char *wallpapers_thumb[4] =
 {
@@ -31,9 +32,25 @@ static char *wallpapers[4] =
     BG_PIC_3,
 };
 
+static int timeout_value[] =
+{
+    /* 5s 60s 120s 5mins never */
+    5000, 60000, 120000, 300000, -1
+};
+
 static void wallpaper_cb(lv_event_t *event)
 {
     rk_demo_bg_set_img(lv_event_get_user_data(event));
+}
+
+static void screen_timeout_cb(lv_event_t *event)
+{
+    lv_obj_t *obj = lv_event_get_target(event);
+
+    selected_id = lv_dropdown_get_selected(obj);
+    if (selected_id > ARRAY_SIZE(timeout_value))
+        selected_id = ARRAY_SIZE(timeout_value);
+    backlight_set_timeout(timeout_value[selected_id]);
 }
 
 lv_obj_t *menu_wallpaper_init(lv_obj_t *parent)
@@ -57,8 +74,9 @@ lv_obj_t *menu_wallpaper_init(lv_obj_t *parent)
     obj = lv_dropdown_create(area_screen_timeout);
     lv_obj_add_style(obj, &style_txt_s, LV_PART_MAIN);
     lv_obj_add_style(lv_dropdown_get_list(obj), &style_txt_s, LV_PART_MAIN);
-    lv_dropdown_set_options(obj, "60s\n120s\n5mins\n永不");
-    lv_dropdown_set_selected(obj, 3);
+    lv_obj_add_event_cb(obj, screen_timeout_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_dropdown_set_options(obj, "5s\n60s\n120s\n5mins\n永不");
+    lv_dropdown_set_selected(obj, selected_id);
     lv_obj_align(obj, LV_ALIGN_RIGHT_MID, 0, 0);
 
     area_locked_screen = lv_obj_create(bg);

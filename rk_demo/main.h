@@ -46,6 +46,7 @@ extern lv_coord_t scr_w;
 extern lv_coord_t scr_h;
 
 int app_disp_rotation(void);
+void backlight_set_timeout(int timeout);
 
 #endif
 

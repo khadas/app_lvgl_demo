@@ -61,8 +61,14 @@ static int backlight_en = 1;
 static int backlight_level = ARRAY_SIZE(brightness) - 1;
 static int backlight_fd = -1;
 #endif
+static int backlight_timeout = 5000;
 
 extern void rk_demo_init(void);
+
+void backlight_set_timeout(int timeout)
+{
+    backlight_timeout = timeout;
+}
 
 static void sigterm_handler(int sig)
 {
@@ -163,11 +169,11 @@ static void backlight_cb(lv_timer_t *timer)
         {
             cur_en = backlight_en;
         }
-        else
+        else if (backlight_timeout > 0)
         {
             if (start_tick == 0)
                 start_tick = lv_tick_get();
-            else if (lv_tick_elaps(start_tick) > 3000)
+            else if (lv_tick_elaps(start_tick) > backlight_timeout)
                 cur_en = backlight_en;
         }
     }
