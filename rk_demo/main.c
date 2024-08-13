@@ -62,6 +62,7 @@ static int backlight_level = ARRAY_SIZE(brightness) - 1;
 static int backlight_fd = -1;
 #endif
 static int backlight_timeout = 5000;
+static int start_tick = 0;
 
 extern void rk_demo_init(void);
 
@@ -95,6 +96,14 @@ static void check_scr(void)
 }
 
 #if USE_SENSOR
+static void touchpad_feedback(lv_indev_drv_t *drv, uint8_t code)
+{
+    if ((code >= LV_EVENT_PRESSED) && (code <= LV_EVENT_RELEASED))
+    {
+        start_tick = lv_tick_get();
+    }
+}
+
 static int level_to_brightness(int level)
 {
     if (level < 0)
@@ -124,7 +133,14 @@ static void update_backlight(int en, int value)
     }
     if (last_value == final_value)
         return;
+
+    if ((!!last_value) != (!!final_value))
+    {
+        /* Switch all indev state */
+        lv_indev_enable(NULL, !!final_value);
+    }
     last_value = final_value;
+
     snprintf(val, sizeof(val), "%d", final_value);
     if (write(backlight_fd, &val, strlen(val)) <= 0)
         LV_LOG_ERROR("update backlight failed");
@@ -134,7 +150,6 @@ static void backlight_cb(lv_timer_t *timer)
 {
     static int cur_en = 1;
     static int cur_value = 255;
-    static int start_tick = 0;
     int value_step;
     int target_value;
 
@@ -183,6 +198,39 @@ static void backlight_cb(lv_timer_t *timer)
     }
 
     update_backlight(cur_en, cur_value);
+
+    if (!cur_en)
+    {
+        lv_indev_t *indev;
+        lv_indev_data_t data;
+        uint32_t tick;
+
+        indev = lv_indev_get_next(NULL);
+        while (indev)
+        {
+            _lv_indev_read(indev, &data);
+            if (data.state == LV_INDEV_STATE_PRESSED)
+            {
+                /* Wait release */
+                tick = lv_tick_get();
+                do
+                {
+                    _lv_indev_read(indev, &data);
+                    if (lv_tick_elaps(tick) > 10000)
+                    {
+                        LV_LOG_WARN("Long-press 10s timeout");
+                        break;
+                    }
+                }
+                while (data.state == LV_INDEV_STATE_PRESSED);
+
+                cur_en = 1;
+                update_backlight(cur_en, cur_value);
+                break;
+            }
+            indev = lv_indev_get_next(indev);
+        }
+    }
 }
 
 static void lsensor_cb(lv_timer_t *timer)
@@ -246,6 +294,14 @@ static void lvgl_init(void)
             LV_LOG_ERROR("open backlight node failed");
         update_backlight(backlight_en, brightness[backlight_level]);
         backlight_en = 0;
+
+        lv_indev_t *indev = lv_indev_get_next(NULL);
+        while (indev)
+        {
+            lv_indev_drv_t *indev_drv = indev->driver;
+            indev_drv->feedback_cb = touchpad_feedback;
+            indev = lv_indev_get_next(indev);
+        }
     }
 #endif
 
