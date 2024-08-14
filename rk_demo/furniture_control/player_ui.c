@@ -118,7 +118,11 @@ static void param_init(RKADK_PLAYER_FRAME_INFO_S *pstFrmInfo)
 
     memset(pstFrmInfo, 0, sizeof(RKADK_PLAYER_FRAME_INFO_S));
     pstFrmInfo->u32DispWidth = 720;
+#if USE_RK3506
+    pstFrmInfo->u32DispHeight = RK_PCT_H(57);
+#else
     pstFrmInfo->u32DispHeight = 512; //1280*0.4=512
+#endif
     pstFrmInfo->u32ImgWidth = pstFrmInfo->u32DispWidth;
     pstFrmInfo->u32ImgHeight = pstFrmInfo->u32DispHeight;
 
@@ -132,7 +136,7 @@ static void param_init(RKADK_PLAYER_FRAME_INFO_S *pstFrmInfo)
 #endif
     pstFrmInfo->u32EnIntfType = DISPLAY_TYPE_MIPI;
     pstFrmInfo->u32VoLay = -1; // rkadk select the default first device
-    pstFrmInfo->u32VoChn = 2; // ui is 1 . play is 2
+    pstFrmInfo->u32VoChn = 0; // ui is 1 . play is 0
     pstFrmInfo->u32VoDev = -1; // rkadk select the default first device
     pstFrmInfo->enIntfSync = RKADK_VO_OUTPUT_DEFAULT;
     pstFrmInfo->enVoSpliceMode = SPLICE_MODE_RGA; // rkadk depend chips
@@ -181,7 +185,7 @@ static void rkadk_init(void)
     stPlayCfg.bEnableVideo = 1;
     stPlayCfg.bEnableAudio = 1;
     stPlayCfg.stFrmInfo.u32FrmInfoX = 0;
-    stPlayCfg.stFrmInfo.u32FrmInfoY = 128;
+    stPlayCfg.stFrmInfo.u32FrmInfoY = RK_PCT_H(10);
     stPlayCfg.bEnableBlackBackground = true;
     stPlayCfg.pfnPlayerCallback = PlayerEventFnTest;
     stPlayCfg.stVdecCfg.u32FrameBufCnt = 4;
@@ -330,11 +334,11 @@ void player_list_button_callback(lv_event_t *event)
             return;
         }
         printf("create video_list_box\n");
-        video_list_box = lv_obj_create(player_box);
+        video_list_box = lv_obj_create(main);
         //lv_obj_remove_style_all(video_list_box);
         lv_obj_set_width(video_list_box, lv_pct(50));
         lv_obj_set_height(video_list_box, lv_pct(40));
-        lv_obj_align(video_list_box, LV_ALIGN_TOP_LEFT, 0, lv_pct(40));
+        lv_obj_align_to(video_list_box, player_box_button, LV_ALIGN_OUT_TOP_LEFT, 0, 0);
 
         video_list = lv_list_create(video_list_box);
         lv_obj_set_size(video_list, lv_pct(100), lv_pct(100));
@@ -436,30 +440,64 @@ void player_stop_button_callback(lv_event_t *event)
     close_framerate_detection();
 }
 
+static void player_btn_draw(lv_obj_t *parent, struct btn_desc *desc)
+{
+    lv_obj_t *obj, *img, *label;
+
+    obj = lv_obj_create(parent);
+    lv_obj_remove_style_all(obj);
+    lv_obj_set_size(obj, lv_pct(100), lv_pct(100));
+    lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(obj, MAIN_COLOR, LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(obj, LV_OPA_COVER, LV_PART_MAIN);
+    lv_obj_set_style_radius(obj, 15, LV_PART_MAIN);
+    lv_obj_add_flag(obj, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_EVENT_BUBBLE);
+    lv_obj_set_flex_flow(obj, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(obj, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER,
+                          LV_FLEX_ALIGN_CENTER);
+    lv_obj_center(obj);
+
+    if (desc->img)
+    {
+        img = lv_img_create(obj);
+        lv_obj_add_flag(img, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_EVENT_BUBBLE);
+        lv_img_set_src(img, desc->img);
+    }
+
+    if (desc->text)
+    {
+        label = lv_label_create(obj);
+        lv_obj_add_flag(label, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_EVENT_BUBBLE);
+        lv_obj_add_style(label, &style_txt_l, LV_PART_MAIN);
+        lv_obj_set_style_text_color(label, lv_color_white(), LV_PART_MAIN);
+        lv_label_set_text(label, desc->text);
+    }
+}
+
 static struct btn_desc player_btn[] =
 {
     {
         .obj  = &player_list_button,
-        .img  = IMG_PLAYER_LIST,
+        .text  = "list",
         .w    = 1,
         .h    = 1,
-        .draw = common_draw,
+        .draw = player_btn_draw,
         .cb   = player_list_button_callback,
     },
     {
         .obj  = &player_start_button,
-        .img  = IMG_PLAYER_START,
+        .text  = "play",
         .w    = 1,
         .h    = 1,
-        .draw = common_draw,
+        .draw = player_btn_draw,
         .cb   = player_start_button_callback,
     },
     {
         .obj  = &player_stop_button,
-        .img  = IMG_PLAYER_STOP,
+        .text  = "stop",
         .w    = 1,
         .h    = 1,
-        .draw = common_draw,
+        .draw = player_btn_draw,
         .cb   = player_stop_button_callback,
     }
 };
@@ -472,7 +510,7 @@ static struct btn_matrix_desc btn_desc =
     .col_dsc = col_dsc,
     .row_dsc = row_dsc,
     .pad = 5,
-    .gap = 40,
+    .gap = 5,
     .desc = player_btn,
     .btn_cnt = sizeof(player_btn) / sizeof(player_btn[0]),
 };
@@ -490,6 +528,7 @@ void player_ui_init(void)
     lv_obj_remove_style_all(main);
     lv_obj_set_style_pad_all(main, 0, LV_PART_MAIN);
     lv_obj_set_size(main, lv_pct(100), lv_pct(100));
+    lv_obj_set_style_bg_opa(main, 0, LV_PART_MAIN);
     lv_obj_refr_size(main);
 
     icon_box = lv_obj_create(main);
@@ -501,12 +540,21 @@ void player_ui_init(void)
 
     btn_return = ui_return_btn_create(icon_box, btn_return_cb, "宣传视频");
 
+#if USE_RK3506 //Because the rk3506 has hardware rga, video can be scaled
     player_box = lv_obj_create(main);
-    //lv_obj_remove_style_all(player_box);
+    lv_obj_set_width(player_box, lv_pct(100));
+    lv_obj_set_height(player_box, lv_pct(33));
+    lv_obj_align(player_box, LV_ALIGN_TOP_LEFT, 0, lv_pct(67));
+#else
+    player_box = lv_obj_create(main);
     lv_obj_set_width(player_box, lv_pct(100));
     lv_obj_set_height(player_box, lv_pct(50));
     lv_obj_align(player_box, LV_ALIGN_TOP_LEFT, 0, lv_pct(50));
-
+#endif
+    col_dsc[0] = RK_PCT_W(27);
+    col_dsc[1] = RK_PCT_W(27);
+    col_dsc[2] = RK_PCT_W(27);
+    row_dsc[0] = RK_PCT_W(27);
     player_box_button = ui_btnmatrix_create(player_box, &btn_desc);
 
     lv_obj_set_style_bg_opa(player_start_button, LV_OPA_COVER, LV_STATE_PRESSED);
@@ -519,7 +567,7 @@ void player_ui_init(void)
     lv_obj_set_style_shadow_width(player_stop_button, 0, LV_PART_MAIN);
     lv_obj_set_style_shadow_width(player_list_button, 0, LV_PART_MAIN);
 
-    video_label = lv_label_create(player_box);
+    video_label = lv_label_create(icon_box);
     lv_obj_set_width(video_label, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(video_label, LV_SIZE_CONTENT);    /// 1
     lv_obj_align(video_label, LV_ALIGN_CENTER, 0, lv_pct(10));

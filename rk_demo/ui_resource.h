@@ -57,11 +57,6 @@
 #define COFFEE_4     "A:"PATH_PREFIX"/coffee4.png"
 #define COFFEE_5     "A:"PATH_PREFIX"/coffee5.png"
 
-//player
-#define IMG_PLAYER_STOP     "A:"PATH_PREFIX"/player-stop.png"
-#define IMG_PLAYER_START    "A:"PATH_PREFIX"/player-start.png"
-#define IMG_PLAYER_LIST     "A:"PATH_PREFIX"/list.png"
-
 //intercom
 #define IMG_INTERCOM_PAUSE          "A:"PATH_PREFIX"/pause-fill.png"
 #define IMG_INTERCOM_ROUND          "A:"PATH_PREFIX"/round.png"
