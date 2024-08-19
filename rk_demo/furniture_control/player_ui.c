@@ -1,5 +1,6 @@
 #define MAX_FILE_COUNT 10
 #define PATH_VIDEO "/oem/"
+#define FRAME_DETECT    0
 #include <ctype.h>
 #include <dirent.h>
 #include <stdio.h>
@@ -46,6 +47,7 @@ pthread_t ntid;
 
 ///////////////////// FUNCTIONS ////////////////////
 
+#if FRAME_DETECT
 static void *GetFramerate(void *arg)
 {
     start_clock = 1;
@@ -64,6 +66,7 @@ static void close_framerate_detection(void)
     play_time = 0;
     ntid = (pthread_t)0;
 }
+#endif
 
 static RKADK_VOID PlayerEventFnTest(RKADK_MW_PTR pPlayer,
                                     RKADK_PLAYER_EVENT_E enEvent,
@@ -78,7 +81,9 @@ static RKADK_VOID PlayerEventFnTest(RKADK_MW_PTR pPlayer,
         printf("+++++ RKADK_PLAYER_EVENT_EOF +++++\n");
         play_flag = 0;
         play_end = 1;
+#if FRAME_DETECT
         close_framerate_detection();
+#endif
         break;
     case RKADK_PLAYER_EVENT_SOF:
         printf("+++++ RKADK_PLAYER_EVENT_SOF +++++\n");
@@ -263,7 +268,16 @@ void video_name_callback(lv_event_t *event)
     {
         printf("rkadk: Prepare failed, ret = %d\n", ret);
     }
+    ret = RKADK_PLAYER_Play(pPlayer);
+    if (ret)
+    {
+        printf("rkadk: Play failed, ret = %d\n", ret);
+    }
+    play_end = 0;
+#if FRAME_DETECT
+    pthread_create(&ntid, NULL, GetFramerate, NULL);
     close_framerate_detection();
+#endif
 }
 
 static char *strlwr(char *s)
@@ -389,7 +403,9 @@ void player_start_button_callback(lv_event_t *event)
     if ((play_flag == 1) || (play_end == 1))
     {
         printf("Video is playing! replay! \n");
+#if FRAME_DETECT
         close_framerate_detection();
+#endif
         RKADK_PLAYER_Stop(pPlayer);
         printf("Video is play file: %s \n", file);
         ret = RKADK_PLAYER_SetDataSource(pPlayer, file);
@@ -408,7 +424,9 @@ void player_start_button_callback(lv_event_t *event)
             printf("rkadk: Play failed, ret = %d\n", ret);
         }
         play_end = 0;
+#if FRAME_DETECT
         pthread_create(&ntid, NULL, GetFramerate, NULL);
+#endif
         return;
 
     }
@@ -419,7 +437,9 @@ void player_start_button_callback(lv_event_t *event)
         {
             printf("rkadk: Play failed, ret = %d\n", ret);
         }
+#if FRAME_DETECT
         pthread_create(&ntid, NULL, GetFramerate, NULL);
+#endif
         return;
     }
 }
@@ -437,7 +457,9 @@ void player_stop_button_callback(lv_event_t *event)
     {
         printf("rkadk: Pause failed, ret = %d\n", ret);
     }
+#if FRAME_DETECT
     close_framerate_detection();
+#endif
 }
 
 static void player_btn_draw(lv_obj_t *parent, struct btn_desc *desc)
@@ -519,6 +541,8 @@ static struct btn_matrix_desc btn_desc =
 void player_ui_init(void)
 {
     rk_demo_bg_hide();
+
+    rkadk_init();
 
     if (main)
         return;
