@@ -439,6 +439,8 @@ void monitor_ui_init()
     if (main)
         return;
 
+    rkadk_init();
+
     style_init();
 
     main = lv_obj_create(lv_scr_act());
