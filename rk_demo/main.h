@@ -24,8 +24,10 @@
 #define FURNITURE_CTRL  1
 #define PHONE_PAGE      1
 #define ROCKIT_EN   MULTIMEDIA_EN
-#define WIFIBT_EN   1
-#define BT_EN       1
+#ifndef WIFIBT_EN
+#define WIFIBT_EN   0
+#endif
+#define BT_EN       WIFIBT_EN
 #define BT_NAME     "SCO_AUDIO"
 #ifndef ASR_EN
 #define ASR_EN      0

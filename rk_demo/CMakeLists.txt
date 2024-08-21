@@ -5,6 +5,7 @@ project(rk_demo)
 add_definitions(-DMULTIMEDIA_EN=${RK_DEMO_MULTIMEDIA_EN})
 add_definitions(-DUSE_SENSOR=${RK_DEMO_SENSOR_EN})
 add_definitions(-DASR_EN=${RK_DEMO_ASR_EN})
+add_definitions(-DWIFIBT_EN=${RK_DEMO_WIFIBT_EN})
 
 include_directories(
 	${PROJECT_SOURCE_DIR}/
