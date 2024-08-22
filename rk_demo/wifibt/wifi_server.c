@@ -142,12 +142,30 @@ static void *wifi_server(void *arg)
     char **key;
     int len;
 
+    //wait hci0 appear
+    int times = 100;
+    while (times-- > 0 && access("/sys/class/net/wlan0", F_OK))
+    {
+        usleep(100 * 1000);
+    }
+
+    if (access("/sys/class/net/wlan0", F_OK) != 0)
+    {
+        log("The wlan0 init failure!\n");
+        return;
+    }
+    else
+    {
+        log("The wlan0 have done.\n");
+    }
+
     while (access("/tmp/.lv_warmup", F_OK) == 0)
     {
         sleep(1);
     }
 
-    system("mkdir -p /oem/cfg && cp /etc/wpa_supplicant.conf /oem/cfg/");
+    if (access("/oem/cfg/wpa_supplicant.conf", F_OK) != 0)
+        system("mkdir -p /oem/cfg && cp /etc/wpa_supplicant.conf /oem/cfg/");
 
     listening = 1;
     while (1)
@@ -158,7 +176,6 @@ static void *wifi_server(void *arg)
         {
         case WIFI_ENABLE:
             log("WIFI_ENABLE\n");
-            system("/usr/bin/wifibt-init.sh start_wifi && sleep 3");
             RK_wifi_register_callback(rk_wifi_state_callback);
             if (RK_wifi_enable(1, "/oem/cfg/wpa_supplicant.conf") < 0)
                 log("RK_wifi_enable 1 fail!\n");
@@ -167,7 +184,6 @@ static void *wifi_server(void *arg)
             log("WIFI_DISABLE\n");
             if (RK_wifi_enable(0, NULL) < 0)
                 log("RK_wifi_enable 0 fail!\n");
-            system("/usr/bin/wifibt-init.sh stop");
             break;
         case WIFI_SCAN:
             log("WIFI_SCAN\n");

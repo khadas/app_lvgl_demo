@@ -16,6 +16,7 @@
 #include <sys/time.h>
 
 #include <RkBtSink.h>
+#include <RkBtBase.h>
 
 #include "utility.h"
 #include "wifibt.h"
@@ -42,6 +43,7 @@ static sem_t sem;
 struct timeval start, now;
 static ssize_t totalBytes;
 static int listening = 0;
+static bt_name[64];
 
 static int bt_sink_info(struct bt_info *info)
 {
@@ -224,6 +226,40 @@ out:
     close(fd);
 
     return ret;
+}
+
+static int bt_ba2str(const bdaddr_t *ba, char *str)
+{
+    return sprintf(str, "%2.2X:%2.2X:%2.2X:%2.2X:%2.2X:%2.2X",
+                   ba->b[5], ba->b[4], ba->b[3], ba->b[2], ba->b[1], ba->b[0]);
+}
+
+static void bt_set_local_name(void)
+{
+    int ctl;
+    static struct hci_dev_info di;
+    char addr[18], name[32];
+
+    /* Open HCI socket  */
+    if ((ctl = socket(AF_BLUETOOTH, SOCK_RAW, BTPROTO_HCI)) < 0)
+    {
+        perror("Can't open HCI socket.");
+        return;
+    }
+
+    di.dev_id = 0;
+    if (ioctl(ctl, HCIGETDEVINFO, (void *) &di))
+    {
+        perror("Can't get device info");
+        return;
+    }
+
+    bt_ba2str(&di.bdaddr, addr);
+    memset(bt_name, 0, sizeof(bt_name));
+    sprintf(bt_name, "SCO_AUDIO_%x", di.bdaddr.b[0]);
+
+    log("set new name: %s, %x, bdaddr: %s\n", bt_name, di.bdaddr.b[0], addr);
+    //rk_bt_set_loacal_name(name);
 }
 
 static void bt_test_ble_recv_data_callback(const char *uuid, char *data,
@@ -663,28 +699,6 @@ static bool bt_test_vendor_cb(bool enable)
 
     if (enable)
     {
-        /*
-        if (access("/sys/class/bluetooth/hci0", F_OK) == 0)
-            goto start_bluez;
-        else
-            return false;
-        */
-
-        //vendor
-        //broadcom
-        if (get_ps_pid("brcm_patchram_plus1"))
-            kill_task("brcm_patchram_plus1");
-
-        //realtek
-        if (get_ps_pid("rtk_hciattach"))
-            kill_task("rtk_hciattach");
-
-        //The hci0 start to init ...
-        if (!access("/usr/bin/wifibt-init.sh", F_OK))
-            exec_command_system("/usr/bin/wifibt-init.sh start_bt");
-        else if (!access("/usr/bin/bt_init.sh", F_OK))
-            exec_command_system("/usr/bin/bt_init.sh");
-
         //wait hci0 appear
         while (times-- > 0 && access("/sys/class/bluetooth/hci0", F_OK))
         {
@@ -697,21 +711,14 @@ static bool bt_test_vendor_cb(bool enable)
             return false;
         }
 
-start_bluez:
-        /* ensure bluetoothd running */
-        /*
-         * DEBUG: vim /etc/init.d/S40bluetooth, modify BLUETOOTHD_ARGS="-n -d"
-         */
-        if (access("/etc/init.d/S40bluetooth", F_OK) == 0)
-            exec_command_system("/etc/init.d/S40bluetooth restart");
-        else if (access("/etc/init.d/S40bluetoothd", F_OK) == 0)
-            exec_command_system("/etc/init.d/S40bluetoothd restart");
+        bt_set_local_name();
+        bt_content.bt_name = bt_name;
 
-        //or
-        //exec_command_system("/usr/libexec/bluetoothd -n -P battery");
-        //or debug
-        //exec_command_system("/usr/libexec/bluetoothd -n -P battery -d");
-        //exec_command_system("hcidump xxx or btmon xxx");
+        //start bluetoothd
+        //exec_command_system("/usr/libexec/bluetooth/bluetoothd -d -n -P battery,hostname,gap,wiimote -f /data/main.conf &");
+
+        exec_command_system("killall bluetoothd && sleep 0.5");
+        exec_command_system("/usr/libexec/bluetooth/bluetoothd -n -P battery,hostname,gap,wiimote -f /data/main.conf &");
 
         //check bluetoothd
         times = 100;
@@ -730,13 +737,13 @@ start_bluez:
     {
         //CLEAN
         exec_command_system("hciconfig hci0 down");
-        exec_command_system("/etc/init.d/S40bluetooth stop");
+        exec_command_system("killall bluetoothd");
 
         //vendor deinit
-        if (get_ps_pid("brcm_patchram_plus1"))
-            kill_task("killall brcm_patchram_plus1");
-        if (get_ps_pid("rtk_hciattach"))
-            kill_task("killall rtk_hciattach");
+        //if (get_ps_pid("brcm_patchram_plus1"))
+        //    kill_task("killall brcm_patchram_plus1");
+        //if (get_ps_pid("rtk_hciattach"))
+        //    kill_task("killall rtk_hciattach");
 
         //audio server deinit
         if (get_ps_pid("bluealsa"))
@@ -785,9 +792,73 @@ static bool bt_test_audio_server_cb(void)
     return true;
 }
 
+#define BT_CONF_DIR "/data/main.conf"
+static int create_bt_conf(struct bt_conf *conf)
+{
+    FILE *fp;
+    char cmdline[256] = {0};
+
+    fp = fopen(BT_CONF_DIR, "wt+");
+    if (NULL == fp)
+        return -1;
+
+    fputs("[General]\n", fp);
+
+    //DiscoverableTimeout
+    if (conf->discoverableTimeout)
+    {
+        sprintf(cmdline, "DiscoverableTimeout = %s\n", conf->discoverableTimeout);
+        fputs(cmdline, fp);
+    }
+
+    //BleName
+    if (conf->BleName)
+    {
+        sprintf(cmdline, "BleName = %s\n", conf->BleName);
+        fputs(cmdline, fp);
+    }
+
+    //class
+    if (conf->Class)
+    {
+        sprintf(cmdline, "Class = %s\n", conf->Class);
+        fputs(cmdline, fp);
+    }
+
+    //SSP
+    if (conf->ssp)
+    {
+        sprintf(cmdline, "SSP = %s\n", conf->ssp);
+        fputs(cmdline, fp);
+    }
+
+    //mode
+    if (conf->mode)
+    {
+        sprintf(cmdline, "ControllerMode = %s\n", conf->mode);
+        fputs(cmdline, fp);
+    }
+
+    //default always
+    conf->JustWorksRepairing = "always";
+    sprintf(cmdline, "JustWorksRepairing = %s\n", conf->JustWorksRepairing);
+    fputs(cmdline, fp);
+
+    fputs("[GATT]\n", fp);
+    //#Cache = always
+    fputs("Cache = always", fp);
+
+    fclose(fp);
+
+    system("cat /data/main.conf");
+    return 0;
+}
+
 static int bt_ble_init(void)
 {
     RkBleGattService *gatt;
+    struct bt_conf conf;
+
     //"indicate"
     static char *chr_props[] = { "read", "write", "notify", "write-without-response", NULL };
 
@@ -825,6 +896,21 @@ static int bt_ble_init(void)
 
     //default state
     bt_content.init = false;
+    bt_content.connecting = false;
+    bt_content.scanning = false;
+    bt_content.discoverable = false;
+    bt_content.pairable = false;
+    bt_content.power = false;
+
+    //bt config file
+    memset(&conf, 0, sizeof(struct bt_conf));
+    //both BR/EDR and LE enabled, "dual", "le" or "bredr"
+    conf.mode = "dual";
+    //0 = disable timer, i.e. stay discoverable forever
+    conf.discoverableTimeout = "0";
+    //"audio-headset"
+    conf.Class = "0x240414";
+    create_bt_conf(&conf);
 
     rk_bt_init(&bt_content);
 }
@@ -855,15 +941,13 @@ static void *bt_server(void *arg)
         {
         case BT_ENABLE:
             log("BT_ENABLE\n");
-            system("/usr/bin/wifibt-init.sh start_bt && sleep 3");
             bt_ble_init();
             timeout = 3;
             while (!bt_content.init && (timeout--))
                 sleep(1);
             if (timeout != 0)
             {
-                rk_bt_set_profile(PROFILE_A2DP_SINK_HF);
-                rk_bt_set_discoverable(1);
+                rk_bt_set_profile(PROFILE_A2DP_SINK_HF, true);
             }
             break;
         case BT_DISABLE:
@@ -874,8 +958,7 @@ static void *bt_server(void *arg)
             log("BT_SINK_ENABLE\n");
             if (!bt_content.init)
                 break;
-            rk_bt_set_profile(PROFILE_A2DP_SINK_HF);
-            rk_bt_set_discoverable(1);
+            rk_bt_set_profile(PROFILE_A2DP_SINK_HF, true);
             break;
         case BT_SINK_DISABLE:
             log("BT_SINK_DISABLE\n");

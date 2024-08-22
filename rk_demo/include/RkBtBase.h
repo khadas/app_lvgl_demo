@@ -160,10 +160,11 @@ typedef enum
      */
     RK_BLE_GATT_CLIENT_NOTIFY_ENABLE,
     RK_BLE_GATT_CLIENT_NOTIFY_DISABLE,
-    RK_BLE_GATT_CLIENT_NOTIFYD_ERR,
+    RK_BLE_GATT_CLIENT_NOTIFY_ERR,
     //RK_BLE_GATT_CLIENT_INDICATED,
 
-    //device mtu
+    //Deprecated !!!
+    //device mtu: ref: remote_dev att_mtu
     RK_BLE_GATT_MTU,
 
     /** local server role - operate by remote */
@@ -228,6 +229,45 @@ typedef struct
     uint8_t chr_cnt;
 } RkBleGattService;
 
+struct bt_conf
+{
+    /* Restricts all controllers to the specified transport. Default value
+     * is "dual", i.e. both BR/EDR and LE enabled (when supported by the HW).
+     * Possible values: "dual", "bredr", "le"
+     */
+    const char *mode;
+
+    //ref: static const char *class_to_icon(uint32_t class)
+    const char *Class;
+
+    //simple secure paired
+    const char *ssp;
+
+    //gap name
+    const char *BleName;
+    /*
+     * How long to stay in discoverable mode before going back to non-discoverable
+     * The value is in seconds. Default is 180, i.e. 3 minutes.
+     * 0 = disable timer, i.e. stay discoverable forever
+     * DiscoverableTimeout = 0
+     */
+    const char *discoverableTimeout;
+
+    /* Specify the policy to the JUST-WORKS repairing initiated by peer
+     * Possible values: "never", "confirm", "always"
+     * Defaults to "never"
+     */
+    const char *JustWorksRepairing;
+};
+
+/*
+ * https://www.bluetooth.com/specifications/specs/core-specification-supplement-9/
+ * Core Specification Supplement 9
+ *
+ * CSS_v9.pdf
+ * Assigned_Numbers.pdf
+ * GATT_Specification_Supplement_v10.pdf
+ */
 typedef struct
 {
     /** ble controller name */
@@ -389,24 +429,31 @@ typedef struct
     /** adapter address for BREDR */
     const char *bt_addr;
 
+    /* preset pincode without ssp */
+    const char *pincode;
 #define IO_CAPABILITY_DISPLAYONLY       0x00
 #define IO_CAPABILITY_DISPLAYYESNO      0x01
 #define IO_CAPABILITY_KEYBOARDONLY      0x02
 #define IO_CAPABILITY_NOINPUTNOOUTPUT   0x03
 #define IO_CAPABILITY_KEYBOARDDISPLAY   0x04
-    /** io capability for adapter*/
+    /** io capability for adapter
+     * Note: The Car must be paired with IO_CAPABILITY_DISPLAYYESNO or IO_CAPABILITY_KEYBOARDONLY
+     */
     uint8_t io_capability;
 
     /** STORE DIR */
     const char *bt_dir_name;
 
     /** bt adapter state */
-    bool init;
-    bool power;
-    bool pairable;
-    bool discoverable;
-    bool scanning;
+    volatile bool init;
+    volatile bool power;
+    volatile bool pairable;
+    volatile bool discoverable;
+    volatile bool scanning;
 
+    volatile bool connecting;
+
+    char connected_a2dp_addr[18];
     /**
      * audio server
      * Only one can be enabled
@@ -419,10 +466,14 @@ typedef struct
 #define PROFILE_A2DP_SOURCE_AG          (1 << 1)
 #define PROFILE_SPP                     (1 << 2)
 #define PROFILE_BLE                     (1 << 3)
+#define PROFILE_OBEX                    (1 << 4)
     uint8_t profile;
 
     /** ble context */
     RkBleContent ble_content;
+    pthread_mutex_t bt_mutex;
+    /* updates notification */
+    pthread_cond_t cond;
 } RkBtContent;
 
 /**
@@ -489,7 +540,7 @@ typedef struct remote_dev
 
     RkBtMedia media;
 
-    bool exist;
+    volatile bool exist;
 
     //change event/reason
     char change_name[64];
@@ -501,15 +552,15 @@ typedef struct remote_dev
     char dev_path[37 + 1];
 
     //base state
-    bool connected;
-    bool paired;
-    bool bonded;
+    volatile bool connected;
+    volatile bool paired;
+    volatile bool bonded;
     //bool trusted;
-    bool blocked;
-    bool auto_connect;
+    volatile bool blocked;
+    volatile bool auto_connect;
 
-    bool disable_auto_connect;
-    bool general_connect;
+    volatile bool disable_auto_connect;
+    volatile bool general_connect;
 
     //avrcp
     RK_BT_STATE player_state;
@@ -526,16 +577,24 @@ typedef struct remote_dev
     void *data;
 } RkBtRemoteDev;
 
+struct adapter_connect_device
+{
+    char addr[18];
+    char addr_type[7]; //public random
+};
+
 typedef bool (*RK_BT_VENDOR_CALLBACK)(bool enable);
-typedef bool (*RK_BT_AUDIO_SERVER_CALLBACK)(void);
+typedef bool (*RK_BT_AUDIO_SERVER_CALLBACK)(bool enable);
 
 typedef void (*RK_BT_STATE_CALLBACK)(RkBtRemoteDev *rdev, RK_BT_STATE state);
 typedef void (*RK_BLE_GATT_CALLBACK)(const char *bd_addr, unsigned int mtu);
 
+typedef void (*RK_BT_RFCOMM_AT_CALLBACK)(char *at_evt);
+
 void rk_bt_register_vendor_callback(RK_BT_VENDOR_CALLBACK cb);
 void rk_bt_register_audio_server_callback(RK_BT_AUDIO_SERVER_CALLBACK cb);
 
-void rk_bt_set_profile(uint8_t profile);
+void rk_bt_set_profile(uint8_t profile, bool enable);
 
 
 /**
@@ -838,6 +897,91 @@ int rk_bt_unpair_by_addr(char *addr);
 void rk_bt_adapter_info(char *data);
 
 bool rk_bt_is_open(void);
+
+/**
+ * @brief      Initiate an OBEX GET operation for PBAP
+ *
+ * @param[in]  dst    The destination device address
+ * @param[in]  dir    The directory to get from
+ * @param[in]  file   The file to get
+ *
+ * #define PBAP_UUID "0000112f-0000-1000-8000-00805f9b34fb"
+ *
+ * dir:
+ * pb: address book 通讯录
+ * ich/och: incoming/outgoing call records 来电/去电通讯录
+ * mch: missed calls 未接通话
+ * cch: all communication records 所有通信记录
+ * fav: favorite persons 最喜欢的人
+ *
+ * @return     Zero on success, -1 on failure
+ *
+ * @details    This function initiates an OBEX GET operation for PBAP. It
+ *             connects to the OBEX server on the specified destination device
+ *             and initiates a SELECT operation to the specified directory. If
+ *             the SELECT operation is successful, it initiates a GET operation
+ *             to the specified file.
+ */
+int rk_bt_pbap_get_vcf(const char *dst, const char *object, const char *file);
+
+/**
+ * Send a file to a Bluetooth device.
+ *
+ * @param dst The destination device's address.
+ * @param file The file to send.
+ *
+ * @return 0 on success, -1 on failure.
+ *
+ * @details
+ * #define OPP_UUID "00001105-0000-1000-8000-00805f9b34fb"
+ * Only for Android
+ */
+int rk_bt_opp_send(const char *dst, const char *file);
+
+/**
+ * @brief Open an RFCOMM channel to a Bluetooth device
+ *
+ * @param addr The address of the Bluetooth device to connect to
+ * @param callback Callback function to receive AT events
+ *
+ * @return Zero on success, -1 on failure
+ *
+ * Opens an RFCOMM channel to the specified Bluetooth device and registers
+ * the provided callback function to receive AT events.
+ */
+int rk_bt_rfcomm_open(const char *addr, RK_BT_RFCOMM_AT_CALLBACK callback);
+
+/**
+ * @brief Close the RFCOMM channel
+ *
+ * @return True if the channel was closed successfully, false otherwise
+ *
+ * Closes the RFCOMM channel if it is open.
+ */
+bool rk_bt_rfcomm_close(void);
+
+/**
+ * @brief Send a line of AT commands over the RFCOMM channel
+ *
+ * @param line The line of AT commands to send
+ *
+ * Sends the provided line of AT commands over the RFCOMM channel.
+ */
+void rk_bt_rfcomm_send(char *line);
+
+/**
+ * @brief Connect to a Bluetooth device
+ *
+ * This function initiates a connection to a Bluetooth device. It takes the
+ * device's address and the type of the device's address as input parameters.
+ *
+ * @param addr The address of the Bluetooth device to connect to.
+ * @param ble_addrtype The type of the ble device's address. This can be "public"
+ *                    for a public address, "random" for a random address, or
+ *                    NULL for an address of bredr device.
+ * @return An integer value. 0 if the connection was successfully initiated.
+ */
+int rk_adapter_connect(const char *addr, const char *ble_addrtype);
 
 #ifdef __cplusplus
 }
