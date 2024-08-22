@@ -186,17 +186,21 @@ static void pos_timer_cb(struct _lv_timer_t *tmr)
 
 static void bt_timer_cb(struct _lv_timer_t *tmr)
 {
+    static RK_BT_STATE last_state = RK_BT_STATE_NONE;
     cmdarg.cmd = BT_INFO;
     cmdarg.val = &new_info;
     bt_query_wait(&cmdarg, sizeof(cmdarg));
 
     update_state_label(label_bt_state, new_info.bt_state);
-    if (new_info.bt_state == BT_STATE_OFF)
+    if ((last_state != BT_STATE_OFF) &&
+            (new_info.bt_state == BT_STATE_OFF))
     {
+        last_state = new_info.bt_state;
         cmdarg.cmd = BT_ENABLE;
         bt_query(&cmdarg, sizeof(cmdarg));
         return;
     }
+    last_state = new_info.bt_state;
     bt_sink_enabled = 1;
 }
 

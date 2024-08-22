@@ -868,6 +868,7 @@ static int bt_ble_init(void)
     if (rk_bt_is_open())
     {
         log("%s: already open \n", __func__);
+        bt_info.bt_state = BT_STATE_ON;
         return 0;
     }
 
