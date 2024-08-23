@@ -152,7 +152,7 @@ static void *wifi_server(void *arg)
     if (access("/sys/class/net/wlan0", F_OK) != 0)
     {
         log("The wlan0 init failure!\n");
-        return;
+        return NULL;
     }
     else
     {
@@ -165,7 +165,8 @@ static void *wifi_server(void *arg)
     }
 
     if (access("/oem/cfg/wpa_supplicant.conf", F_OK) != 0)
-        system("mkdir -p /oem/cfg && cp /etc/wpa_supplicant.conf /oem/cfg/");
+        if (system("mkdir -p /oem/cfg && cp /etc/wpa_supplicant.conf /oem/cfg/"))
+            log("Copy wpa_supplicant failed");
 
     listening = 1;
     while (1)

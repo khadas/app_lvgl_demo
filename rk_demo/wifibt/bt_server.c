@@ -43,7 +43,7 @@ static sem_t sem;
 struct timeval start, now;
 static ssize_t totalBytes;
 static int listening = 0;
-static bt_name[64];
+static char bt_name[64];
 
 static int bt_sink_info(struct bt_info *info)
 {
@@ -755,7 +755,7 @@ static bool bt_test_vendor_cb(bool enable)
     return true;
 }
 
-static bool bt_test_audio_server_cb(void)
+static bool bt_test_audio_server_cb(bool enable)
 {
     char rsp[64];
 
@@ -850,7 +850,9 @@ static int create_bt_conf(struct bt_conf *conf)
 
     fclose(fp);
 
-    system("cat /data/main.conf");
+    if (system("cat /data/main.conf"))
+        log("cat /data/main.conf failed");
+
     return 0;
 }
 
