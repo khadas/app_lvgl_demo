@@ -143,7 +143,7 @@ static void param_init(RKADK_PLAYER_FRAME_INFO_S *pstFrmInfo)
 #endif
     pstFrmInfo->u32EnIntfType = DISPLAY_TYPE_MIPI;
     pstFrmInfo->u32VoLay = -1; // rkadk select the default first device
-    pstFrmInfo->u32VoChn = 0; // ui is 1 . play is 0
+    pstFrmInfo->u32VoChn = 1; // ui is 1 . play is 0
     pstFrmInfo->u32VoDev = -1; // rkadk select the default first device
     pstFrmInfo->enIntfSync = RKADK_VO_OUTPUT_DEFAULT;
     pstFrmInfo->enVoSpliceMode = SPLICE_MODE_RGA; // rkadk depend chips
