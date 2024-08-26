@@ -9,8 +9,9 @@
 #include "rkadk_log.h"
 #include "rkadk_param.h"
 #include "rkadk_player.h"
+#include "rk_mpi_vo.h"
 
-#define VO_SUPPORT_SCALE    0
+#define VO_SUPPORT_SCALE    1
 
 enum
 {
@@ -251,6 +252,7 @@ static void rkadk_init(void)
     stPlayCfg.stRtspCfg.transport = "udp";
     stPlayCfg.stVdecCfg.u32FrameBufCnt = 4;
 
+    RK_MPI_VO_SetLayerFlush(-1);
     if (RKADK_PLAYER_Create(&pPlayer, &stPlayCfg))
     {
         printf("rkadk: RKADK_PLAYER_Create failed\n");
@@ -377,6 +379,7 @@ static void kb_cb(lv_event_t *e)
     }
     lv_obj_del(kb);
     kb = NULL;
+    RK_MPI_VO_SetLayerFlush(-1);
 }
 
 static void rtsp_addr_set(lv_event_t *e)
@@ -428,9 +431,14 @@ static void rtsp_addr_set(lv_event_t *e)
 static void rtsp_setting_callback(lv_event_t *e)
 {
     if (lv_obj_has_flag(ui_setting_box, LV_OBJ_FLAG_HIDDEN))
+    {
         lv_obj_clear_flag(ui_setting_box, LV_OBJ_FLAG_HIDDEN);
+    }
     else
+    {
         lv_obj_add_flag(ui_setting_box, LV_OBJ_FLAG_HIDDEN);
+        RK_MPI_VO_SetLayerFlush(-1);
+    }
 }
 
 static void ui_ratio_cb(lv_event_t *e)
@@ -556,8 +564,7 @@ void monitor_ui_init()
     if (main)
         return;
 
-    rkadk_init();
-
+    RK_MPI_VO_SetLayerFlush(-1);
     style_init();
 
     main = lv_obj_create(lv_scr_act());

@@ -17,7 +17,7 @@
 #include "rkadk_log.h"
 #include "rkadk_param.h"
 #include "rkadk_player.h"
-
+#include "rk_mpi_vo.h"
 ///////////////////// VARIABLES ////////////////////
 static lv_obj_t *main = NULL;
 static lv_obj_t *btn_return;
@@ -542,8 +542,7 @@ void player_ui_init(void)
 {
     rk_demo_bg_hide();
 
-    rkadk_init();
-
+    RK_MPI_VO_SetLayerFlush(-1);
     if (main)
         return;
 
