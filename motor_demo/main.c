@@ -26,6 +26,7 @@
 #include "main.h"
 #include "ml_label.h"
 #include "soc.h"
+#include "ui_scaler.h"
 
 #if ENABLE_MOTOR_CONTROL
 #include "Rockchip_MADHT1505BA1.h"
@@ -36,6 +37,7 @@
 #define ANGLE_TO_SPEED(x)   ((x) * (METER_TICKS - 1) * 1000 / max_angle)
 #define SPEED_TO_ANGLE(x)   ((x) * max_angle / (METER_TICKS - 1) / 1000)
 #define CONVERSION_ANGULAR 2916
+#define SCALER_RESIZE(x)    ui_scaler_calc(ui_scaler, x)
 
 static float max_angle = 360.0;
 int interrupt_task = 1;
@@ -85,13 +87,15 @@ lv_obj_t *label_jitter_val;
 static struct axis_ui axiss[2];
 static struct axis_ui *position_ctrl_target = NULL;
 
-static int g_indev_rotation = 0;
+static int g_indev_rotation = 90;
 static int g_disp_rotation = LV_DISP_ROT_90;
 
 static int quit = 0;
 static char *compatible_name;
 static char *soc_name;
 static char *sys_version;
+
+static void *ui_scaler;
 
 int set_pos0 = 0;
 int set_pos1 = 0;
@@ -145,13 +149,13 @@ static void font_init(void)
 {
     lv_freetype_init(64, 1, 0);
 
-    ttf_main.weight = 68;
-    ttf_main.name = SYS_FONT(SourceHanSansCN - Regular);
+    ttf_main.weight = SCALER_RESIZE(68);
+    ttf_main.name = SRC_FONT("SmileySans-Oblique.ttf");
     ttf_main.style = FT_FONT_STYLE_NORMAL;
     lv_ft_font_init(&ttf_main);
 
-    ttf_main_s.weight = 48;
-    ttf_main_s.name = SYS_FONT(SourceHanSansCN - Regular);
+    ttf_main_s.weight = SCALER_RESIZE(48);
+    ttf_main_s.name = SRC_FONT("SmileySans-Oblique.ttf");
     ttf_main_s.style = FT_FONT_STYLE_NORMAL;
     lv_ft_font_init(&ttf_main_s);
 }
@@ -159,13 +163,25 @@ static void font_init(void)
 static void lvgl_init(void)
 {
     lv_init();
-#ifdef USE_SDL_GPU
+
+#if USE_SDL_GPU
     hal_sdl_init(0, 0, g_disp_rotation);
-#else
+#endif
+
+#if USE_DRM
     hal_drm_init(0, 0, g_disp_rotation);
+#endif
+
+#if USE_RKADK
+    hal_rkadk_init(0, 0, g_disp_rotation);
+#endif
+
+#if USE_EVDEV
     lv_port_indev_init(g_indev_rotation);
 #endif
 
+    ui_scaler = ui_scaler_new(1920, 1080);
+    ui_scaler_set_refer_size(ui_scaler, LV_HOR_RES, LV_VER_RES);
     font_init();
 }
 
@@ -173,7 +189,7 @@ static int motor_init(void)
 {
 #if ENABLE_MOTOR_CONTROL
     int ret;
-    ret = MADHT1505BA1_master_init(7); //bind cpu core 3
+    ret = MADHT1505BA1_master_init(7); //This place is the binding thread of the motor
     if (ret == -1)
     {
         printf("MADHT1505BA1_master_init is err\n");
@@ -358,6 +374,11 @@ static void *motor_sync_th(void *arg)
 #endif
 }
 
+static void close_cb(lv_event_t *e)
+{
+    lv_obj_add_flag(position_cont, LV_OBJ_FLAG_HIDDEN);
+}
+
 static void sync_cb(lv_event_t *e)
 {
     scr_cb(e);
@@ -373,10 +394,13 @@ static void axis_cb(lv_event_t *e)
     struct axis_ui *axis = lv_event_get_user_data(e);
 
     //printf("%s %d\n", __func__, __LINE__);
+    lv_obj_add_flag(page_overview, LV_OBJ_FLAG_HIDDEN);
+    if (lv_obj_has_flag(position_cont, LV_OBJ_FLAG_HIDDEN))
+        lv_obj_clear_flag(position_cont, LV_OBJ_FLAG_HIDDEN);
+    else if (position_ctrl_target == axis)
+        lv_obj_add_flag(position_cont, LV_OBJ_FLAG_HIDDEN);
     position_ctrl_target = axis;
     ml_label_set_text(label_pos_ctrl_target, axis->txt_idx);
-    lv_obj_add_flag(page_overview, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_clear_flag(position_cont, LV_OBJ_FLAG_HIDDEN);
 }
 
 static void axis_ui_init(lv_obj_t *parent,
@@ -388,18 +412,19 @@ static void axis_ui_init(lv_obj_t *parent,
     lv_obj_set_flex_flow(axis->cont, LV_FLEX_FLOW_COLUMN);
     lv_obj_add_flag(axis->cont, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_clear_flag(axis->cont, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_size(axis->cont, 720, 280);
+    lv_obj_set_size(axis->cont, SCALER_RESIZE(720), SCALER_RESIZE(280));
     lv_obj_set_style_bg_color(axis->cont, lv_color_hex(0x2566a8),
                               LV_PART_MAIN);
+    lv_obj_set_style_pad_gap(axis->cont, 5, LV_PART_MAIN);
     lv_obj_add_event_cb(axis->cont, axis_cb, LV_EVENT_CLICKED, axis);
 
     subcont = lv_obj_create(axis->cont);
     lv_obj_remove_style_all(subcont);
     lv_obj_add_flag(subcont, LV_OBJ_FLAG_EVENT_BUBBLE);
-    lv_obj_set_size(subcont, lv_pct(100), 50);
+    lv_obj_set_size(subcont, lv_pct(100), SCALER_RESIZE(50));
 
     axis->light = lv_led_create(subcont);
-    lv_obj_set_size(axis->light, 30, 30);
+    lv_obj_set_size(axis->light, SCALER_RESIZE(30), SCALER_RESIZE(30));
     lv_obj_align(axis->light, LV_ALIGN_LEFT_MID, 10, 0);
     lv_obj_set_style_bg_color(axis->light, lv_color_hex(0x242424),
                               LV_PART_MAIN);
@@ -410,16 +435,17 @@ static void axis_ui_init(lv_obj_t *parent,
     axis->label = ml_label_create(subcont, axis->txt_idx);
     lv_obj_set_style_text_color(axis->label, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_text_font(axis->label, ttf_main_s.font, LV_PART_MAIN);
-    lv_obj_align_to(axis->label, axis->light, LV_ALIGN_OUT_RIGHT_MID, 20, 0);
+    lv_obj_align_to(axis->label, axis->light, LV_ALIGN_OUT_RIGHT_MID,
+                    SCALER_RESIZE(20), 0);
     lv_obj_add_flag(axis->label, LV_OBJ_FLAG_EVENT_BUBBLE);
 
     subcont = lv_obj_create(axis->cont);
     lv_obj_remove_style_all(subcont);
     lv_obj_add_flag(subcont, LV_OBJ_FLAG_EVENT_BUBBLE);
-    lv_obj_set_size(subcont, lv_pct(100), 85);
+    lv_obj_set_size(subcont, lv_pct(100), SCALER_RESIZE(85));
 
     axis->pos = ml_label_create(subcont, TXT_CUR_POS);
-    lv_obj_set_size(axis->pos, lv_pct(60), lv_pct(100));
+    lv_obj_set_size(axis->pos, lv_pct(60), LV_SIZE_CONTENT);
     lv_obj_set_style_text_color(axis->pos, lv_color_white(),
                                 LV_PART_MAIN);
     lv_obj_set_style_text_font(axis->pos, ttf_main_s.font, LV_PART_MAIN);
@@ -428,26 +454,25 @@ static void axis_ui_init(lv_obj_t *parent,
 
     axis->pos_val = lv_label_create(subcont);
     lv_label_set_text(axis->pos_val, "000.00");
-    lv_obj_set_size(axis->pos_val, lv_pct(40), lv_pct(100));
-    lv_obj_set_style_radius(axis->pos_val, 10, LV_PART_MAIN);
+    lv_obj_set_size(axis->pos_val, lv_pct(40), LV_SIZE_CONTENT);
+    lv_obj_set_style_radius(axis->pos_val, 5, LV_PART_MAIN);
     lv_obj_set_style_text_color(axis->pos_val, lv_color_black(),
                                 LV_PART_MAIN);
-    lv_obj_set_style_text_font(axis->pos_val, ttf_main.font, LV_PART_MAIN);
+    lv_obj_set_style_text_font(axis->pos_val, ttf_main_s.font, LV_PART_MAIN);
     lv_obj_set_style_text_align(axis->pos_val, LV_TEXT_ALIGN_CENTER,
                                 LV_PART_MAIN);
     lv_obj_set_style_bg_color(axis->pos_val, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_bg_opa(axis->pos_val, LV_OPA_100, LV_PART_MAIN);
-    lv_obj_align_to(axis->pos_val, axis->pos, LV_ALIGN_OUT_RIGHT_MID,
-                    20, 0);
+    lv_obj_align(axis->pos_val, LV_ALIGN_RIGHT_MID, 0, 0);
     lv_obj_add_flag(axis->pos_val, LV_OBJ_FLAG_EVENT_BUBBLE);
 
     subcont = lv_obj_create(axis->cont);
     lv_obj_remove_style_all(subcont);
-    lv_obj_set_size(subcont, lv_pct(100), 85);
+    lv_obj_set_size(subcont, lv_pct(100), SCALER_RESIZE(85));
     lv_obj_add_flag(subcont, LV_OBJ_FLAG_EVENT_BUBBLE);
 
     axis->target = ml_label_create(subcont, TXT_TAR_POS);
-    lv_obj_set_size(axis->target, lv_pct(60), lv_pct(100));
+    lv_obj_set_size(axis->target, lv_pct(60), LV_SIZE_CONTENT);
     lv_obj_set_style_text_color(axis->target, lv_color_white(),
                                 LV_PART_MAIN);
     lv_obj_set_style_text_font(axis->target, ttf_main_s.font, LV_PART_MAIN);
@@ -456,17 +481,16 @@ static void axis_ui_init(lv_obj_t *parent,
 
     axis->target_val = lv_label_create(subcont);
     lv_label_set_text(axis->target_val, "  0.00");
-    lv_obj_set_size(axis->target_val, lv_pct(40), lv_pct(100));
-    lv_obj_set_style_radius(axis->target_val, 10, LV_PART_MAIN);
+    lv_obj_set_size(axis->target_val, lv_pct(40), LV_SIZE_CONTENT);
+    lv_obj_set_style_radius(axis->target_val, 5, LV_PART_MAIN);
     lv_obj_set_style_text_color(axis->target_val, lv_color_black(),
                                 LV_PART_MAIN);
-    lv_obj_set_style_text_font(axis->target_val, ttf_main.font, LV_PART_MAIN);
+    lv_obj_set_style_text_font(axis->target_val, ttf_main_s.font, LV_PART_MAIN);
     lv_obj_set_style_text_align(axis->target_val, LV_TEXT_ALIGN_CENTER,
                                 LV_PART_MAIN);
     lv_obj_set_style_bg_color(axis->target_val, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_bg_opa(axis->target_val, LV_OPA_100, LV_PART_MAIN);
-    lv_obj_align_to(axis->target_val, axis->target, LV_ALIGN_OUT_RIGHT_MID,
-                    20, 0);
+    lv_obj_align(axis->target_val, LV_ALIGN_RIGHT_MID, 0, 0);
     lv_obj_add_flag(axis->target_val, LV_OBJ_FLAG_EVENT_BUBBLE);
 }
 
@@ -483,21 +507,21 @@ static void switch_language(lv_event_t *e)
 void update_tick_points(lv_point_t *p, int angle)
 {
     float degree = angle * 2 * PI / 360.0;
-    p[0].x = 240 * cos(degree) + 290;
-    p[0].y = 240 * sin(degree) + 290;
-    p[1].x = 230 * cos(degree) + 290;
-    p[1].y = 230 * sin(degree) + 290;
-    p[2].x = 200 * cos(degree) + 290;
-    p[2].y = 200 * sin(degree) + 290;
+    p[0].x = SCALER_RESIZE(240) * cos(degree) + SCALER_RESIZE(290);
+    p[0].y = SCALER_RESIZE(240) * sin(degree) + SCALER_RESIZE(290);
+    p[1].x = SCALER_RESIZE(230) * cos(degree) + SCALER_RESIZE(290);
+    p[1].y = SCALER_RESIZE(230) * sin(degree) + SCALER_RESIZE(290);
+    p[2].x = SCALER_RESIZE(200) * cos(degree) + SCALER_RESIZE(290);
+    p[2].y = SCALER_RESIZE(200) * sin(degree) + SCALER_RESIZE(290);
 }
 
 void update_needle_points(lv_point_t *p, int angle)
 {
     float degree = angle * 2 * PI / 360.0;
-    p[0].x = 290 * cos(degree) + 290;
-    p[0].y = 290 * sin(degree) + 290;
-    p[1].x = 280 * cos(degree) + 290;
-    p[1].y = 280 * sin(degree) + 290;
+    p[0].x = SCALER_RESIZE(290) * cos(degree) + SCALER_RESIZE(290);
+    p[0].y = SCALER_RESIZE(290) * sin(degree) + SCALER_RESIZE(290);
+    p[1].x = SCALER_RESIZE(280) * cos(degree) + SCALER_RESIZE(290);
+    p[1].y = SCALER_RESIZE(280) * sin(degree) + SCALER_RESIZE(290);
 }
 
 static void needle_cb(lv_event_t *e)
@@ -546,11 +570,13 @@ static struct meter *meter_create(lv_obj_t *parent)
 
     meter->cont = lv_obj_create(parent);
     lv_obj_remove_style_all(meter->cont);
-    lv_obj_set_size(meter->cont, 580, 580);
+    lv_obj_clear_flag(meter->cont, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_size(meter->cont, SCALER_RESIZE(580), SCALER_RESIZE(580));
     lv_obj_center(meter->cont);
 
     meter->main = lv_arc_create(meter->cont);
     lv_obj_clear_flag(meter->main, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_clear_flag(meter->main, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_size(meter->main, lv_pct(100), lv_pct(100));
     lv_arc_set_rotation(meter->main, START_ANGLE);
     lv_arc_set_bg_angles(meter->main, 0, max_angle);
@@ -568,7 +594,8 @@ static struct meter *meter_create(lv_obj_t *parent)
 
     meter->adorn = lv_arc_create(meter->cont);
     lv_obj_clear_flag(meter->adorn, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_set_size(meter->adorn, 520, 520);
+    lv_obj_clear_flag(meter->adorn, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_size(meter->adorn, SCALER_RESIZE(520), SCALER_RESIZE(520));
     lv_arc_set_rotation(meter->adorn, START_ANGLE);
     lv_arc_set_bg_angles(meter->adorn, 0, max_angle);
     lv_obj_set_style_arc_width(meter->adorn, 2,
@@ -586,6 +613,7 @@ static struct meter *meter_create(lv_obj_t *parent)
     meter->needle = lv_img_create(meter->cont);
     lv_img_set_src(meter->needle, SRC_PNG(needle));
     lv_img_set_angle(meter->needle, START_ANGLE * 10);
+    lv_img_set_zoom(meter->needle, SCALER_RESIZE(256));
     lv_obj_center(meter->needle);
     lv_obj_add_flag(meter->needle, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(meter->needle, needle_cb,
@@ -651,6 +679,7 @@ static void meter_cb(lv_event_t *e)
 
 static void position_ctrl_create(void)
 {
+    lv_obj_t *btn_cont;
     lv_obj_t *btn;
     lv_obj_t *label;
 
@@ -658,9 +687,10 @@ static void position_ctrl_create(void)
     lv_obj_set_size(position_cont, lv_pct(40), lv_pct(100));
     lv_obj_align(position_cont, LV_ALIGN_RIGHT_MID, 0, 0);
     lv_obj_add_flag(position_cont, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(position_cont, LV_OBJ_FLAG_SCROLLABLE);
 
     label_pos_ctrl_target = ml_label_create(position_cont, TXT_AXIS_X);
-    lv_obj_set_pos(label_pos_ctrl_target, 40, 40);
+    lv_obj_align(label_pos_ctrl_target, LV_ALIGN_TOP_LEFT, 0, 0);
     lv_obj_set_style_text_color(label_pos_ctrl_target, lv_color_black(),
                                 LV_PART_MAIN);
     lv_obj_set_style_text_font(label_pos_ctrl_target, ttf_main_s.font,
@@ -668,12 +698,28 @@ static void position_ctrl_create(void)
 
     pos_meter = meter_create(position_cont);
 
-    btn = lv_btn_create(position_cont);
-    lv_obj_set_size(btn, 300, 100);
-    lv_obj_align_to(btn, pos_meter->cont, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
+    btn_cont = lv_obj_create(position_cont);
+    lv_obj_remove_style_all(btn_cont);
+    lv_obj_set_size(btn_cont, lv_pct(80), SCALER_RESIZE(80));
+    lv_obj_align(btn_cont, LV_ALIGN_BOTTOM_MID, 0, 0);
+
+    btn = lv_btn_create(btn_cont);
+    lv_obj_set_size(btn, lv_pct(45), lv_pct(100));
+    lv_obj_align(btn, LV_ALIGN_LEFT_MID, 0, 0);
     lv_obj_add_event_cb(btn, meter_cb, LV_EVENT_CLICKED, NULL);
 
     label = ml_label_create(btn, TXT_CONFIRM);
+    lv_obj_set_style_text_color(label, lv_color_white(), LV_PART_MAIN);
+    lv_obj_set_style_text_font(label, ttf_main_s.font,
+                               LV_PART_MAIN);
+    lv_obj_center(label);
+
+    btn = lv_btn_create(btn_cont);
+    lv_obj_set_size(btn, lv_pct(45), lv_pct(100));
+    lv_obj_align(btn, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_add_event_cb(btn, close_cb, LV_EVENT_CLICKED, NULL);
+
+    label = ml_label_create(btn, TXT_CLOSE);
     lv_obj_set_style_text_color(label, lv_color_white(), LV_PART_MAIN);
     lv_obj_set_style_text_font(label, ttf_main_s.font,
                                LV_PART_MAIN);
@@ -793,8 +839,8 @@ static void ui_init(void)
     lv_obj_add_flag(label_title, LV_OBJ_FLAG_EVENT_BUBBLE);
 
     btn_overview = lv_btn_create(scr);
-    lv_obj_set_size(btn_overview, 300, 120);
-    lv_obj_set_pos(btn_overview, 20, 180);
+    lv_obj_set_size(btn_overview, SCALER_RESIZE(300), SCALER_RESIZE(120));
+    lv_obj_set_pos(btn_overview, SCALER_RESIZE(20), SCALER_RESIZE(180));
     lv_obj_set_style_bg_color(btn_overview, lv_color_hex(0x2591a8),
                               LV_PART_MAIN);
     lv_obj_add_event_cb(btn_overview, overview_cb, LV_EVENT_CLICKED, NULL);
@@ -807,8 +853,8 @@ static void ui_init(void)
     lv_obj_add_flag(label_overview, LV_OBJ_FLAG_EVENT_BUBBLE);
 
     btn_reset = lv_btn_create(scr);
-    lv_obj_set_size(btn_reset, 300, 120);
-    lv_obj_set_pos(btn_reset, 20, 340);
+    lv_obj_set_size(btn_reset, SCALER_RESIZE(300), SCALER_RESIZE(120));
+    lv_obj_set_pos(btn_reset, SCALER_RESIZE(20), SCALER_RESIZE(340));
     lv_obj_set_style_bg_color(btn_reset, lv_color_hex(0x2591a8),
                               LV_PART_MAIN);
     lv_obj_add_event_cb(btn_reset, reset_cb, LV_EVENT_CLICKED, NULL);
@@ -821,8 +867,8 @@ static void ui_init(void)
     lv_obj_add_flag(label_autolocate, LV_OBJ_FLAG_EVENT_BUBBLE);
 
     btn_axissync = lv_btn_create(scr);
-    lv_obj_set_size(btn_axissync, 300, 120);
-    lv_obj_set_pos(btn_axissync, 20, 500);
+    lv_obj_set_size(btn_axissync, SCALER_RESIZE(300), SCALER_RESIZE(120));
+    lv_obj_set_pos(btn_axissync, SCALER_RESIZE(20), SCALER_RESIZE(500));
     lv_obj_set_style_bg_color(btn_axissync, lv_color_hex(0x2591a8),
                               LV_PART_MAIN);
     lv_obj_add_event_cb(btn_axissync, sync_cb, LV_EVENT_CLICKED, NULL);
@@ -835,18 +881,18 @@ static void ui_init(void)
     lv_obj_add_flag(label_axissync, LV_OBJ_FLAG_EVENT_BUBBLE);
 
     axiss[0].txt_idx = TXT_AXIS_X;
-#if ENABLE_MOTOR_CONTRO
+#if ENABLE_MOTOR_CONTROL
     axiss[0].slave = &slave[0];
 #endif
     axis_ui_init(scr, &axiss[0]);
-    lv_obj_set_pos(axiss[0].cont, 350, 180);
+    lv_obj_set_pos(axiss[0].cont, SCALER_RESIZE(350), SCALER_RESIZE(180));
 
     axiss[1].txt_idx = TXT_AXIS_Y;
-#if ENABLE_MOTOR_CONTRO
+#if ENABLE_MOTOR_CONTROL
     axiss[1].slave = &slave[1];
 #endif
     axis_ui_init(scr, &axiss[1]);
-    lv_obj_set_pos(axiss[1].cont, 350, 500);
+    lv_obj_set_pos(axiss[1].cont, SCALER_RESIZE(350), SCALER_RESIZE(500));
 
     label_jitter = ml_label_create(scr, TXT_JITTER);
     lv_obj_set_style_text_color(label_jitter, lv_color_white(), LV_PART_MAIN);
@@ -903,6 +949,7 @@ int main(int argc, char **argv)
     struct sched_param param;
     int ret = 0;
     int fre = 500;
+    // This place is the ui binding thread
     // if(thread_bind_cpu(4) == -1) {
     //     printf("bind cpu core fail\n");
     // }

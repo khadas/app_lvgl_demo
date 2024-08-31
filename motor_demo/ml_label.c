@@ -40,6 +40,7 @@ static const char *txt[][2] =
     {"当前位置", "Current Position"},
     {"目标位置", "Target Position"},
     {"确认", "Confirm"},
+    {"关闭", "Close"},
     {"语言", "Language"},
     {"系统版本", "System Version"},
     {"硬件版本", "Hardware Version"},

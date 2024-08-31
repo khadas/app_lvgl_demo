@@ -32,9 +32,9 @@
 
 #define ALIGN(x, a)     (((x) + (a - 1)) & ~(a - 1))
 #define FAKE_FD         1234
-#define SRC_PNG(x)      "A:/usr/share/res/"#x".png"
-#define SRC_FONT(x)     "/usr/share/res/"#x".ttf"
-#define SYS_FONT(x)     "/usr/share/fonts/source-han-sans-cn/"#x".otf"
+#define SRC_PNG(x)      "A:/usr/share/resource/"#x".png"
+#define SRC_FONT(x)     "/usr/share/resource/"x
+#define SYS_FONT(x)     "/usr/share/fonts/source-han-sans-cn/"x".otf"
 #define METER_TICKS     13
 #define PI              3.14159265358979f
 

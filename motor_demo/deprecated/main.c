@@ -100,12 +100,12 @@ static void font_init(void)
     lv_freetype_init(64, 1, 0);
 
     ttf_main.weight = 68;
-    ttf_main.name = SYS_FONT(SourceHanSansCN - Regular);
+    ttf_main.name = SRC_FONT("SmileySans-Oblique.ttf");
     ttf_main.style = FT_FONT_STYLE_NORMAL;
     lv_ft_font_init(&ttf_main);
 
     ttf_main_s.weight = 48;
-    ttf_main_s.name = SYS_FONT(SourceHanSansCN - Regular);
+    ttf_main_s.name = SRC_FONT("SmileySans-Oblique.ttf");
     ttf_main_s.style = FT_FONT_STYLE_NORMAL;
     lv_ft_font_init(&ttf_main_s);
 }

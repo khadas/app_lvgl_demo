@@ -13,6 +13,7 @@ enum
     TXT_CUR_POS,
     TXT_TAR_POS,
     TXT_CONFIRM,
+    TXT_CLOSE,
     TXT_LANGUAGE,
     TXT_SYS_VER,
     TXT_HW_VER,
