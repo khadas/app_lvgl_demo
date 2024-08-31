@@ -9,6 +9,7 @@ include_directories(
 	${PROJECT_SOURCE_DIR}/lvgl/
 	${PROJECT_SOURCE_DIR}/sys/
 	${PROJECT_SOURCE_DIR}/cJSON/
+	${PROJECT_SOURCE_DIR}/common/
 	${CMAKE_SYSROOT}/usr/include/libdrm/
 	${CMAKE_SYSROOT}/usr/include/rkadk/
 	${CMAKE_SYSROOT}/usr/include/lvgl/
@@ -36,6 +37,7 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/hal SRCS)
 aux_source_directory(${PROJECT_SOURCE_DIR}/lvgl SRCS)
 aux_source_directory(${PROJECT_SOURCE_DIR}/sys SRCS)
 aux_source_directory(${PROJECT_SOURCE_DIR}/cJSON SRCS)
+aux_source_directory(${PROJECT_SOURCE_DIR}/common SRCS)
 
 if (LV_USE_RK_DEMO)
 	if (RK_DEMO_ASR_EN)
