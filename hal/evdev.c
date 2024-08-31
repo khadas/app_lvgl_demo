@@ -342,6 +342,8 @@ int evdev_init(lv_disp_drv_t *drv, int rot)
  */
 int evdev_set_file(lv_disp_drv_t *drv, char *dev_name)
 {
+    int disp_hor;
+    int disp_ver;
     int rc = 1;
 
     if (evdev_fd != -1)
@@ -405,10 +407,20 @@ int evdev_set_file(lv_disp_drv_t *drv, char *dev_name)
     evdev_key_val = 0;
     evdev_button = LV_INDEV_STATE_REL;
 
+    if ((evdev_rot == 0) || (evdev_rot == 180))
+    {
+        disp_hor = drv->hor_res;
+        disp_ver = drv->ver_res;
+    }
+    else
+    {
+        disp_hor = drv->ver_res;
+        disp_ver = drv->hor_res;
+    }
     if ((evdev_min_x != 0) ||
-            (evdev_max_x != drv->hor_res) ||
+            (evdev_max_x != disp_hor) ||
             (evdev_min_y != 0) ||
-            (evdev_max_y != drv->ver_res))
+            (evdev_max_y != disp_ver))
     {
         evdev_calibrate = 1;
     }
