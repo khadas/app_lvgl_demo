@@ -2,15 +2,11 @@
 
 start() {
 	set -a
-	mkdir -p /userdata/cfg
-	if [ ! -f /userdata/cfg/wpa_supplicant.conf ];then
-		cp /etc/wpa_supplicant.conf /userdata/cfg/
-	fi
 	export LV_DRIVERS_SET_PLANE=CURSOR
 	ulimit -n 1024
 	set +a
-	touch /tmp/.lv_warmup
 	rk_demo &
+	sleep 1 # All processer help rk_demo output first UI.
 }
 
 case "$1" in

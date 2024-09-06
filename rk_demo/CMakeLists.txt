@@ -67,7 +67,7 @@ endif()
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 install(DIRECTORY resource DESTINATION share)
-install(PROGRAMS S01lv_demo S99lv_demo-end DESTINATION /etc/init.d)
+install(PROGRAMS S10lv_demo DESTINATION /etc/init.d)
 if (NOT DEFINED LVGL_DEMO_RK3506)
 	install(FILES asound.conf DESTINATION /etc)
 endif()
