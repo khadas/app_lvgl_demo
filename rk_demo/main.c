@@ -17,6 +17,9 @@
 #include <fcntl.h>
 #include <lvgl/lvgl.h>
 #include <lvgl/lv_conf.h>
+#include <sched.h>
+#include <pthread.h>
+
 
 #include "main.h"
 #include "hal_sdl.h"
@@ -373,6 +376,17 @@ int main(int argc, char **argv)
     uint32_t st0 = 0, et0;
 #endif
     signal(SIGINT, sigterm_handler);
+
+    struct sched_param param;
+    int max_priority;
+
+    max_priority = sched_get_priority_max(SCHED_FIFO);
+
+    param.sched_priority = max_priority;
+
+    if (sched_setscheduler(0, SCHED_FIFO, &param) == -1) {
+        perror("sched_setscheduler failed");
+    }
 
 #if ROCKIT_EN
     RK_MPI_SYS_Init();
