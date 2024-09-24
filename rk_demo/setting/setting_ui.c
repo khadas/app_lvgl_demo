@@ -5,6 +5,7 @@
 #include "display_ui.h"
 #include "home_ui.h"
 #include "language_and_date_ui.h"
+#include "lv_toast.h"
 #include "main.h"
 #include "volume_ui.h"
 #include "wallpaper_ui.h"
@@ -57,6 +58,7 @@ static struct submenu_s submenu_desc[SUBMENU_MAX];
 
 static void sliders_draw(lv_obj_t *parent, struct btn_desc *desc);
 static void menu_switch_cb(lv_event_t *e);
+static void wifi_switch_cb(lv_event_t *e);
 #if BT_EN
 static void switch_toggled(lv_event_t *e);
 #endif
@@ -112,7 +114,7 @@ static struct btn_desc setting_btn[] =
         .w    = 1,
         .h    = 1,
         .draw = common_draw,
-        .cb   = menu_switch_cb,
+        .cb   = wifi_switch_cb,
         .user_data = (void *)SUBMENU_WIFI
     },
 #endif
@@ -302,6 +304,22 @@ static void menu_switch_cb(lv_event_t *e)
         lv_obj_clear_flag(submenu_mask, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(submenu_desc[cur_menu].menu,
                           LV_OBJ_FLAG_HIDDEN);
+    }
+}
+
+static void wifi_switch_cb(lv_event_t *e)
+{
+    if (wifi_init_done())
+    {
+        menu_switch_cb(e);
+    }
+    else
+    {
+        lv_obj_t *toast = lv_toast_create(lv_layer_sys());
+        lv_toast_set_text(toast, "WiFi初始化未完成请稍后重试");
+        lv_obj_add_style(toast, &style_txt_m, LV_PART_MAIN);
+        lv_obj_align(toast, LV_ALIGN_TOP_MID, 0, 20);
+        lv_toast_show(toast);
     }
 }
 

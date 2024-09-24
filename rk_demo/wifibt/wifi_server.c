@@ -31,6 +31,11 @@ int wifi_scanning_done(void)
     return 0;
 }
 
+int wifi_init_done(void)
+{
+    return listening;
+}
+
 int wifi_enabled(void)
 {
     return (rkwifi_gonff == false) ? 0 : 1;
@@ -143,7 +148,7 @@ static void *wifi_server(void *arg)
     int len;
 
     //wait hci0 appear
-    int times = 100;
+    int times = 1000;
     while (times-- > 0 && access("/sys/class/net/wlan0", F_OK))
     {
         usleep(100 * 1000);
@@ -157,11 +162,6 @@ static void *wifi_server(void *arg)
     else
     {
         log("The wlan0 have done.\n");
-    }
-
-    while (access("/tmp/.lv_warmup", F_OK) == 0)
-    {
-        sleep(1);
     }
 
     if (access("/oem/cfg/wpa_supplicant.conf", F_OK) != 0)

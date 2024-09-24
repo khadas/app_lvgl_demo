@@ -80,6 +80,7 @@ int wifi_query_wait(void *buf, int len);
 int wifi_scanning_done(void);
 int wifi_enabled(void);
 int wifi_connected(void);
+int wifi_init_done(void);
 
 int run_bt_server(void);
 int bt_query(void *buf, int len);
