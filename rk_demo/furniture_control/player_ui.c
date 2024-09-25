@@ -139,7 +139,6 @@ static void param_init(RKADK_PLAYER_FRAME_INFO_S *pstFrmInfo)
 #else
 #error "Only support DEPTH 16 or 32"
 #endif
-    pstFrmInfo->u32EnIntfType = DISPLAY_TYPE_MIPI;
     pstFrmInfo->u32VoLay = -1; // rkadk select the default first device
     pstFrmInfo->u32VoChn = 1; // ui is 2 . play is 1
     pstFrmInfo->u32VoDev = -1; // rkadk select the default first device
